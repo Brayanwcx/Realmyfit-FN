@@ -13,5 +13,10 @@ export class CreateUserDto {
     @IsNotEmpty()
     @ApiProperty()
     readonly lastName: string;
+
+    @IsString()
+    @IsNotEmpty()
+    @ApiProperty()
+    readonly docType: string;
 }
 export class UpdateUserDto extends PartialType(CreateUserDto){}
