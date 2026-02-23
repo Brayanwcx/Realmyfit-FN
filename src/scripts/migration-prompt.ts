@@ -12,8 +12,8 @@ import { join } from 'path';
     message: '🌍 Selecciona el ambiente:',
     choices: [
       { title: 'Development', value: 'dev' },
-      { title: 'Staging', value: 'stg' },
-      { title: 'Production', value: 'prod' },
+      // { title: 'Staging', value: 'stg' },
+      // { title: 'Production', value: 'prod' },
     ],
   });
 
