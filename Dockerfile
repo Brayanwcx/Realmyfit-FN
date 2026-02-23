@@ -20,4 +20,5 @@ COPY --from=build /app/dist ./dist
 
 EXPOSE 3000
 
-CMD ["node", "dist/main.js"]
+CMD ["sh", "-c", "npm run migration:run && node dist/main.js"]
+# CMD ["node", "dist/main.js"]
