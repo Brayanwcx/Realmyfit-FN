@@ -1,0 +1,95 @@
+.page-wrapper {
+  padding: 8rem 0 5rem;
+  background-color: var(--color-bg);
+  min-height: 100vh;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 4rem;
+  
+  .page-title {
+    font-size: clamp(2.5rem, 4vw, 3.5rem);
+    margin-bottom: 1rem;
+    .text-primary { color: var(--color-primary); }
+  }
+  .page-subtitle {
+    color: var(--color-text-muted);
+    font-size: 1.1rem;
+    max-width: 650px;
+    margin: 0 auto;
+  }
+}
+
+.events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 2rem;
+}
+
+.event-card {
+  border-radius: 16px;
+  padding: 2rem;
+  transition: var(--transition-medium);
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5), inset 0 0 0 1px var(--color-primary);
+  }
+
+  .event-date-badge {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(39, 174, 96, 0.15);
+    color: var(--color-primary);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    align-self: flex-start;
+
+    .mr-1 { margin-right: 0.5rem; }
+  }
+
+  .event-info {
+    flex: 1;
+    .event-title {
+      font-size: 1.4rem;
+      color: var(--color-text-main);
+      margin-bottom: 0.75rem;
+      font-family: var(--font-heading);
+    }
+    .event-instructor {
+      color: var(--color-text-muted);
+      font-size: 1rem;
+      strong { color: var(--color-text-main); }
+    }
+  }
+
+  .event-footer {
+    margin-top: 2rem;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    padding-top: 1.5rem;
+
+    .spots-available {
+      color: var(--color-text-main);
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    .spots-full {
+      color: #e74c3c;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    .w-100 { width: 100%; }
+    .mt-3 { margin-top: 1rem; }
+
+    .btn-secondary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}

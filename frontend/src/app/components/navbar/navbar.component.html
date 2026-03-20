@@ -1,0 +1,67 @@
+<nav class="navbar glass" [class.navbar-scrolled]="isScrolled">
+  <div class="navbar-container container">
+    <a routerLink="/" class="navbar-brand">
+      <span class="text-white">RealMy</span><span class="text-primary">Fit</span>
+    </a>
+
+    <!-- Desktop Menu -->
+    <ul class="navbar-menu" [class.active]="isMobileMenuOpen">
+      <li><a routerLink="/" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}" (click)="closeMobileMenu()">Inicio</a></li>
+      
+      <!-- Dropdown Servicios -->
+      <li class="nav-item-dropdown" [class.mobile-expanded]="isServicesExpanded">
+        <a class="dropdown-trigger" (click)="toggleServices($event)">
+          Servicios
+          <!-- Chevron icon -->
+          <svg class="chevron-icon" [class.rotated]="isServicesExpanded" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </a>
+
+        <!-- Dropdown Menu -->
+        <ul class="dropdown-menu glass">
+          <li><a routerLink="/productos" (click)="closeMobileMenu()">🛒 Productos</a></li>
+          <li><a routerLink="/entrenadores" (click)="closeMobileMenu()">💪 Entrenadores</a></li>
+          <li><a routerLink="/maquinas" (click)="closeMobileMenu()">⚙️ Máquinas</a></li>
+          <li><a routerLink="/membresias" (click)="closeMobileMenu()">🎟️ Membresías</a></li>
+        </ul>
+      </li>
+
+      <li><a routerLink="/eventos" routerLinkActive="active-link" (click)="closeMobileMenu()">Eventos</a></li>
+      <li><a routerLink="/#acerca" (click)="closeMobileMenu()">Nosotros</a></li>
+
+      <!-- Mobile ONLY actions inside the sliding menu -->
+      <li class="mobile-only mt-4">
+        <button class="btn-secondary w-100 mb-2" routerLink="/cart" (click)="closeMobileMenu()">
+          🛒 Ver Carrito
+        </button>
+        <button class="btn-primary w-100" routerLink="/login" (click)="closeMobileMenu()">Iniciar Sesión</button>
+      </li>
+    </ul>
+
+    <!-- Desktop Actions -->
+    <div class="navbar-actions">
+      <!-- Cart Icon -->
+      <button class="icon-btn cart-btn" routerLink="/cart" aria-label="Carrito de compras">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="9" cy="21" r="1"></circle>
+          <circle cx="20" cy="21" r="1"></circle>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+        </svg>
+        <!-- Badge badge indicator placeholder -->
+        <span class="cart-badge">0</span>
+      </button>
+
+      <button class="btn-primary" routerLink="/login">Iniciar Sesión</button>
+    </div>
+
+    <!-- Mobile Hamburger Toggle -->
+    <button class="navbar-toggle" (click)="toggleMobileMenu()" [attr.aria-expanded]="isMobileMenuOpen">
+      <div class="hamburger" [class.is-active]="isMobileMenuOpen">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </button>
+  </div>
+</nav>

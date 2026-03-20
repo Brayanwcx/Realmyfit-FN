@@ -1,0 +1,118 @@
+.page-wrapper {
+  padding: 8rem 0 5rem;
+  background-color: var(--color-bg);
+  min-height: 100vh;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 4rem;
+  
+  .page-title {
+    font-size: clamp(2.5rem, 4vw, 3.5rem);
+    margin-bottom: 1rem;
+    .text-primary { color: var(--color-primary); }
+  }
+
+  .page-subtitle {
+    color: var(--color-text-muted);
+    font-size: 1.1rem;
+    max-width: 650px;
+    margin: 0 auto;
+  }
+}
+
+.machines-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.machine-card {
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  transition: var(--transition-medium);
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255,255,255,0.1);
+
+    .machine-image {
+      .machine-icon {
+        transform: scale(1.2);
+        color: var(--color-primary);
+      }
+    }
+
+    .machine-overlay {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .machine-image {
+    height: 180px;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-medium);
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+
+    .machine-icon {
+      color: rgba(255,255,255,0.3);
+      transition: var(--transition-medium);
+    }
+  }
+
+  .machine-info {
+    padding: 1.5rem;
+    flex: 1;
+
+    .machine-category {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      background: rgba(39, 174, 96, 0.1);
+      color: var(--color-primary);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 1rem;
+      font-weight: 700;
+    }
+
+    .machine-name {
+      font-size: 1.3rem;
+      color: var(--color-text-main);
+      margin-bottom: 0.75rem;
+      font-family: var(--font-heading);
+    }
+
+    .machine-desc {
+      color: var(--color-text-muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+  }
+
+  .machine-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 1.5rem;
+    background: linear-gradient(0deg, rgba(18,18,18,1) 0%, rgba(18,18,18,0.8) 50%, rgba(18,18,18,0) 100%);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: var(--transition-medium);
+    display: flex;
+    align-items: flex-end;
+
+    .w-100 { width: 100%; }
+  }
+}

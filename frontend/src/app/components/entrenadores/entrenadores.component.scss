@@ -1,0 +1,131 @@
+.page-wrapper {
+  padding: 8rem 0 5rem;
+  background-color: var(--color-bg);
+  min-height: 100vh;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 4rem;
+  
+  .page-title {
+    font-size: clamp(2.5rem, 4vw, 3.5rem);
+    margin-bottom: 1rem;
+    .text-primary { color: var(--color-primary); }
+  }
+
+  .page-subtitle {
+    color: var(--color-text-muted);
+    font-size: 1.1rem;
+    max-width: 650px;
+    margin: 0 auto;
+  }
+}
+
+.trainers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2.5rem;
+}
+
+.trainer-card {
+  border-radius: 16px;
+  overflow: hidden;
+  text-align: center;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 0 0 1px var(--color-primary);
+    
+    .trainer-photo {
+      background: rgba(39, 174, 96, 0.15);
+      border-bottom: 1px solid var(--color-primary);
+      .avatar-icon {
+        transform: scale(1.1);
+        color: var(--color-primary);
+      }
+    }
+  }
+
+  .trainer-photo {
+    height: 220px;
+    background: rgba(255, 255, 255, 0.02);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-medium);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+
+    .avatar-icon {
+      color: var(--color-text-muted);
+      transition: var(--transition-medium);
+    }
+  }
+
+  .trainer-info {
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+
+    h3 {
+      font-size: 1.4rem;
+      color: var(--color-text-main);
+      margin-bottom: 0.5rem;
+      font-family: var(--font-heading);
+    }
+
+    .specialty {
+      font-weight: 600;
+      font-size: 0.95rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+
+    .divider {
+      width: 40px;
+      height: 2px;
+      background: rgba(255,255,255,0.1);
+      margin-bottom: 1.5rem;
+    }
+
+    .experience {
+      color: var(--color-text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+      strong {
+        color: var(--color-text-main);
+      }
+    }
+
+    .social-links {
+      display: flex;
+      gap: 1rem;
+      margin-top: auto;
+
+      .social-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.05);
+        color: var(--color-text-muted);
+        transition: var(--transition-fast);
+
+        &:hover {
+          background: var(--color-primary);
+          color: #fff;
+          transform: translateY(-3px);
+        }
+      }
+    }
+  }
+}

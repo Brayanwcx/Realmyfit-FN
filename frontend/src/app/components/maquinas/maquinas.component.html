@@ -1,0 +1,35 @@
+<section class="page-wrapper">
+  <div class="container page-header">
+    <h1 class="page-title">Equipamiento de <span class="text-primary">Vanguardia</span></h1>
+    <p class="page-subtitle">Explora nuestras instalaciones equipadas con maquinaria de última generación para llevar tu entrenamiento físico al óptimo rendimiento.</p>
+  </div>
+
+  <div class="container machines-grid">
+    @for (machine of maquinas; track machine.name) {
+      <div class="machine-card glass">
+        <div class="machine-image">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" class="machine-icon" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Dumbbell / equipment abstract SVG -->
+            <path d="M6 3v18"></path>
+            <path d="M18 3v18"></path>
+            <path d="M6 12h12"></path>
+            <path d="M4 6h4"></path>
+            <path d="M4 18h4"></path>
+            <path d="M16 6h4"></path>
+            <path d="M16 18h4"></path>
+          </svg>
+        </div>
+        
+        <div class="machine-info">
+          <span class="machine-category">{{ machine.cat }}</span>
+          <h3 class="machine-name">{{ machine.name }}</h3>
+          <p class="machine-desc">{{ machine.desc }}</p>
+        </div>
+        
+        <div class="machine-overlay">
+          <button class="btn-primary w-100">Ver Ficha Técnica</button>
+        </div>
+      </div>
+    }
+  </div>
+</section>
