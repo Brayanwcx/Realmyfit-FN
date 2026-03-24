@@ -55,17 +55,35 @@
 <section class="testimonials-section">
   <div class="container text-center">
     <h2>Lo que dicen <span class="text-primary">nuestros atletas</span></h2>
-    <div class="testimonial-wrapper">
-      <div class="testimonial-card glass">
-        <p class="quote">"Empecé desde cero y el equipo me guio paso a paso. Ahora no imagino mi vida sin RealMyFit. Es más que un gimnasio, es mi segunda casa."</p>
-        <div class="author">
-          <div class="avatar">🙋</div>
-          <div>
-            <strong>Carlos M.</strong>
-            <span class="text-primary d-block">Miembro hace 2 años</span>
+    <div class="carousel-container" (mouseenter)="stopCarousel()" (mouseleave)="startCarousel()">
+      <button class="carousel-nav prev" (click)="prev()">
+        <svg fill="currentColor" viewBox="0 0 24 24" width="24" height="24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/></svg>
+      </button>
+
+      <div class="carousel-track">
+        @for (testimonial of testimonials; track testimonial.author; let i = $index) {
+          <div class="testimonial-card glass" [class.active]="i === currentIndex">
+            <p class="quote">{{ testimonial.text }}</p>
+            <div class="author">
+              <div class="avatar">{{ testimonial.avatar }}</div>
+              <div>
+                <strong>{{ testimonial.author }}</strong>
+                <span class="text-primary d-block">{{ testimonial.role }}</span>
+              </div>
+            </div>
           </div>
-        </div>
+        }
       </div>
+
+      <button class="carousel-nav next" (click)="next()">
+        <svg fill="currentColor" viewBox="0 0 24 24" width="24" height="24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+      </button>
+    </div>
+
+    <div class="carousel-dots">
+      @for (testimonial of testimonials; track testimonial.author; let i = $index) {
+        <span class="dot" [class.active]="i === currentIndex" (click)="goTo(i)"></span>
+      }
     </div>
   </div>
 </section>

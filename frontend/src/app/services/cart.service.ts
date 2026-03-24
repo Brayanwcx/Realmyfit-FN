@@ -22,4 +22,9 @@ export class CartService {
   getItems() {
     return this.items;
   }
+
+  removeFromCart(item: any) {
+    this.items = this.items.filter(i => i.name !== item.name);
+    this.cartSubject.next(this.items);
+  }
 }

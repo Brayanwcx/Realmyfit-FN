@@ -36,7 +36,13 @@
         <button class="btn-secondary w-100 mb-2" routerLink="/cart" (click)="closeMobileMenu()">
           🛒 Ver Carrito ({{ totalItems }})
         </button>
-        <button class="btn-primary w-100" routerLink="/login" (click)="closeMobileMenu()">Iniciar Sesión</button>
+        <button class="btn-primary w-100" style="display: flex; align-items: center; justify-content: center; gap: 8px;" routerLink="/login" (click)="closeMobileMenu()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          Iniciar Sesión
+        </button>
       </li>
     </ul>
 
@@ -53,7 +59,12 @@
         <span class="cart-badge">{{ totalItems }}</span>
       </button>
 
-      <button class="btn-primary" routerLink="/login">Iniciar Sesión</button>
+      <button class="icon-btn login-btn" routerLink="/login" aria-label="Mi Perfil">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </button>
     </div>
 
     <!-- Mobile Hamburger Toggle -->

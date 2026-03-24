@@ -46,9 +46,33 @@
       </div>
     }
 
+    <!-- Filter Section Glassmorphism -->
+    <div class="reviews-filter-container fade-in">
+      <div class="filter-pills">
+        <button class="filter-pill" [class.active]="selectedRating === null" (click)="setFilter(null)">
+          Todas
+        </button>
+        <button class="filter-pill" [class.active]="selectedRating === 5" (click)="setFilter(5)">
+          ⭐⭐⭐⭐⭐ Excelentes
+        </button>
+        <button class="filter-pill" [class.active]="selectedRating === 4" (click)="setFilter(4)">
+          ⭐⭐⭐⭐ Muy Buenas
+        </button>
+        <button class="filter-pill" [class.active]="selectedRating === 3" (click)="setFilter(3)">
+          ⭐⭐⭐ Buenas
+        </button>
+        <button class="filter-pill" [class.active]="selectedRating === 2" (click)="setFilter(2)">
+          ⭐⭐ Regulares
+        </button>
+        <button class="filter-pill" [class.active]="selectedRating === 1" (click)="setFilter(1)">
+          ⭐ Malas
+        </button>
+      </div>
+    </div>
+
     <!-- Reviews Masonry / Grid -->
     <div class="reviews-grid">
-      @for (review of reviews; track review.name) {
+      @for (review of filteredReviews; track review.name) {
         <div class="review-card glass">
           <div class="card-header">
             <div class="user-avatar">

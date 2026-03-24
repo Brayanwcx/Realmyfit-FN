@@ -11,6 +11,7 @@ export class Resenas {
   globalRating = 4.9;
   totalReviews = 1248;
   showForm = false;
+  selectedRating: number | null = null;
 
   reviews = [
     { name: 'Diana Salazar', role: 'Miembro VIP', rating: 5, date: 'Hace 2 días', text: 'El ambiente y las máquinas son de otro nivel. Realmente me motivan a dar el 100% cada día. La zona de fuerza es mi favorita.' },
@@ -23,5 +24,16 @@ export class Resenas {
 
   toggleForm() {
     this.showForm = !this.showForm;
+  }
+
+  get filteredReviews() {
+    if (this.selectedRating === null) {
+      return this.reviews;
+    }
+    return this.reviews.filter(review => review.rating === this.selectedRating);
+  }
+
+  setFilter(rating: number | null) {
+    this.selectedRating = rating;
   }
 }

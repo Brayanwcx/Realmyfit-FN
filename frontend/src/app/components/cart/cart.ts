@@ -26,4 +26,8 @@ export class CartComponent implements OnInit {
   get total() {
     return this.subtotal > 0 ? this.subtotal + 5.00 : 0; // Flat tax/shipping mock
   }
+
+  removeItem(item: any) {
+    this.cartService.removeFromCart(item);
+  }
 }
