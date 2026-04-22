@@ -1,28 +1,81 @@
 import { Routes } from '@angular/router';
-import { HomeComponent } from './components/home/home';
-import { LoginComponent } from './components/login/login.component'; 
-import { ProductosComponent } from './components/productos/productos';
-import { EntrenadoresComponent } from './components/entrenadores/entrenadores';
-import { MaquinasComponent } from './components/maquinas/maquinas';
-import { MembresiasComponent } from './components/membresias/membresias';
-import { CartComponent } from './components/cart/cart';
-import { EventosComponent } from './components/eventos/eventos'; // The component TS is eventos.ts
-import { Resenas } from './components/resenas/resenas';
-import { Contacto } from './components/contacto/contacto';
-import { MaquinaDetalle } from './components/maquina-detalle/maquina-detalle';
-import { EventoInscripcion } from './components/evento-inscripcion/evento-inscripcion';
 export const routes: Routes = [
-  { path: '', component: HomeComponent },
-  { path: 'login', component: LoginComponent },
-  { path: 'productos', component: ProductosComponent },
-  { path: 'entrenadores', component: EntrenadoresComponent },
-  { path: 'maquinas', component: MaquinasComponent },
-  { path: 'membresias', component: MembresiasComponent },
-  { path: 'eventos', component: EventosComponent },
-  { path: 'cart', component: CartComponent },
-  { path: 'resenas', component: Resenas },
-  { path: 'contacto', component: Contacto },
-  { path: 'ficha-tecnica', component: MaquinaDetalle },
-  { path: 'inscripcion', component: EventoInscripcion },
+  {
+    path: '',
+    loadComponent: () =>
+      import('./components/home/home').then((m) => m.HomeComponent),
+  },
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./components/login/login.component').then((m) => m.LoginComponent),
+  },
+  {
+    path: 'register',
+    loadComponent: () =>
+      import('./components/register/register.component').then(
+        (m) => m.RegisterComponent,
+      ),
+  },
+  {
+    path: 'productos',
+    loadComponent: () =>
+      import('./components/productos/productos').then(
+        (m) => m.ProductosComponent,
+      ),
+  },
+  {
+    path: 'entrenadores',
+    loadComponent: () =>
+      import('./components/entrenadores/entrenadores').then(
+        (m) => m.EntrenadoresComponent,
+      ),
+  },
+  {
+    path: 'maquinas',
+    loadComponent: () =>
+      import('./components/maquinas/maquinas').then((m) => m.MaquinasComponent),
+  },
+  {
+    path: 'membresias',
+    loadComponent: () =>
+      import('./components/membresias/membresias').then(
+        (m) => m.MembresiasComponent,
+      ),
+  },
+  {
+    path: 'eventos',
+    loadComponent: () =>
+      import('./components/eventos/eventos').then((m) => m.EventosComponent),
+  },
+  {
+    path: 'cart',
+    loadComponent: () =>
+      import('./components/cart/cart').then((m) => m.CartComponent),
+  },
+  {
+    path: 'resenas',
+    loadComponent: () =>
+      import('./components/resenas/resenas').then((m) => m.Resenas),
+  },
+  {
+    path: 'contacto',
+    loadComponent: () =>
+      import('./components/contacto/contacto').then((m) => m.Contacto),
+  },
+  {
+    path: 'ficha-tecnica',
+    loadComponent: () =>
+      import('./components/maquina-detalle/maquina-detalle').then(
+        (m) => m.MaquinaDetalle,
+      ),
+  },
+  {
+    path: 'inscripcion',
+    loadComponent: () =>
+      import('./components/evento-inscripcion/evento-inscripcion').then(
+        (m) => m.EventoInscripcion,
+      ),
+  },
   { path: '**', redirectTo: '' }
 ];

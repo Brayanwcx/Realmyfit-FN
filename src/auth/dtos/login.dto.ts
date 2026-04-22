@@ -1,9 +1,9 @@
 /* eslint-disable prettier/prettier */
-import { IsString, IsNotEmpty, IsNumber, IsPositive, IsBoolean, IsOptional } from "class-validator";
-import { PartialType, ApiProperty } from "@nestjs/swagger";
+import { IsEmail, IsNotEmpty, IsString } from "class-validator";
+import { ApiProperty } from "@nestjs/swagger";
 
 export class LoginDto {
-    @IsString()
+    @IsEmail()
     @IsNotEmpty()
     @ApiProperty()
     readonly email: string;
@@ -12,9 +12,4 @@ export class LoginDto {
     @IsNotEmpty()
     @ApiProperty()
     readonly password: string;
-
-    @IsBoolean()
-    @IsNotEmpty()
-    @ApiProperty()
-    readonly isActive: boolean;
 }

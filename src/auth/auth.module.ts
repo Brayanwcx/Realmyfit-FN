@@ -9,11 +9,16 @@ import { ConfigType } from '@nestjs/config';
 import config from '../config';
 import { RolesGuard } from './guards/roles.guard';
 import { JwtAuthGuard } from './guards/auth.guard';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { TokenLog } from './entities/token-log.entity';
+import { RolesModule } from '../roles/roles.module';
 
 @Module({
   imports: [
     UsersModule,
+    RolesModule,
     PassportModule,
+    TypeOrmModule.forFeature([TokenLog]),
     JwtModule.registerAsync({
       inject: [config.KEY],
       useFactory: (configType: ConfigType<typeof config>) => ({

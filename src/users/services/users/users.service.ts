@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+    ConflictException,
+    Injectable,
+    NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../../entities/user.entity';
@@ -71,7 +75,14 @@ export class UsersService {
             password: hashedPassword, //Guardamos la encriptada
             roles,
         });
-        return this.userRepo.save(newUser);
+        try {
+            return await this.userRepo.save(newUser);
+        } catch (error: any) {
+            if (error?.code === '23505') {
+                throw new ConflictException('El correo ya esta registrado');
+            }
+            throw error;
+        }
     }
 
     async updateUser(id: number, updateUserDto: UpdateUserDto) {

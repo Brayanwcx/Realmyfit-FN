@@ -1,0 +1,94 @@
+<div class="register-wrapper">
+  <div class="register-container glass">
+    <div class="register-header">
+      <h2 class="title">Crear Cuenta</h2>
+      <p class="subtitle">Registrate en <span class="text-primary">RealMyFit</span></p>
+    </div>
+
+    @if(errorMessage) {
+      <div class="alert alert-danger">{{ errorMessage }}</div>
+    }
+
+    @if(successMessage) {
+      <div class="alert alert-success">{{ successMessage }}</div>
+    }
+
+    <form (ngSubmit)="onSubmit()" #registerForm="ngForm" class="register-form">
+      <div class="input-grid">
+        <div class="input-group">
+          <label for="name">Nombre</label>
+          <input id="name" name="name" type="text" [(ngModel)]="name" minlength="2" required #nameModel="ngModel" />
+          @if(nameModel.invalid && nameModel.touched) {
+            <small class="field-error">Minimo 2 caracteres.</small>
+          }
+        </div>
+
+        <div class="input-group">
+          <label for="lastName">Apellido</label>
+          <input id="lastName" name="lastName" type="text" [(ngModel)]="lastName" minlength="2" required #lastNameModel="ngModel" />
+          @if(lastNameModel.invalid && lastNameModel.touched) {
+            <small class="field-error">Minimo 2 caracteres.</small>
+          }
+        </div>
+      </div>
+
+      <div class="input-grid">
+        <div class="input-group">
+          <label for="docType">Tipo de documento</label>
+          <select id="docType" name="docType" [(ngModel)]="docType" required>
+            <option value="CC">CC</option>
+            <option value="TI">TI</option>
+            <option value="CE">CE</option>
+            <option value="PASAPORTE">Pasaporte</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label for="docNumber">Numero de documento</label>
+          <input id="docNumber" name="docNumber" type="text" [(ngModel)]="docNumber" required minlength="5" maxlength="20" pattern="^[A-Za-z0-9-]{5,20}$" #docModel="ngModel" />
+          @if(docModel.invalid && docModel.touched) {
+            <small class="field-error">Usa 5-20 caracteres (letras, numeros o guion).</small>
+          }
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label for="email">Correo electronico</label>
+        <input id="email" name="email" type="email" placeholder="tu@correo.com" [(ngModel)]="email" required #emailModel="ngModel" />
+        @if(emailModel.invalid && emailModel.touched) {
+          <small class="field-error">Ingresa un correo valido.</small>
+        }
+      </div>
+
+      <div class="input-group">
+        <label for="password">Contrasena</label>
+        <input id="password" name="password" type="password" placeholder="Minimo 6 caracteres" [(ngModel)]="password" minlength="6" required #passwordModel="ngModel" />
+        @if(passwordModel.invalid && passwordModel.touched) {
+          <small class="field-error">Minimo 6 caracteres.</small>
+        }
+      </div>
+
+      <div class="input-group">
+        <label for="confirmPassword">Confirmar contrasena</label>
+        <input id="confirmPassword" name="confirmPassword" type="password" placeholder="Repite tu contrasena" [(ngModel)]="confirmPassword" required #confirmModel="ngModel" />
+        @if(confirmModel.touched && password !== confirmPassword) {
+          <small class="field-error">Las contrasenas no coinciden.</small>
+        }
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary w-100" [disabled]="!registerForm.valid || isLoading || password !== confirmPassword">
+          @if (isLoading) {
+            <span class="spinner"></span>
+          } @else {
+            Crear Cuenta
+          }
+        </button>
+      </div>
+    </form>
+
+    <div class="register-footer">
+      <p>Ya tienes cuenta? <a routerLink="/login" class="text-primary">Inicia sesion</a></p>
+    </div>
+  </div>
+</div>
