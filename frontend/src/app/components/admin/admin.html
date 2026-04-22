@@ -1,0 +1,53 @@
+<div class="admin-layout">
+  <!-- Dynamic Background Lights -->
+  <div class="admin-bg-lights">
+    <div class="light-orb orb-1"></div>
+    <div class="light-orb orb-2"></div>
+  </div>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" *ngIf="isSidebarOpen" (click)="toggleSidebar()"></div>
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar glass" [class.sidebar-open]="isSidebarOpen">
+    <div class="sidebar-header">
+      <h2 class="logo-text">Realmyfit <span class="text-primary">Admin</span></h2>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <a *ngFor="let item of menuItems" 
+         [routerLink]="item.route" 
+         routerLinkActive="active" 
+         class="nav-item"
+         (click)="isSidebarOpen = false">
+        <span class="nav-icon" [innerHTML]="item.svg"></span>
+        <span class="nav-label">{{ item.label }}</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="btn-logout glass" routerLink="/">Volver al Sitio</button>
+    </div>
+  </aside>
+
+  <!-- Main Content area -->
+  <main class="admin-main">
+    <header class="admin-top-bar glass">
+      <button class="mobile-menu-btn" (click)="toggleSidebar()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <h1 class="page-title">Panel de Control</h1>
+      <div class="user-profile">
+        <span class="user-name">{{ userName }}</span>
+        <div class="user-avatar glass">{{ userInitials }}</div>
+      </div>
+    </header>
+
+    <section class="admin-content">
+      <!-- Nested views will go here -->
+      <div class="view-container">
+        <router-outlet></router-outlet>
+      </div>
+    </section>
+  </main>
+</div>

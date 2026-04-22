@@ -1,11 +1,11 @@
 <!-- Main View Container -->
-<app-navbar></app-navbar>
+<app-navbar *ngIf="!isAdminRoute()"></app-navbar>
 
-<main>
-  <!-- Router Outlet conditionally loads Home or Login -->
+<main [class.admin-mode]="isAdminRoute()">
+  <!-- Router Outlet conditionally loads Home, Login, or Admin -->
   <router-outlet></router-outlet>
 </main>
 
-<app-footer></app-footer>
+<app-footer *ngIf="!isAdminRoute()"></app-footer>
 
 <!--sisis-->

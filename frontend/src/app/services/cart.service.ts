@@ -9,12 +9,12 @@ export class CartService {
   private cartSubject = new BehaviorSubject<any[]>(this.items);
   cart$ = this.cartSubject.asObservable();
 
-  addToCart(item: any) {
+  addToCart(item: any, quantity: number = 1) {
     const existing = this.items.find(i => i.name === item.name);
     if (existing) {
-      existing.qty += 1;
+      existing.qty += quantity;
     } else {
-      this.items.push({ ...item, qty: 1, img: 'default' });
+      this.items.push({ ...item, qty: quantity, img: 'default' });
     }
     this.cartSubject.next(this.items);
   }
