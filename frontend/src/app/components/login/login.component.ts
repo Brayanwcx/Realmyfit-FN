@@ -4,6 +4,7 @@ import { AuthService } from '../../services/auth';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import Swal from 'sweetalert2';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
   selector: 'app-login',
@@ -19,6 +20,14 @@ export class LoginComponent implements OnInit, OnDestroy {
   showPassword = false;
   showConfirmPassword = false;
   isTransitioning = false;
+
+  // Login attempt limiting
+  loginAttempts = 0;
+  maxAttempts = 5;
+  isLocked = false;
+  lockTimer = 0;
+  private lockInterval: any = null;
+  private readonly LOCK_DURATION = 60; // seconds
 
   // Login
   email = '';
@@ -61,17 +70,94 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
     this.initParticles();
+    this.loadLockState();
   }
 
   ngOnDestroy() {
     if (this.animFrame) {
       cancelAnimationFrame(this.animFrame);
     }
+    if (this.lockInterval) {
+      clearInterval(this.lockInterval);
+    }
+  }
+
+  // ---- Lock state persistence ----
+  private loadLockState() {
+    const stored = sessionStorage.getItem('login_attempts');
+    if (stored) {
+      this.loginAttempts = parseInt(stored, 10);
+    }
+
+    const lockUntil = sessionStorage.getItem('login_lock_until');
+    if (lockUntil) {
+      const remaining = Math.ceil((parseInt(lockUntil, 10) - Date.now()) / 1000);
+      if (remaining > 0) {
+        this.isLocked = true;
+        this.lockTimer = remaining;
+        this.startLockCountdown();
+      } else {
+        // Lock expired — reset
+        sessionStorage.removeItem('login_lock_until');
+        sessionStorage.removeItem('login_attempts');
+        this.loginAttempts = 0;
+      }
+    }
+  }
+
+  private saveLockState() {
+    sessionStorage.setItem('login_attempts', this.loginAttempts.toString());
+  }
+
+  private activateLock() {
+    this.isLocked = true;
+    this.lockTimer = this.LOCK_DURATION;
+    const lockUntil = Date.now() + (this.LOCK_DURATION * 1000);
+    sessionStorage.setItem('login_lock_until', lockUntil.toString());
+    this.startLockCountdown();
+  }
+
+  private startLockCountdown() {
+    this.lockInterval = setInterval(() => {
+      this.lockTimer--;
+      if (this.lockTimer <= 0) {
+        clearInterval(this.lockInterval);
+        this.lockInterval = null;
+        this.isLocked = false;
+        this.loginAttempts = 0;
+        sessionStorage.removeItem('login_lock_until');
+        sessionStorage.removeItem('login_attempts');
+        this.cdr.detectChanges();
+      }
+      this.cdr.detectChanges();
+    }, 1000);
+  }
+
+  private resetAttempts() {
+    this.loginAttempts = 0;
+    this.isLocked = false;
+    if (this.lockInterval) {
+      clearInterval(this.lockInterval);
+      this.lockInterval = null;
+    }
+    sessionStorage.removeItem('login_attempts');
+    sessionStorage.removeItem('login_lock_until');
+  }
+
+  get attemptsRemaining(): number {
+    return this.maxAttempts - this.loginAttempts;
+  }
+
+  get lockTimerFormatted(): string {
+    const m = Math.floor(this.lockTimer / 60);
+    const s = this.lockTimer % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
   initParticles() {
@@ -196,9 +282,15 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   private loginUser() {
+    if (this.isLocked) {
+      this.isLoading = false;
+      return;
+    }
+
     this.authService.login(this.email, this.password).subscribe({
       next: (res) => {
         this.isLoading = false;
+        this.resetAttempts();
         const user = res.user;
         const isAdmin = user?.roles?.some((r: any) =>
           r.name === 'ADMIN' || r.name === 'admin' || r === 'ADMIN'
@@ -222,7 +314,26 @@ export class LoginComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.isLoading = false;
-        this.errorMessage = err.message || 'Credenciales inválidas';
+        this.loginAttempts++;
+        this.saveLockState();
+
+        if (this.loginAttempts >= this.maxAttempts) {
+          this.activateLock();
+          this.errorMessage = '';
+          Swal.fire({
+            title: '⛔ Cuenta Bloqueada',
+            html: `<span style="color:#a0a0a0">Demasiados intentos fallidos.<br>Intenta de nuevo en <strong style="color:#ff4757">60 segundos</strong>.</span>`,
+            icon: 'error',
+            confirmButtonText: 'Entendido',
+            background: '#1a1a2e',
+            color: '#f5f5f5',
+            confirmButtonColor: '#ff4757',
+            showClass: { popup: 'animate__animated animate__shakeX' },
+            hideClass: { popup: 'animate__animated animate__fadeOutDown animate__faster' }
+          });
+        } else {
+          this.errorMessage = `Credenciales inválidas. Te quedan ${this.attemptsRemaining} intento${this.attemptsRemaining !== 1 ? 's' : ''}.`;
+        }
       }
     });
   }
@@ -267,6 +378,7 @@ export class LoginComponent implements OnInit, OnDestroy {
           this.email = this.registerData.email;
           this.password = '';
           this.resetValidations();
+          this.cdr.detectChanges(); // Forzar actualización de la vista desde SweetAlert
         });
       },
       error: (err) => {
@@ -288,6 +400,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   get isLoginFormValid(): boolean {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)
-      && this.password.length >= 1;
+      && this.password.length >= 1
+      && !this.isLocked;
   }
 }

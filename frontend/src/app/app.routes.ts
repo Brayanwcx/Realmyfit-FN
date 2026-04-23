@@ -19,9 +19,12 @@ import { Resenas } from './components/resenas/resenas';
 import { Contacto } from './components/contacto/contacto';
 import { MaquinaDetalle } from './components/maquina-detalle/maquina-detalle';
 import { EventoInscripcion } from './components/evento-inscripcion/evento-inscripcion';
+import { PerfilComponent } from './components/perfil/perfil';
+
 export const routes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'login', component: LoginComponent },
+  { path: 'perfil', component: PerfilComponent },
   { path: 'productos', component: ProductosComponent },
   { path: 'entrenadores', component: EntrenadoresComponent },
   { path: 'maquinas', component: MaquinasComponent },

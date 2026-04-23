@@ -22,6 +22,39 @@
   </div>
 </section>
 
+<!-- Image Gallery Showcase -->
+<section class="gallery-section">
+  <div class="container">
+    <div class="section-header text-center">
+      <h2>Nuestras <span class="text-primary">Instalaciones</span></h2>
+      <p>Espacios diseñados para que cada entrenamiento sea una experiencia única</p>
+    </div>
+    <div class="gallery-grid">
+      <div class="gallery-item gallery-large">
+        <img src="images/gym-interior.png" alt="Interior del gimnasio RealMyFit" loading="lazy" />
+        <div class="gallery-overlay">
+          <h4>Zona de Máquinas</h4>
+          <p>Equipamiento de última generación</p>
+        </div>
+      </div>
+      <div class="gallery-item">
+        <img src="images/group-training.png" alt="Clases grupales en RealMyFit" loading="lazy" />
+        <div class="gallery-overlay">
+          <h4>Clases Grupales</h4>
+          <p>Energía y motivación colectiva</p>
+        </div>
+      </div>
+      <div class="gallery-item">
+        <img src="images/gym-weights.png" alt="Zona de pesas RealMyFit" loading="lazy" />
+        <div class="gallery-overlay">
+          <h4>Zona de Pesas</h4>
+          <p>Forja tu fuerza interior</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <app-features></app-features>
 
 <!-- Why Choose Us Section -->
@@ -33,19 +66,31 @@
     </div>
     <div class="why-us-grid">
       <div class="why-card glass">
-        <div class="icon-circle">🏋️</div>
-        <h4>Equipamiento Bio-Mecánico</h4>
-        <p>No son solo pesas; es maquinaria diseñada para el movimiento natural de tu cuerpo minimizando lesiones.</p>
+        <div class="why-card-img">
+          <img src="images/gym-interior.png" alt="Equipamiento bio-mecánico" loading="lazy" />
+        </div>
+        <div class="why-card-content">
+          <h4>Equipamiento Bio-Mecánico</h4>
+          <p>No son solo pesas; es maquinaria diseñada para el movimiento natural de tu cuerpo minimizando lesiones.</p>
+        </div>
       </div>
       <div class="why-card glass">
-        <div class="icon-circle">🧠</div>
-        <h4>Asesoramiento Integral</h4>
-        <p>Entrenamiento, nutrición y recuperación unidos en un ecosistema pensado exclusivamente para tu éxito.</p>
+        <div class="why-card-img">
+          <img src="images/personal-trainer.png" alt="Asesoramiento integral" loading="lazy" />
+        </div>
+        <div class="why-card-content">
+          <h4>Asesoramiento Integral</h4>
+          <p>Entrenamiento, nutrición y recuperación unidos en un ecosistema pensado exclusivamente para tu éxito.</p>
+        </div>
       </div>
       <div class="why-card glass">
-        <div class="icon-circle">🔥</div>
-        <h4>Espacios Motivadores</h4>
-        <p>Ambientes con iluminación dinámica y música envolvente para que cada rutina te llene de energía.</p>
+        <div class="why-card-img">
+          <img src="images/group-training.png" alt="Espacios motivadores" loading="lazy" />
+        </div>
+        <div class="why-card-content">
+          <h4>Espacios Motivadores</h4>
+          <p>Ambientes con iluminación dinámica y música envolvente para que cada rutina te llene de energía.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -96,6 +141,9 @@
         <h2>¿Listo para <span class="text-primary">dar el primer paso</span>?</h2>
         <p>Aprovecha nuestro descuento de bienvenida y empieza a entrenar hoy con la mejor maquinaria humana y técnica.</p>
         <button class="btn-primary btn-large glow-btn" routerLink="/membresias">Unirme Ahora</button>
+      </div>
+      <div class="cta-image">
+        <img src="images/hero-athlete.png" alt="Empieza tu transformación" loading="lazy" />
       </div>
       <div class="cta-visual">
         <div class="abstract-shape shape-1"></div>

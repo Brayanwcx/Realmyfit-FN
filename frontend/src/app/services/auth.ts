@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { catchError, tap } from 'rxjs/operators';
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -13,6 +13,11 @@ export class AuthService {
 
   private userSubject = new BehaviorSubject<any>(this.getUser());
   public currentUser = this.userSubject.asObservable();
+
+  private getAuthHeaders(): HttpHeaders {
+    const token = localStorage.getItem('gym_token');
+    return new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+  }
 
   login(email: string, password: string): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/auth/login`, { email, password }).pipe(
@@ -51,6 +56,20 @@ export class AuthService {
     );
   }
 
+  getUserProfile(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/auth/profile`, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      tap(user => {
+        this.userSubject.next(user);
+      }),
+      catchError(error => {
+        console.error('Error al obtener perfil', error);
+        return throwError(() => new Error('Error al cargar el perfil'));
+      })
+    );
+  }
+
   logout(): void {
     localStorage.removeItem('gym_token');
     localStorage.removeItem('gym_user');
@@ -59,6 +78,12 @@ export class AuthService {
 
   isAuthenticated(): boolean {
     return !!localStorage.getItem('gym_token');
+  }
+
+  isAdmin(): boolean {
+    const user = this.getUser();
+    if (!user?.roles) return false;
+    return user.roles.some((r: any) => r.name === 'ADMIN' || r === 'ADMIN');
   }
 
   getUser() {
