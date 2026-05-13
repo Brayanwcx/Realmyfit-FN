@@ -10,14 +10,13 @@ import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
 import { Role } from '../../../auth/models/roles.model';
 
-@ApiBearerAuth()
-@Roles(Role.ADMIN)
-@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Reviews')
 @Controller('reviews')
 export class ReviewsController {
     constructor(private readonly reviewsService: ReviewsService) {}
 
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
     @Post()
     @ApiOperation({ summary: 'Create a new review' })
     @ApiResponse({ status: 201, description: 'Review created successfully' })
@@ -37,12 +36,18 @@ export class ReviewsController {
         return this.reviewsService.findOne(id);
     }
 
+    @Roles(Role.ADMIN)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @ApiBearerAuth()
     @Patch(':id')
     @ApiOperation({ summary: 'Update a review by id' })
     update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateReviewDto) {
         return this.reviewsService.update(id, dto);
     }
 
+    @Roles(Role.ADMIN)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @ApiBearerAuth()
     @Delete(':id')
     @HttpCode(204)
     @ApiOperation({ summary: 'Delete a review by id' })
