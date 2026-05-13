@@ -1,29 +1,91 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ReviewsService, Review } from '../../core/services/reviews.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-resenas',
-  imports: [CommonModule],
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './resenas.html',
   styleUrls: ['./resenas.scss'],
 })
-export class Resenas {
-  globalRating = 4.9;
-  totalReviews = 1248;
+export class Resenas implements OnInit {
+  private reviewsService = inject(ReviewsService);
+  private authService = inject(AuthService);
+
+  reviews: Review[] = [];
+  globalRating = 0;
+  totalReviews = 0;
   showForm = false;
   selectedRating: number | null = null;
+  currentUser: any = null;
 
-  reviews = [
-    { name: 'Diana Salazar', role: 'Miembro VIP', rating: 5, date: 'Hace 2 días', text: 'El ambiente y las máquinas son de otro nivel. Realmente me motivan a dar el 100% cada día. La zona de fuerza es mi favorita.' },
-    { name: 'Carlos Mendoza', role: 'Principiante', rating: 5, date: 'Hace 1 semana', text: 'Los entrenadores son súper atentos. Empecé desde cero y me han guiado en todo mi proceso. Las instalaciones, impecables.' },
-    { name: 'Laura Gómez', role: 'Atleta Pro', rating: 4, date: 'Hace 2 semanas', text: 'Excelente equipamiento de CrossFit. Solo sugeriría ampliar un poco el área de estiramientos, pero en general es el mejor gym de la ciudad en tecnología.' },
-    { name: 'Andrés Felipe', role: 'Miembro Élite', rating: 5, date: 'Hace 1 mes', text: 'Sus eventos son increíbles. Fui a la masterclass de spinning y la energía estuvo brutal, hasta invitaron un DJ sorpresa. Totalmente recomendado.' },
-    { name: 'Valentina C.', role: 'Fitness Lover', rating: 5, date: 'Hace 1 mes', text: 'La iluminación, la música y el diseño del gym hacen que quieras entrenar más. La app para reservar eventos o productos también funciona de maravilla y ahorra filas.' },
-    { name: 'Javier Rocha', role: 'Miembro Regular', rating: 4, date: 'Hace 2 meses', text: 'Muy buenas instalaciones y máquinas de primer nivel. El horario de atención nocturno es súper conveniente.' }
-  ];
+  // Form
+  newRating: number = 5;
+  newComment: string = '';
+  isSubmitting = false;
+
+  ngOnInit() {
+    this.authService.currentUser.subscribe(user => {
+      this.currentUser = user;
+    });
+    this.fetchReviews();
+  }
+
+  fetchReviews() {
+    this.reviewsService.getReviews().subscribe({
+      next: (data) => {
+        // Only show active reviews
+        this.reviews = data.filter(r => r.isActive !== false);
+        this.totalReviews = this.reviews.length;
+        if (this.totalReviews > 0) {
+          const sum = this.reviews.reduce((acc, r) => acc + r.rating, 0);
+          this.globalRating = Number((sum / this.totalReviews).toFixed(1));
+        } else {
+          this.globalRating = 0;
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching reviews:', err);
+      }
+    });
+  }
 
   toggleForm() {
+    if (!this.currentUser) {
+      alert('Debes iniciar sesión para publicar una reseña');
+      return;
+    }
     this.showForm = !this.showForm;
+    this.newRating = 5;
+    this.newComment = '';
+  }
+
+  submitReview() {
+    if (!this.currentUser) return;
+    
+    this.isSubmitting = true;
+    this.reviewsService.createReview(this.newRating, this.newComment, this.currentUser.id || this.currentUser.sub).subscribe({
+      next: (review) => {
+        // Optimistically add it since it defaults to active: true
+        this.reviews.unshift({...review, user: this.currentUser});
+        this.totalReviews++;
+        // Recalculate global rating
+        const sum = this.reviews.reduce((acc, r) => acc + r.rating, 0);
+        this.globalRating = Number((sum / this.totalReviews).toFixed(1));
+        
+        this.isSubmitting = false;
+        this.showForm = false;
+        alert('¡Reseña publicada con éxito!');
+      },
+      error: (err) => {
+        console.error('Error creating review', err);
+        this.isSubmitting = false;
+        alert('Ocurrió un error al publicar la reseña');
+      }
+    });
   }
 
   get filteredReviews() {

@@ -22,7 +22,10 @@ export class Review {
     @CreateDateColumn()
     createdAt: Date;
 
-    @ManyToOne(() => User, (user) => user.reviews, { eager: true })
+    @Column({ type: 'boolean', default: true })
+    isActive: boolean;
+
+    @ManyToOne(() => User, (user) => user.reviews)
     @JoinColumn({ name: 'user_id' })
     user: User;
 

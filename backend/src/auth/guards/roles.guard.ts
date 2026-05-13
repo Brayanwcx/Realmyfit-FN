@@ -23,9 +23,10 @@ export class RolesGuard implements CanActivate {
     }
 
     // Buscamos si el usuario tiene el rol requerido o el rol de administrador
-    const hasRole = user.roles.some((roleObj: any) => 
-        requiredRoles.includes(roleObj.name as Role) || roleObj.name === Role.ADMIN
-    );
+    const hasRole = user.roles.some((roleObj: any) => {
+        const roleName = typeof roleObj === 'string' ? roleObj.toLowerCase() : (roleObj.name || '').toLowerCase();
+        return requiredRoles.some(r => r.toLowerCase() === roleName) || roleName === Role.ADMIN.toLowerCase();
+    });
 
     if (!hasRole) {
       throw new ForbiddenException(`Require one of these roles: ${requiredRoles}`);

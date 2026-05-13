@@ -25,6 +25,7 @@ import { AdminUsersComponent } from './features/admin/users';
 import { AdminProductsComponent } from './features/admin/products';
 import { AdminPlaceholderComponent } from './features/admin/placeholder';
 import { AdminMembershipsComponent } from './features/admin/memberships';
+import { AdminReviewsComponent } from './features/admin/reviews';
 
 export const routes: Routes = [
   // ─── Públicas ──────────────────────────────────────────────────
@@ -59,6 +60,7 @@ export const routes: Routes = [
       { path: 'products', component: AdminProductsComponent },
       { path: 'memberships', component: AdminMembershipsComponent },
       { path: 'events', component: AdminPlaceholderComponent },
+      { path: 'reviews', component: AdminReviewsComponent },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   },
