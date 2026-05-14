@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
+import { Machine } from '../../core/services/machines.service';
 
 @Component({
   selector: 'app-maquina-detalle',
@@ -10,29 +11,42 @@ import { CommonModule } from '@angular/common';
   styleUrl: './maquina-detalle.scss',
 })
 export class MaquinaDetalle implements OnInit {
-  videoUrl!: SafeResourceUrl;
-  maquina: any = null;
+  videoUrl!: SafeResourceUrl | null;
+  maquina: Machine | null = null;
 
   constructor(private sanitizer: DomSanitizer, private router: Router) {
     const nav = this.router.getCurrentNavigation();
     if (nav?.extras.state) {
-      this.maquina = nav.extras.state['maquina'];
+      this.maquina = nav.extras.state['maquina'] as Machine;
     }
   }
 
   ngOnInit() {
-    // Si no pasaron máquina por estado, generamos una por defecto
-    if (!this.maquina) {
-      this.maquina = {
-        name: 'Prensa Atlética 45°',
-        cat: 'Fuerza',
-        desc: 'Concebida para atletas de alto rendimiento. Ofrece un recorrido biomecánico perfecto que aísla los cuádriceps, femorales y glúteos de forma segura y efectiva, reduciendo la presión en la columna lumbar.',
-        youtubeId: 'FCHm4L2X0hE' // Un video aleatorio real/ejemplo de prensa
-      };
-    }
+    if (this.maquina?.videoUrl) {
+      // Soportar URLs de YouTube completas o IDs cortos
+      const rawUrl = this.maquina.videoUrl;
+      let embedUrl = rawUrl;
 
-    // Asegurar la url de youtube para el iframe embed
-    const url = `https://www.youtube.com/embed/${this.maquina.youtubeId || 'FCHm4L2X0hE'}`;
-    this.videoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+      if (rawUrl.includes('youtube.com/watch')) {
+        const videoId = new URL(rawUrl).searchParams.get('v');
+        embedUrl = `https://www.youtube.com/embed/${videoId}`;
+      } else if (rawUrl.includes('youtu.be/')) {
+        const videoId = rawUrl.split('youtu.be/')[1].split('?')[0];
+        embedUrl = `https://www.youtube.com/embed/${videoId}`;
+      }
+
+      this.videoUrl = this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
+    } else {
+      this.videoUrl = null;
+    }
+  }
+
+  getStatusText(status: string): string {
+    switch (status) {
+      case 'AVAILABLE': return 'Disponible';
+      case 'IN_MAINTENANCE': return 'En Mantenimiento';
+      case 'OUT_OF_SERVICE': return 'Fuera de Servicio';
+      default: return status;
+    }
   }
 }

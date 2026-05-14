@@ -4,32 +4,61 @@
     <p class="page-subtitle">Explora nuestras instalaciones equipadas con maquinaria de última generación para llevar tu entrenamiento físico al óptimo rendimiento.</p>
   </div>
 
-  <div class="container machines-grid">
-    @for (machine of maquinas; track machine.name) {
-      <div class="machine-card glass">
-        <div class="machine-image">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" class="machine-icon" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <!-- Dumbbell / equipment abstract SVG -->
-            <path d="M6 3v18"></path>
-            <path d="M18 3v18"></path>
-            <path d="M6 12h12"></path>
-            <path d="M4 6h4"></path>
-            <path d="M4 18h4"></path>
-            <path d="M16 6h4"></path>
-            <path d="M16 18h4"></path>
-          </svg>
-        </div>
-        
-        <div class="machine-info">
-          <span class="machine-category">{{ machine.cat }}</span>
-          <h3 class="machine-name">{{ machine.name }}</h3>
-          <p class="machine-desc">{{ machine.desc }}</p>
-        </div>
-        
-        <div class="machine-actions">
-          <button class="btn-primary w-100" [routerLink]="['/ficha-tecnica']" [state]="{ maquina: machine }">Ver Ficha Técnica</button>
-        </div>
+  <div class="container">
+
+    @if (loading) {
+      <div class="state-message">Cargando equipamiento...</div>
+    }
+
+    @if (errorMessage) {
+      <div class="state-message error">{{ errorMessage }}</div>
+    }
+
+    @if (!loading && !errorMessage && maquinas.length === 0) {
+      <div class="state-message">No hay equipamiento registrado aún.</div>
+    }
+
+    @if (!loading && !errorMessage && maquinas.length > 0) {
+      <div class="machines-grid">
+        @for (machine of maquinas; track machine.id) {
+          <div class="machine-card glass">
+
+            <div class="machine-image">
+              @if (machine.imageUrl) {
+                <img [src]="machine.imageUrl" [alt]="machine.name" class="machine-img">
+              } @else {
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" class="machine-icon" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 3v18"></path>
+                  <path d="M18 3v18"></path>
+                  <path d="M6 12h12"></path>
+                  <path d="M4 6h4"></path>
+                  <path d="M4 18h4"></path>
+                  <path d="M16 6h4"></path>
+                  <path d="M16 18h4"></path>
+                </svg>
+              }
+            </div>
+
+            <div class="machine-info">
+              @if (machine.category) {
+                <span class="machine-category">{{ machine.category }}</span>
+              }
+              <h3 class="machine-name">{{ machine.name }}</h3>
+              @if (machine.description) {
+                <p class="machine-desc">{{ machine.description }}</p>
+              }
+              @if (machine.status !== 'AVAILABLE') {
+                <span class="machine-status-badge">{{ getStatusText(machine.status) }}</span>
+              }
+            </div>
+
+            <div class="machine-actions">
+              <button class="btn-primary w-100" [routerLink]="['/ficha-tecnica']" [state]="{ maquina: machine }">Ver Ficha Técnica</button>
+            </div>
+          </div>
+        }
       </div>
     }
+
   </div>
 </section>
