@@ -1,0 +1,79 @@
+<section class="page-wrapper inscription-section">
+  <div class="container">
+    <div class="header-back">
+      <button class="btn-secondary glass" routerLink="/eventos">← Volver a Eventos</button>
+    </div>
+
+    <!-- Grid 2 columns: Left = Event Info, Right = Form -->
+    <div class="inscription-grid">
+      
+      <div class="event-details glass">
+        <div class="event-image-cover">
+          <img [src]="evento.image" [alt]="evento.title">
+          <div class="event-date-badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="mr-1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            {{ evento.date }}
+          </div>
+        </div>
+
+        <div class="event-text">
+          <h2>{{ evento.title }}</h2>
+          <p class="instructor">Instructor: <span class="text-primary">{{ evento.instructor }}</span></p>
+          <hr class="divider">
+          <p class="description">{{ evento.desc }}</p>
+          
+          <div class="highlights">
+            <div class="highlight-item">
+               <span>🔥</span><span>Alta Intensidad</span>
+            </div>
+            <div class="highlight-item">
+               <span>🏆</span><span>Para todos los niveles</span>
+            </div>
+            <div class="highlight-item">
+               <span>⏱️</span><span>90 Minutos de duración</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="inscription-form-container glass">
+        <div class="form-header">
+          <h1 class="page-title">Termina tu <span class="text-primary">Reserva</span></h1>
+          <p class="text-muted">Estás a un paso de asegurar tu lugar. Confirma tus datos abajo.</p>
+        </div>
+
+        <form class="inscription-form" (submit)="confirmInscripcion($event)">
+          <div class="form-group">
+            <label>Nombre Completo</label>
+            <input type="text" class="form-control" placeholder="Ej. Carlos Mendoza" required>
+          </div>
+
+          <div class="form-group">
+            <label>Correo Electrónico</label>
+            <input type="email" class="form-control" placeholder="tu@correo.com" required>
+          </div>
+
+          <div class="form-group">
+            <label>Número de Contacto</label>
+            <input type="tel" class="form-control" placeholder="+57 300 000 0000" required>
+          </div>
+
+          <div class="form-options">
+            <label class="checkbox-container">
+              <input type="checkbox" required>
+              Acepto términos y condiciones de participación
+            </label>
+          </div>
+
+          <button type="submit" class="btn-primary w-100 mt-4 glow-btn">Confirmar Asistencia</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</section>

@@ -1,0 +1,12 @@
+<!-- Main View Container -->
+<app-navbar *ngIf="!isAdminRoute()"></app-navbar>
+
+<main [class.admin-mode]="isAdminRoute()">
+  <!-- Router Outlet conditionally loads Home, Login, or Admin -->
+  <router-outlet></router-outlet>
+</main>
+
+<app-footer *ngIf="!isAdminRoute()"></app-footer>
+
+<!-- Chatbot Widget -->
+<app-chatbot *ngIf="!isAdminRoute()"></app-chatbot>

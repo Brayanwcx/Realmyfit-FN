@@ -1,0 +1,55 @@
+<section class="page-wrapper detail-section">
+  <div class="container">
+    <div class="header-back">
+      <button class="btn-secondary glass" routerLink="/maquinas">← Volver a Máquinas</button>
+    </div>
+
+    <div class="detail-grid">
+      <!-- Media/Video section -->
+      <div class="video-container glass">
+        <div class="video-player" style="padding: 0; border: none;">
+          <iframe 
+            [src]="videoUrl" 
+            width="100%" 
+            height="100%" 
+            frameborder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowfullscreen
+            style="border-radius: 16px;">
+          </iframe>
+        </div>
+      </div>
+
+      <!-- Tech specs section -->
+      <div class="tech-specs glass">
+        <span class="badge-category">{{ maquina.cat }}</span>
+        <h1 class="machine-title">{{ maquina.name }} <span class="text-primary">Pro Series</span></h1>
+        
+        <p class="machine-desc">{{ maquina.desc }}</p>
+
+        <div class="spec-list">
+          <div class="spec-item">
+            <span class="spec-label">Carga Máxima:</span>
+            <span class="spec-value">450 kg</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Dimensiones:</span>
+            <span class="spec-value">220cm x 150cm x 140cm</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Enfoque Muscular:</span>
+            <span class="spec-value">Tren Inferior Completo</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Nivel Recomendado:</span>
+            <span class="spec-value">Intermedio / Avanzado</span>
+          </div>
+        </div>
+
+        <div class="train-action">
+           <button class="btn-primary w-100 glow-btn" routerLink="/membresias">Reservar Sesión de Entrenamiento</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

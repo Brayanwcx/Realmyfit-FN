@@ -1,0 +1,236 @@
+.contact-section {
+  padding-top: 8rem;
+  padding-bottom: 6rem;
+  min-height: 100vh;
+}
+
+.contact-header {
+  text-align: center;
+  margin-bottom: 4rem;
+  
+  .page-title {
+    font-size: clamp(2.5rem, 4vw, 3.5rem);
+    margin-bottom: 1rem;
+    color: var(--color-text-main);
+    .text-primary { color: var(--color-primary); }
+  }
+  .page-subtitle {
+    color: var(--color-text-muted);
+    font-size: 1.1rem;
+    max-width: 650px;
+    margin: 0 auto;
+  }
+}
+
+/* Method Cards */
+.contact-methods-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin-bottom: 5rem;
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.method-card {
+  padding: 2.5rem 2rem;
+  border-radius: 20px;
+  text-align: center;
+  transition: var(--transition-medium);
+  background: linear-gradient(145deg, rgba(30, 30, 30, 0.6), rgba(15, 15, 15, 0.8));
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: var(--color-primary);
+    transform: scaleX(0);
+    transition: transform 0.4s ease;
+  }
+
+  &:hover {
+    transform: translateY(-8px);
+    &::before { transform: scaleX(1); }
+    .icon-circle {
+      background: var(--color-primary);
+      color: #fff;
+      box-shadow: 0 10px 20px rgba(39, 174, 96, 0.4);
+    }
+  }
+
+  .icon-circle {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    transition: var(--transition-medium);
+  }
+
+  h3 {
+    font-size: 1.3rem;
+    color: var(--color-text-main);
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    color: var(--color-text-muted);
+    line-height: 1.6;
+    font-size: 0.95rem;
+  }
+}
+
+/* Main Grid (Form vs Map) */
+.contact-main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: stretch;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Contact Form */
+.contact-form-container {
+  padding: 3rem;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(20,20,20,0.8), rgba(0,0,0,0.9));
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+
+  h2 {
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-text-main);
+    .text-primary { color: var(--color-primary); }
+  }
+
+  .form-desc {
+    color: var(--color-text-muted);
+    margin-bottom: 2.5rem;
+  }
+
+  .form-group-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+
+    @media (max-width: 600px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--color-text-main);
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 1rem;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #fff;
+      font-family: inherit;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+
+      &:focus {
+        outline: none;
+        border-color: var(--color-primary);
+        box-shadow: 0 0 15px rgba(39, 174, 96, 0.2);
+        background: rgba(0,0,0,0.6);
+      }
+
+      option {
+        background-color: #1a1a1a;
+        color: #fff;
+        padding: 10px;
+      }
+    }
+  }
+
+  textarea.form-control {
+    resize: vertical;
+  }
+
+  .glow-btn {
+    padding: 1.1rem;
+    font-size: 1.1rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 20px rgba(39, 174, 96, 0.2);
+    margin-top: 1rem;
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 10px 30px rgba(39, 174, 96, 0.4);
+      transform: translateY(-2px);
+    }
+  }
+}
+
+/* Map */
+.map-container {
+  border-radius: 24px;
+  overflow: hidden;
+  padding: 1rem;
+  background: rgba(255,255,255,0.03);
+  display: flex;
+
+  .map-wrapper {
+    width: 100%;
+    min-height: 400px;
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255,255,255,0.05);
+
+    /* TRICK INNOVADOR: Invertir mapa estándar blanco para hacerlo modo noche / dark mode estilo hacker */
+    iframe {
+      filter: invert(90%) hue-rotate(180deg) contrast(110%); 
+      transition: var(--transition-slow);
+      &:hover { filter: invert(90%) hue-rotate(180deg) contrast(130%); }
+    }
+
+    .map-overlay-badge {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: var(--color-primary);
+      color: #fff;
+      padding: 0.8rem 1.5rem;
+      border-radius: 30px;
+      font-weight: 700;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+      animation: float 3s ease-in-out infinite;
+      pointer-events: none;
+    }
+  }
+}
+
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0); }
+}
+
+.w-100 { width: 100%; }

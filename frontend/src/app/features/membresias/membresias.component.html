@@ -1,0 +1,191 @@
+<section class="page-wrapper relative overflow-hidden">
+  <!-- Dynamic Background Effects -->
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+  <div class="bg-glow bg-glow-3"></div>
+
+  <div class="container relative z-10">
+    <div class="page-header">
+      <div class="badge-pill mb-4">Suscripciones</div>
+      <h1 class="page-title">
+        Desbloquea tu <span class="text-gradient">Verdadero Potencial</span>
+      </h1>
+      <p class="page-subtitle">Elige el nivel de intensidad que transformará tu vida. Sin contratos ocultos, sin excusas. Solo resultados.</p>
+    </div>
+
+    <!-- Loading Skeleton -->
+    @if (loading) {
+      <div class="pricing-grid">
+        @for (i of [1,2,3]; track i) {
+          <div class="pricing-card glass skeleton-card">
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-price"></div>
+            <div class="skeleton skeleton-desc"></div>
+            <div class="skeleton skeleton-line"></div>
+            <div class="skeleton skeleton-line"></div>
+            <div class="skeleton skeleton-line"></div>
+            <div class="skeleton skeleton-btn"></div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Error State -->
+    @if (!loading && errorMessage) {
+      <div class="error-container">
+        <div class="error-card glass">
+          <div class="error-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </div>
+          <h3>¡Ups! Algo salió mal</h3>
+          <p>{{ errorMessage }}</p>
+          <button class="btn-glow" (click)="loadPlans()">Reintentar</button>
+        </div>
+      </div>
+    }
+
+    <!-- Plans Grid -->
+    @if (!loading && !errorMessage && planes.length > 0) {
+      <div class="pricing-grid" [class.has-multiple]="planes.length > 1">
+        @for (plan of planes; track plan.id) {
+          <div class="pricing-card glass-card" [class.recommended]="plan.recommended">
+            @if (plan.recommended) {
+              <div class="recommended-badge">
+                <span class="sparkle">✨</span> EL MÁS ELEGIDO
+              </div>
+            }
+            
+            <div class="card-header">
+              <h3 class="plan-name">{{ plan.name }}</h3>
+              @if (plan.description) {
+                <p class="plan-description">{{ plan.description }}</p>
+              }
+            </div>
+
+            <div class="plan-price-wrapper">
+              <div class="plan-price">
+                <span class="currency">$</span>
+                <span class="amount">{{ plan.price | number:'1.0-0' }}</span>
+              </div>
+              <span class="period">{{ getDurationLabel(plan.durationDays) }}</span>
+            </div>
+            
+            <div class="features-wrapper">
+              <p class="features-title">¿Qué incluye?</p>
+              <ul class="plan-features">
+                @for (feature of plan.features; track feature) {
+                  <li>
+                    <div class="check-wrapper">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="check-icon">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    </div>
+                    <span>{{ feature }}</span>
+                  </li>
+                }
+              </ul>
+            </div>
+            
+            <button 
+              class="btn-select"
+              [class.btn-primary-gradient]="plan.recommended"
+              [class.btn-outline]="!plan.recommended"
+              (click)="selectPlan(plan)"
+              id="select-plan-{{ plan.id }}">
+              Elegir {{ plan.name }}
+            </button>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Empty State -->
+    @if (!loading && !errorMessage && planes.length === 0) {
+      <div class="empty-container">
+        <div class="empty-card glass">
+          <div class="empty-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+          </div>
+          <h3>Aún no hay planes</h3>
+          <p>Estamos preparando las mejores membresías para ti. Vuelve pronto.</p>
+        </div>
+      </div>
+    }
+  </div>
+</section>
+
+<!-- Confirmation Modal -->
+@if (showConfirmModal && selectedPlan) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content glass-premium" (click)="$event.stopPropagation()">
+      <div class="modal-glow"></div>
+      <button class="btn-close" (click)="closeModal()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+
+      <div class="modal-header-centered">
+        <div class="modal-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+        </div>
+        <h3>Confirma tu Suscripción</h3>
+        <p>Estás a un paso de comenzar tu transformación</p>
+      </div>
+
+      <div class="confirm-plan-card">
+        <div class="plan-summary-header">
+          <span class="plan-summary-name">{{ selectedPlan.name }}</span>
+          <span class="plan-summary-badge">{{ selectedPlan.durationDays }} Días</span>
+        </div>
+        <div class="plan-summary-price">
+          <span class="currency">$</span>{{ selectedPlan.price | number:'1.0-0' }}
+        </div>
+        <div class="plan-summary-divider"></div>
+        <div class="plan-summary-row">
+          <span>Fecha de inicio</span>
+          <span class="text-white">Hoy</span>
+        </div>
+        <div class="plan-summary-row">
+          <span>Total a pagar</span>
+          <span class="text-white text-bold">${{ selectedPlan.price | number:'1.0-0' }}</span>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="closeModal()" [disabled]="subscribing">Cancelar</button>
+        <button class="btn-confirm-glow" (click)="confirmSubscription()" [disabled]="subscribing">
+          @if (subscribing) {
+            <div class="spinner"></div> Activando...
+          } @else {
+            Suscribirme Ahora
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Toast Notification -->
+@if (toast.show) {
+  <div class="toast-modern" [class.success]="toast.type === 'success'" [class.error]="toast.type === 'error'">
+    <div class="toast-icon">
+      <svg *ngIf="toast.type === 'success'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+      <svg *ngIf="toast.type === 'error'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="15" y1="9" x2="9" y2="15"></line>
+        <line x1="9" y1="9" x2="15" y2="15"></line>
+      </svg>
+    </div>
+    <div class="toast-content">
+      <span class="toast-title">{{ toast.type === 'success' ? '¡Éxito!' : 'Error' }}</span>
+      <span class="toast-message">{{ toast.message }}</span>
+    </div>
+  </div>
+}
