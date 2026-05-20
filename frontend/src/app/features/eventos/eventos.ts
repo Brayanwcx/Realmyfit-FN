@@ -1,17 +1,43 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { EventsService } from '../../core/services/events.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-eventos',
-  imports: [RouterLink],
+  standalone: true,
+  imports: [RouterLink, CommonModule],
   templateUrl: './eventos.component.html',
   styleUrls: ['./eventos.component.scss'],
 })
-export class EventosComponent {
-  eventos = [
-    { title: 'Maratón de Spinning', date: 'Viernes, 20:00 hrs', instructor: 'Sarah Connor', spots: 5, image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop' },
-    { title: 'Masterclass: Fuerza Bruta', date: 'Sábado, 10:00 hrs', instructor: 'Marcus Vance', spots: 0, image: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=1470&auto=format&fit=crop' },
-    { title: 'Taller de Core y Flexibilidad', date: 'Domingo, 09:00 hrs', instructor: 'Elena Rojas', spots: 12, image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=1470&auto=format&fit=crop' },
-    { title: 'Torneo Crossfit Amateur', date: 'Próximo Mes', instructor: 'David Lee', spots: 24, image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1470&auto=format&fit=crop' }
-  ];
+export class EventosComponent implements OnInit {
+  private eventsService = inject(EventsService);
+  private apiBase = environment.apiUrl;
+  
+  eventos: any[] = [];
+  loading = true;
+
+  ngOnInit() {
+    this.eventsService.getEventsPublic().subscribe({
+      next: (data) => {
+        this.eventos = data.filter(e => e.isActive).map(e => ({
+          ...e,
+          instructor: 'Inst. Profesional',
+          spots: e.capacity || 0,
+          image: e.imageUrl ? this.resolveImageUrl(e.imageUrl) : 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b',
+        }));
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+      }
+    });
+  }
+
+  resolveImageUrl(url: string): string {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    return `${this.apiBase}${url}`;
+  }
 }

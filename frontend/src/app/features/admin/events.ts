@@ -312,7 +312,7 @@ export class AdminEventsComponent implements OnInit {
     if (this.selectedFile) {
         this.eventsService.uploadImage(this.selectedFile).subscribe({
           next: (uploadRes) => {
-            this.newEvent.imageUrl = uploadRes.url;
+            this.newEvent.imageUrl = uploadRes.imageUrl;
             this.saveEventData();
           },
           error: (err) => {

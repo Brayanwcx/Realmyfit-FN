@@ -23,7 +23,9 @@ import { AdminComponent } from './features/admin/admin';
 import { AdminDashboardComponent } from './features/admin/dashboard';
 import { AdminUsersComponent } from './features/admin/users';
 import { AdminProductsComponent } from './features/admin/products';
-import { AdminPlaceholderComponent } from './features/admin/placeholder';
+import { AdminTrainersComponent } from './features/admin/trainers';
+import { AdminEventsComponent } from './features/admin/events';
+import { AdminEventRegistrationsComponent } from './features/admin/event-registrations';
 import { AdminMembershipsComponent } from './features/admin/memberships';
 import { AdminMachinesComponent } from './features/admin/machines';
 
@@ -57,10 +59,12 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard', component: AdminDashboardComponent },
       { path: 'users', component: AdminUsersComponent },
+      { path: 'trainers', component: AdminTrainersComponent },
       { path: 'products', component: AdminProductsComponent },
       { path: 'memberships', component: AdminMembershipsComponent },
       { path: 'machines', component: AdminMachinesComponent },
-      { path: 'events', component: AdminPlaceholderComponent },
+      { path: 'events', component: AdminEventsComponent },
+      { path: 'event-registrations', component: AdminEventRegistrationsComponent },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   },
