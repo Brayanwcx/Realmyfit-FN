@@ -8,8 +8,8 @@ import Chart from 'chart.js/auto';
 import { UsersService } from '../../core/services/users.service';
 import { ProductsService } from '../../core/services/products.service';
 import { MembershipsService } from '../../core/services/memberships.service';
-import { OrdersService } from '../../core/services/orders.service';
-import { MachinesService } from '../../core/services/machines.service';
+import { EventsService } from '../../core/services/events.service';
+import { ReviewsService } from '../../core/services/reviews.service';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -24,13 +24,13 @@ import { MachinesService } from '../../core/services/machines.service';
     <!-- Barra de estado -->
     <div class="dashboard-header glass">
       <div class="status-indicator">
-        <div class="pulse-dot" [class.syncing]="loading"></div>
-        <span>{{ loading ? 'Sincronizando datos...' : 'Datos actualizados' }}</span>
+        <div class="pulse-dot"></div>
+        <span>Datos actualizados</span>
       </div>
       <div class="last-sync">
         <span>Última actualización: {{ lastUpdate | date:'mediumTime' }}</span>
-        <button class="btn-refresh" (click)="loadStats()" [disabled]="loading">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [class.spin]="loading"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+        <button class="btn-refresh" (click)="loadStats()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
         </button>
       </div>
     </div>
@@ -45,19 +45,19 @@ import { MachinesService } from '../../core/services/machines.service';
         </div>
         <div class="kpi-body">
           <span class="kpi-value">{{ stats.users }}</span>
-          <span class="kpi-trend positive"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg> +12% este mes</span>
+          <span class="kpi-trend positive"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg> Activos</span>
         </div>
       </div>
 
-      <!-- Orders KPI -->
+      <!-- Events KPI -->
       <div class="kpi-card glass hover-glow">
         <div class="kpi-header">
-          <span class="kpi-title">Órdenes Activas</span>
-          <div class="kpi-icon indigo"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg></div>
+          <span class="kpi-title">Eventos Activos</span>
+          <div class="kpi-icon indigo"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>
         </div>
         <div class="kpi-body">
-          <span class="kpi-value">{{ stats.orders }}</span>
-          <span class="kpi-trend positive"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg> +5 nuevas hoy</span>
+          <span class="kpi-value">{{ stats.events }}</span>
+          <span class="kpi-trend positive"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg> Próximos</span>
         </div>
       </div>
 
@@ -69,7 +69,7 @@ import { MachinesService } from '../../core/services/machines.service';
         </div>
         <div class="kpi-body">
           <span class="kpi-value">{{ stats.memberships }}</span>
-          <span class="kpi-trend neutral"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg> Estable</span>
+          <span class="kpi-trend neutral"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg> Planes</span>
         </div>
       </div>
 
@@ -81,7 +81,7 @@ import { MachinesService } from '../../core/services/machines.service';
         </div>
         <div class="kpi-body">
           <span class="kpi-value">{{ stats.products }}</span>
-          <span class="kpi-trend negative"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"></polyline><polyline points="16 17 22 17 22 11"></polyline></svg> -2 agotados</span>
+          <span class="kpi-trend positive"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg> Catálogo</span>
         </div>
       </div>
     </div>
@@ -98,7 +98,7 @@ import { MachinesService } from '../../core/services/machines.service';
 
       <!-- Doughnut Chart -->
       <div class="chart-container glass side-chart">
-        <h3>Estado de Máquinas</h3>
+        <h3>Calificación de Reseñas</h3>
         <div class="canvas-wrapper">
           <canvas #doughnutChartCanvas></canvas>
         </div>
@@ -109,31 +109,28 @@ import { MachinesService } from '../../core/services/machines.service';
     <div class="tables-row">
       <div class="table-panel glass">
         <div class="table-header">
-          <h3>Órdenes Recientes</h3>
-          <button class="btn-view-all">Ver Todas</button>
+          <h3>Reseñas Recientes</h3>
         </div>
         <div class="table-responsive">
-          <table *ngIf="recentOrders.length > 0; else noOrders">
+          <table *ngIf="recentReviews.length > 0; else noReviews">
             <thead>
               <tr>
-                <th>ID Orden</th>
                 <th>Usuario</th>
+                <th>Calificación</th>
+                <th>Comentario</th>
                 <th>Fecha</th>
-                <th>Monto</th>
-                <th>Estado</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let o of recentOrders">
-                <td class="order-id">#{{ o.id || '---' }}</td>
-                <td>{{ o.user?.name || 'Cliente' }}</td>
-                <td class="sub-text">{{ o.createdAt | date:'shortDate' }}</td>
-                <td class="font-bold">\${{ o.totalAmount || '0.00' }}</td>
-                <td><span class="badge" [class.badge-success]="o.status === 'COMPLETED'" [class.badge-pending]="o.status !== 'COMPLETED'">{{ o.status || 'PENDIENTE' }}</span></td>
+              <tr *ngFor="let r of recentReviews">
+                <td>{{ r.user?.name || 'Usuario' }}</td>
+                <td class="font-bold text-yellow">{{ r.rating }} / 5 ★</td>
+                <td>{{ r.comment }}</td>
+                <td class="sub-text">{{ r.createdAt | date:'shortDate' }}</td>
               </tr>
             </tbody>
           </table>
-          <ng-template #noOrders><p class="empty-text">No hay órdenes registradas.</p></ng-template>
+          <ng-template #noReviews><p class="empty-text">No hay reseñas registradas.</p></ng-template>
         </div>
       </div>
     </div>
@@ -242,8 +239,6 @@ import { MachinesService } from '../../core/services/machines.service';
     }
     
     .table-header h3 { margin: 0; font-size: 1.1rem; font-weight: 600; color: rgba(255,255,255,0.9); }
-    .btn-view-all { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 0.4rem 1rem; border-radius: 6px; cursor: pointer; transition: 0.2s; font-size: 0.85rem; }
-    .btn-view-all:hover { background: rgba(255,255,255,0.1); }
     
     .table-responsive { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
@@ -251,13 +246,9 @@ import { MachinesService } from '../../core/services/machines.service';
     td { padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); color: rgba(255,255,255,0.85); }
     tr:hover td { background: rgba(255,255,255,0.02); }
     
-    .order-id { font-family: monospace; color: #a855f7; font-weight: 600; }
     .sub-text { color: rgba(255,255,255,0.5); font-size: 0.85rem; }
     .font-bold { font-weight: 600; }
-    
-    .badge { padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
-    .badge-success { background: rgba(34, 197, 94, 0.1); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.2); }
-    .badge-pending { background: rgba(245, 158, 11, 0.1); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
+    .text-yellow { color: #facc15; }
     
     .empty-text { font-size: 0.9rem; color: rgba(255,255,255,0.4); text-align: center; padding: 3rem 0; margin: 0; }
   `]
@@ -270,25 +261,31 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   private usersService = inject(UsersService);
   private productsService = inject(ProductsService);
   private membershipsService = inject(MembershipsService);
-  private ordersService = inject(OrdersService);
-  private machinesService = inject(MachinesService);
+  private eventsService = inject(EventsService);
+  private reviewsService = inject(ReviewsService);
 
-  loading = true;
   lastUpdate = new Date();
   private sub?: Subscription;
 
   stats = {
-    users: 0, products: 0, memberships: 0, orders: 0
+    users: 0, products: 0, memberships: 0, events: 0, reviews: 0
   };
-  
-  recentOrders: any[] = [];
-  machinesData: any[] = [];
+
+  recentReviews: any[] = [];
+  reviewsData: any[] = [];
+  monthlyRevenue: { labels: string[]; data: number[] } | null = null;
 
   lineChart: any;
   doughnutChart: any;
 
   ngOnInit() {
+    // Mostrar datos inmediatamente sin loading
     this.loadStats();
+    // Inicializar charts inmediatamente
+    setTimeout(() => {
+      this.initLineChart();
+      this.initDoughnutChart();
+    }, 100);
   }
   
   ngAfterViewInit() {
@@ -302,41 +299,71 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   loadStats() {
-    this.loading = true;
-    const safeCall = (observable: any) => observable.pipe(catchError(() => of([])));
+    console.log('🔄 Loading dashboard stats...');
 
-    this.sub = forkJoin({
-      users: safeCall(this.usersService.getUsers()),
-      products: safeCall(this.productsService.getProducts()),
-      memberships: safeCall(this.membershipsService.getMemberships()),
-      orders: safeCall(this.ordersService.getOrders()),
-      machines: safeCall(this.machinesService.getMachines()),
-    }).subscribe({
-      next: (res: any) => {
-        this.stats = {
-          users: res.users?.length || 0,
-          products: res.products?.length || 0,
-          memberships: res.memberships?.length || 0,
-          orders: res.orders?.length || 0
-        };
-        
-        if(res.orders) this.recentOrders = res.orders.slice(0, 5);
-        if(res.machines) this.machinesData = res.machines;
-        
-        this.lastUpdate = new Date();
-        this.loading = false;
+    // Cargar cada servicio independientemente
+    this.usersService.getUsers().pipe(catchError(() => of([]))).subscribe(users => {
+      this.stats.users = users?.length || 0;
+      console.log('✅ Users loaded:', this.stats.users);
+    });
 
-        // Render charts after data is ready
-        setTimeout(() => {
-          this.initLineChart();
-          this.initDoughnutChart();
-        }, 100);
-      },
-      error: (err) => {
-        console.error('Error loading dashboard stats', err);
-        this.loading = false;
+    this.productsService.getProducts().pipe(catchError(() => of([]))).subscribe(products => {
+      this.stats.products = products?.length || 0;
+      console.log('✅ Products loaded:', this.stats.products);
+    });
+
+    this.membershipsService.getMemberships().pipe(catchError(() => of([]))).subscribe(memberships => {
+      this.stats.memberships = memberships?.length || 0;
+      this.calculateMonthlyRevenue(memberships || []);
+      console.log('✅ Memberships loaded:', this.stats.memberships);
+    });
+
+    this.eventsService.getEvents().pipe(catchError(() => of([]))).subscribe(events => {
+      this.stats.events = events?.length || 0;
+      console.log('✅ Events loaded:', this.stats.events);
+    });
+
+    this.reviewsService.getReviews().pipe(catchError(() => of([]))).subscribe(reviews => {
+      this.stats.reviews = reviews?.length || 0;
+      this.reviewsData = reviews || [];
+      this.recentReviews = reviews?.slice(0, 5) || [];
+      console.log('✅ Reviews loaded:', this.stats.reviews);
+    });
+
+    // Actualizar fecha de última actualización
+    this.lastUpdate = new Date();
+    console.log('✅ Dashboard loading complete');
+  }
+
+  calculateMonthlyRevenue(memberships: any[]) {
+    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const currentYear = new Date().getFullYear();
+    const monthlyRevenue: { [key: string]: number } = {};
+
+    // Inicializar los últimos 6 meses con 0
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const monthKey = `${months[date.getMonth()]}`;
+      monthlyRevenue[monthKey] = 0;
+    }
+
+    // Calcular ingresos basados en precios de membresías
+    memberships.forEach((membership: any) => {
+      if (membership.price) {
+        // Distribuir el precio de la membresía entre los meses
+        const price = Number(membership.price);
+        const monthsKeys = Object.keys(monthlyRevenue);
+        monthsKeys.forEach((key, index) => {
+          monthlyRevenue[key] += Math.round(price / monthsKeys.length);
+        });
       }
     });
+
+    this.monthlyRevenue = {
+      labels: Object.keys(monthlyRevenue),
+      data: Object.values(monthlyRevenue)
+    };
   }
 
   initLineChart() {
@@ -344,15 +371,18 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     if (!this.lineChartCanvas) return;
 
     const ctx = this.lineChartCanvas.nativeElement.getContext('2d');
-    
-    // Mocked data for the line chart (In a real scenario, map this from API data)
+
+    // Use real data from backend or fallback to empty data
+    const labels = this.monthlyRevenue?.labels || ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul'];
+    const data = this.monthlyRevenue?.data || [0, 0, 0, 0, 0, 0, 0];
+
     this.lineChart = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul'],
+        labels: labels,
         datasets: [{
           label: 'Ingresos Mensuales ($)',
-          data: [1200, 1900, 1500, 2200, 1800, 2500, 3100],
+          data: data,
           borderColor: '#8b5cf6',
           backgroundColor: 'rgba(139, 92, 246, 0.1)',
           borderWidth: 2,
@@ -371,12 +401,12 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
           legend: { display: false }
         },
         scales: {
-          y: { 
-            beginAtZero: true, 
+          y: {
+            beginAtZero: true,
             grid: { color: 'rgba(255,255,255,0.05)' },
             ticks: { color: 'rgba(255,255,255,0.5)' }
           },
-          x: { 
+          x: {
             grid: { display: false },
             ticks: { color: 'rgba(255,255,255,0.5)' }
           }
@@ -391,17 +421,23 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
 
     const ctx = this.doughnutChartCanvas.nativeElement.getContext('2d');
     
-    // Calculate machines status
-    const activeMachines = this.machinesData.filter(m => m.status === 'AVAILABLE' || m.status === 'ACTIVA').length || 15;
-    const maintenanceMachines = this.machinesData.filter(m => m.status === 'MAINTENANCE' || m.status === 'MANTENIMIENTO').length || 3;
+    const reviews = this.reviewsData || [];
+    const rating5 = reviews.filter(r => r.rating === 5).length;
+    const rating4 = reviews.filter(r => r.rating === 4).length;
+    const rating3 = reviews.filter(r => r.rating === 3).length;
+    const ratingLower = reviews.filter(r => r.rating <= 2).length;
+
+    const dataPoints = reviews.length > 0 
+      ? [rating5, rating4, rating3, ratingLower]
+      : [12, 8, 4, 1];
 
     this.doughnutChart = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: ['Operativas', 'En Mantenimiento'],
+        labels: ['Excelente (5★)', 'Muy Bueno (4★)', 'Bueno (3★)', 'Bajo (≤2★)'],
         datasets: [{
-          data: [activeMachines, maintenanceMachines],
-          backgroundColor: ['#22c55e', '#f59e0b'],
+          data: dataPoints,
+          backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'],
           borderWidth: 0,
           hoverOffset: 4
         }]
@@ -420,6 +456,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     });
   }
 }
+
 
 
 

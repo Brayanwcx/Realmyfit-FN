@@ -102,21 +102,21 @@ import { finalize } from 'rxjs';
               </div>
               <div class="form-group">
                 <label>Hora</label>
-                <input type="time" name="time" [(ngModel)]="newEvent.time" required class="glass-input">
+                <input type="time" name="time" [(ngModel)]="newEvent.time" class="glass-input">
               </div>
             </div>
-  
+
             <div class="form-row">
               <div class="form-group">
                 <label>Ubicación</label>
-                <input type="text" name="location" [(ngModel)]="newEvent.location" required placeholder="Ej. Sala A" class="glass-input">
+                <input type="text" name="location" [(ngModel)]="newEvent.location" placeholder="Ej. Sala A" class="glass-input">
               </div>
               <div class="form-group">
                 <label>Capacidad</label>
-                <input type="number" name="capacity" [(ngModel)]="newEvent.capacity" required placeholder="0" class="glass-input">
+                <input type="number" name="capacity" [(ngModel)]="newEvent.capacity" placeholder="0" class="glass-input">
               </div>
             </div>
-  
+
             <div class="form-group">
               <label>Imagen del Evento</label>
               <div class="file-upload-wrapper glass-input">
@@ -136,10 +136,10 @@ import { finalize } from 'rxjs';
                 </div>
               }
             </div>
-  
+
             <div class="form-group">
               <label>Descripción</label>
-              <textarea name="description" [(ngModel)]="newEvent.description" required placeholder="Describe el evento..." class="glass-input"></textarea>
+              <textarea name="description" [(ngModel)]="newEvent.description" placeholder="Describe el evento..." class="glass-input"></textarea>
             </div>
   
             <div class="modal-actions">

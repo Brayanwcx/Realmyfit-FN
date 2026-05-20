@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Observable } from 'rxjs';
 
@@ -33,13 +33,6 @@ export class EventsService {
   uploadImage(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<any>(`${environment.apiUrl}/files/upload`, formData, { headers: this.getHeaders() });
-  }
-
-  private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem('gym_token');
-    return new HttpHeaders({
-      'Authorization': `Bearer ${token}`
-    });
+    return this.http.post<any>(`${environment.apiUrl}/files/upload`, formData);
   }
 }

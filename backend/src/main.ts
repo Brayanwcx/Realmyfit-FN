@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { getDataSourceToken } from '@nestjs/typeorm';
 import { seedRoles } from './core/database/seeds/roles.seed';
+import { seedAdminUser } from './core/database/seeds/admin-user.seed';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -16,6 +17,15 @@ async function bootstrap() {
     console.log('🌱 Seed de roles completado.');
   } catch (err) {
     console.error('⚠️  Error ejecutando seed de roles:', err);
+  }
+  // ───────────────────────────────────────────────────────────────────────────
+
+  // ── Auto-seed: ensure admin user exists ─────────────────────────────────────
+  try {
+    const dataSource = app.get(getDataSourceToken());
+    await seedAdminUser(dataSource);
+  } catch (err) {
+    console.error('⚠️  Error ejecutando seed de usuario admin:', err);
   }
   // ───────────────────────────────────────────────────────────────────────────
 

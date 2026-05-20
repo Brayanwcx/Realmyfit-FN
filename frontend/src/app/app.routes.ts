@@ -23,15 +23,10 @@ import { AdminComponent } from './features/admin/admin';
 import { AdminDashboardComponent } from './features/admin/dashboard';
 import { AdminUsersComponent } from './features/admin/users';
 import { AdminProductsComponent } from './features/admin/products';
-import { AdminPlaceholderComponent } from './features/admin/placeholder';
 import { AdminMembershipsComponent } from './features/admin/memberships';
 
 import { AdminEventsComponent } from './features/admin/events';
-import { AdminTrainersComponent } from './features/admin/trainers.component';
-import { AdminMachinesComponent } from './features/admin/machines.component';
-import { AdminOrdersComponent } from './features/admin/orders.component';
 import { AdminReviewsComponent } from './features/admin/reviews.component';
-import { AdminContactsComponent } from './features/admin/contacts.component';
 
 export const routes: Routes = [
   // ─── Públicas ──────────────────────────────────────────────────
@@ -66,11 +61,7 @@ export const routes: Routes = [
       { path: 'products', component: AdminProductsComponent },
       { path: 'memberships', component: AdminMembershipsComponent },
       { path: 'events', component: AdminEventsComponent },
-      { path: 'trainers', component: AdminTrainersComponent },
-      { path: 'machines', component: AdminMachinesComponent },
-      { path: 'orders', component: AdminOrdersComponent },
       { path: 'reviews', component: AdminReviewsComponent },
-      { path: 'contacts', component: AdminContactsComponent },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   },

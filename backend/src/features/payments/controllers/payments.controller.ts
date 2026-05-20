@@ -31,6 +31,13 @@ export class PaymentsController {
         return this.paymentsService.findAll();
     }
 
+    @Get('stats/monthly-revenue')
+    @ApiOperation({ summary: 'Get monthly revenue statistics' })
+    @ApiResponse({ status: 200, description: 'Monthly revenue statistics' })
+    getMonthlyRevenue() {
+        return this.paymentsService.getMonthlyRevenue();
+    }
+
     @Get(':id')
     @ApiOperation({ summary: 'Get payment by id' })
     findOne(@Param('id', ParseIntPipe) id: number) {

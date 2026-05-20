@@ -129,7 +129,7 @@ import { finalize } from 'rxjs';
   
             <div class="form-group">
               <label>Descripción General</label>
-              <textarea name="description" [(ngModel)]="newMembership.description" required placeholder="Breve descripción..." class="glass-input desc-input"></textarea>
+              <textarea name="description" [(ngModel)]="newMembership.description" placeholder="Breve descripción..." class="glass-input desc-input"></textarea>
             </div>
 
             <div class="form-group">

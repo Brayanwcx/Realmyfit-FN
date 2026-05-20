@@ -145,7 +145,7 @@ import { finalize } from 'rxjs';
   
             <div class="form-group">
               <label>Descripción</label>
-              <textarea name="description" [(ngModel)]="newProduct.description" required placeholder="Describe el producto..." class="glass-input"></textarea>
+              <textarea name="description" [(ngModel)]="newProduct.description" placeholder="Describe el producto..." class="glass-input"></textarea>
             </div>
   
             <div class="modal-actions">

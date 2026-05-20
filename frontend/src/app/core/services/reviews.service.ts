@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -10,14 +10,19 @@ export class ReviewsService {
   private http = inject(HttpClient);
   private apiUrl = environment.apiUrl;
 
-  private getHeaders() {
-    const token = localStorage.getItem('gym_token');
-    return new HttpHeaders({
-      'Authorization': `Bearer ${token}`
-    });
-  }
-
   getReviews(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/reviews`);
+  }
+
+  createReview(review: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/reviews`, review);
+  }
+
+  updateReview(id: number, review: any): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/reviews/${id}`, review);
+  }
+
+  deleteReview(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/reviews/${id}`);
   }
 }
