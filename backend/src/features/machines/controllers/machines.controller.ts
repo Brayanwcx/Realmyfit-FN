@@ -10,15 +10,15 @@ import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
 import { Role } from '../../../auth/models/roles.model';
 
-@ApiBearerAuth()
-@Roles(Role.ADMIN)
-@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Machines')
 @Controller('machines')
 export class MachinesController {
     constructor(private readonly machinesService: MachinesService) {}
 
     @Post()
+    @ApiBearerAuth()
+    @Roles(Role.ADMIN)
+    @UseGuards(JwtAuthGuard, RolesGuard)
     @ApiOperation({ summary: 'Create a new machine' })
     @ApiResponse({ status: 201, description: 'Machine created successfully' })
     create(@Body() dto: CreateMachineDto) {
@@ -38,16 +38,21 @@ export class MachinesController {
     }
 
     @Patch(':id')
+    @ApiBearerAuth()
+    @Roles(Role.ADMIN)
+    @UseGuards(JwtAuthGuard, RolesGuard)
     @ApiOperation({ summary: 'Update a machine by id' })
     update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateMachineDto) {
         return this.machinesService.update(id, dto);
     }
 
     @Delete(':id')
+    @ApiBearerAuth()
+    @Roles(Role.ADMIN)
+    @UseGuards(JwtAuthGuard, RolesGuard)
     @HttpCode(204)
     @ApiOperation({ summary: 'Delete a machine by id' })
     remove(@Param('id', ParseIntPipe) id: number) {
         return this.machinesService.remove(id);
     }
 }
-

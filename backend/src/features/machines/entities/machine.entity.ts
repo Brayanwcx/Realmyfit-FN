@@ -26,14 +26,6 @@ export class Machine {
     @Column({ type: 'varchar', length: 255, nullable: true })
     brand: string;
 
-    @Column({ type: 'varchar', length: 255, nullable: true })
-    model: string;
-
-    @Column({ type: 'varchar', length: 255, nullable: true })
-    serialNumber: string;
-
-    @Column({ type: 'varchar', length: 255, nullable: true })
-    location: string;
 
     @Column({
         type: 'enum',
@@ -44,6 +36,22 @@ export class Machine {
 
     @Column({ type: 'varchar', length: 500, nullable: true })
     imageUrl: string;
+
+    @Column({ type: 'varchar', length: 100, nullable: true })
+    category: string;
+
+    @Column({ type: 'varchar', length: 500, nullable: true })
+    videoUrl: string;
+
+    @Column({ type: 'varchar', length: 100, nullable: true })
+    maxLoad: string;
+
+
+    @Column({ type: 'varchar', length: 255, nullable: true })
+    muscleFocus: string;
+
+    @Column({ type: 'varchar', length: 255, nullable: true })
+    recommendedLevel: string;
 
     @Column({ type: 'date', nullable: true })
     acquisitionDate: string;

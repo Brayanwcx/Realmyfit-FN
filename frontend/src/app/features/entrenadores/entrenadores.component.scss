@@ -7,7 +7,7 @@
 .page-header {
   text-align: center;
   margin-bottom: 4rem;
-  
+
   .page-title {
     font-size: clamp(2.5rem, 4vw, 3.5rem);
     margin-bottom: 1rem;
@@ -22,12 +22,22 @@
   }
 }
 
+.error-state, .empty-state {
+  text-align: center;
+  padding: 4rem 0;
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+}
+.error-state { color: #ff6b6b; }
+
+/* ── Grid ── */
 .trainers-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 2.5rem;
 }
 
+/* ── Card ── */
 .trainer-card {
   border-radius: 16px;
   overflow: hidden;
@@ -40,30 +50,50 @@
   &:hover {
     transform: translateY(-8px);
     box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 0 0 1px var(--color-primary);
-    
+
     .trainer-photo {
-      background: rgba(39, 174, 96, 0.15);
       border-bottom: 1px solid var(--color-primary);
-      .avatar-icon {
-        transform: scale(1.1);
-        color: var(--color-primary);
-      }
     }
   }
 
   .trainer-photo {
     height: 220px;
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255,255,255,0.02);
     display: flex;
     align-items: center;
     justify-content: center;
     transition: var(--transition-medium);
     border-bottom: 1px solid rgba(255,255,255,0.05);
+    overflow: hidden;
+    position: relative;
+  }
 
-    .avatar-icon {
-      color: var(--color-text-muted);
-      transition: var(--transition-medium);
-    }
+  .trainer-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    transition: transform 0.4s ease;
+  }
+
+  &:hover .trainer-img {
+    transform: scale(1.04);
+  }
+
+  /* ── Avatar initials fallback ── */
+  .avatar-initials {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-primary, #0ea5e9), #7c3aed);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -1px;
+    box-shadow: 0 8px 24px rgba(14,165,233,0.3);
   }
 
   .trainer-info {
@@ -74,7 +104,7 @@
     flex: 1;
 
     h3 {
-      font-size: 1.4rem;
+      font-size: 1.3rem;
       color: var(--color-text-main);
       margin-bottom: 0.5rem;
       font-family: var(--font-heading);
@@ -82,7 +112,7 @@
 
     .specialty {
       font-weight: 600;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       letter-spacing: 1px;
       text-transform: uppercase;
       margin-bottom: 1.5rem;
@@ -99,9 +129,7 @@
       color: var(--color-text-muted);
       font-size: 0.95rem;
       margin-bottom: 1.5rem;
-      strong {
-        color: var(--color-text-main);
-      }
+      strong { color: var(--color-text-main); }
     }
 
     .social-links {
@@ -128,4 +156,31 @@
       }
     }
   }
+}
+
+/* ── Skeleton loading ── */
+.trainer-card.skeleton {
+  pointer-events: none;
+
+  .trainer-photo {
+    background: rgba(255,255,255,0.05);
+    animation: shimmer 1.5s infinite;
+  }
+
+  .skel-line {
+    height: 14px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.08);
+    margin: 0.6rem auto;
+    animation: shimmer 1.5s infinite;
+    &.wide   { width: 70%; }
+    &.medium { width: 50%; }
+    &.narrow { width: 35%; }
+  }
+}
+
+@keyframes shimmer {
+  0%   { opacity: 0.5; }
+  50%  { opacity: 1;   }
+  100% { opacity: 0.5; }
 }

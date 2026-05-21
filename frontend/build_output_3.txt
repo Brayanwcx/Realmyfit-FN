@@ -1,0 +1,84 @@
+
+> realmyfit@0.0.0 build
+> ng build
+
+[33m❯[39m Building...
+[32m✔[39m Building...
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m        [2m | [22m [1mRaw size[22m[2m | [22m[1mEstimated transfer size[22m
+[32mmain-CKHZCVEC.js[39m   [2m | [22m[2mmain[22m         [2m | [22m[36m793.42 kB[39m[2m | [22m              [36m166.72 kB[39m
+[32mstyles-766A7ZMF.css[39m[2m | [22m[2mstyles[22m       [2m | [22m  [36m1.35 kB[39m[2m | [22m              [36m532 bytes[39m
+
+[1m [22m                  [2m | [22m[1mInitial total[22m[2m | [22m[1m[93m794.77 kB[39m[22m[2m | [22m              [1m167.26 kB[22m
+
+Application bundle generation failed. [4.735 seconds] - 2026-05-19T21:41:56.907Z
+
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. Find more at https://v21.angular.dev/extended-diagnostics/NG8107[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/auth/perfil/perfil.html:193:32:
+[37m      193 │             @if (wishlistItems?.[32mlength[37m) {
+          ╵                                 [32m~~~~~~[0m
+
+  Warning occurs in the template of component PerfilComponent.
+
+    src/app/auth/perfil/perfil.ts:13:15:
+[37m      13 │   templateUrl: [32m'./perfil.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mbundle initial exceeded maximum budget. Budget 500.00 kB was not met by 294.77 kB with a total of 794.77 kB.[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1msrc/app/features/hero/hero.component.scss exceeded maximum budget. Budget 4.00 kB was not met by 123 bytes with a total of 4.12 kB.[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1msrc/app/auth/login/login.component.scss exceeded maximum budget. Budget 4.00 kB was not met by 11.88 kB with a total of 15.88 kB.[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1msrc/app/shared/components/navbar/navbar.component.scss exceeded maximum budget. Budget 4.00 kB was not met by 2.48 kB with a total of 6.48 kB.[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1msrc/app/features/admin/admin.scss exceeded maximum budget. Budget 4.00 kB was not met by 930 bytes with a total of 4.93 kB.[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1msrc/app/features/home/home.component.scss exceeded maximum budget. Budget 4.00 kB was not met by 5.32 kB with a total of 9.32 kB.[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1msrc/app/auth/perfil/perfil.scss exceeded maximum budget. Budget 4.00 kB was not met by 6.61 kB with a total of 10.61 kB.[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1msrc/app/features/membresias/membresias.component.scss exceeded maximum budget. Budget 4.00 kB was not met by 8.04 kB with a total of 12.04 kB.[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1msrc/app/features/productos/productos.component.scss exceeded maximum budget. Budget 4.00 kB was not met by 2.79 kB with a total of 6.79 kB.[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1msrc/app/features/resenas/resenas.scss exceeded maximum budget. Budget 4.00 kB was not met by 914 bytes with a total of 4.91 kB.[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1msrc/app/features/chatbot/chatbot.component.scss exceeded maximum budget. Budget 4.00 kB was not met by 1.54 kB with a total of 5.54 kB.[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mangular:styles/component:scss;b99a92bce18b98748cd499300a628a562bfd49c9ca75db273e716a97ef5620f4;C:/Users/danie/OneDrive/Desktop/R FILT/Realmyfit-FN/frontend/src/app/features/admin/trainers.ts exceeded maximum budget. Budget 4.00 kB was not met by 1.39 kB with a total of 5.39 kB.[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1msrc/app/features/contacto/contacto.scss exceeded maximum budget. Budget 4.00 kB was not met by 214 bytes with a total of 4.21 kB.[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mModule 'sweetalert2' used by 'src/app/auth/login/login.component.ts' is not ESM[0m
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: [4mhttps://angular.dev/tools/cli/build#configuring-commonjs-dependencies[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1msrc/app/auth/login/login.component.scss exceeded maximum budget. Budget 8.00 kB was not met by 7.88 kB with a total of 15.88 kB.[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1msrc/app/features/home/home.component.scss exceeded maximum budget. Budget 8.00 kB was not met by 1.32 kB with a total of 9.32 kB.[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1msrc/app/auth/perfil/perfil.scss exceeded maximum budget. Budget 8.00 kB was not met by 2.61 kB with a total of 10.61 kB.[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1msrc/app/features/membresias/membresias.component.scss exceeded maximum budget. Budget 8.00 kB was not met by 4.04 kB with a total of 12.04 kB.[0m
+
+[39m[22m

@@ -4,52 +4,95 @@
       <button class="btn-secondary glass" routerLink="/maquinas">← Volver a Máquinas</button>
     </div>
 
-    <div class="detail-grid">
-      <!-- Media/Video section -->
-      <div class="video-container glass">
-        <div class="video-player" style="padding: 0; border: none;">
-          <iframe 
-            [src]="videoUrl" 
-            width="100%" 
-            height="100%" 
-            frameborder="0" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-            allowfullscreen
-            style="border-radius: 16px;">
-          </iframe>
-        </div>
+    @if (!maquina) {
+      <div style="text-align:center; padding: 4rem; color: rgba(255,255,255,0.5);">
+        No se encontró información de la máquina. <a routerLink="/maquinas" style="color: #4ade80;">Volver al listado</a>
       </div>
+    }
 
-      <!-- Tech specs section -->
-      <div class="tech-specs glass">
-        <span class="badge-category">{{ maquina.cat }}</span>
-        <h1 class="machine-title">{{ maquina.name }} <span class="text-primary">Pro Series</span></h1>
-        
-        <p class="machine-desc">{{ maquina.desc }}</p>
+    @if (maquina) {
+      <div class="detail-grid">
 
-        <div class="spec-list">
-          <div class="spec-item">
-            <span class="spec-label">Carga Máxima:</span>
-            <span class="spec-value">450 kg</span>
+        <!-- Media/Video section -->
+        <div class="video-container glass">
+          @if (videoUrl) {
+            <div class="video-player" style="padding: 0; border: none;">
+              <iframe
+                [src]="videoUrl"
+                width="100%"
+                height="100%"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+                style="border-radius: 16px;">
+              </iframe>
+            </div>
+          } @else if (maquina.imageUrl) {
+            <img [src]="maquina.imageUrl" [alt]="maquina.name" style="width:100%; height:100%; object-fit:cover; border-radius:16px;">
+          } @else {
+            <div style="display:flex; align-items:center; justify-content:center; height:100%; color: rgba(255,255,255,0.3);">
+              <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M6 3v18"></path><path d="M18 3v18"></path><path d="M6 12h12"></path>
+                <path d="M4 6h4"></path><path d="M4 18h4"></path><path d="M16 6h4"></path><path d="M16 18h4"></path>
+              </svg>
+            </div>
+          }
+        </div>
+
+        <!-- Tech specs section -->
+        <div class="tech-specs glass">
+          @if (maquina.category) {
+            <span class="badge-category">{{ maquina.category }}</span>
+          }
+          <h1 class="machine-title">{{ maquina.name }}</h1>
+
+          @if (maquina.description) {
+            <p class="machine-desc">{{ maquina.description }}</p>
+          }
+
+          <div class="spec-list">
+            @if (maquina.brand) {
+              <div class="spec-item">
+                <span class="spec-label">Marca:</span>
+                <span class="spec-value">{{ maquina.brand }}</span>
+              </div>
+            }
+            @if (maquina.maxLoad) {
+              <div class="spec-item">
+                <span class="spec-label">Carga Máxima:</span>
+                <span class="spec-value">{{ maquina.maxLoad }}</span>
+              </div>
+            }
+            @if (maquina.muscleFocus) {
+              <div class="spec-item">
+                <span class="spec-label">Enfoque Muscular:</span>
+                <span class="spec-value">{{ maquina.muscleFocus }}</span>
+              </div>
+            }
+            @if (maquina.recommendedLevel) {
+              <div class="spec-item">
+                <span class="spec-label">Nivel Recomendado:</span>
+                <span class="spec-value">{{ maquina.recommendedLevel }}</span>
+              </div>
+            }
+            @if (maquina.acquisitionDate) {
+              <div class="spec-item">
+                <span class="spec-label">Fecha de Adquisición:</span>
+                <span class="spec-value">{{ maquina.acquisitionDate }}</span>
+              </div>
+            }
+            <div class="spec-item">
+              <span class="spec-label">Estado:</span>
+              <span class="spec-value">{{ getStatusText(maquina.status) }}</span>
+            </div>
           </div>
-          <div class="spec-item">
-            <span class="spec-label">Dimensiones:</span>
-            <span class="spec-value">220cm x 150cm x 140cm</span>
-          </div>
-          <div class="spec-item">
-            <span class="spec-label">Enfoque Muscular:</span>
-            <span class="spec-value">Tren Inferior Completo</span>
-          </div>
-          <div class="spec-item">
-            <span class="spec-label">Nivel Recomendado:</span>
-            <span class="spec-value">Intermedio / Avanzado</span>
+
+          <div class="train-action">
+            <button class="btn-primary w-100 glow-btn" routerLink="/membresias">Reservar Sesión de Entrenamiento</button>
           </div>
         </div>
 
-        <div class="train-action">
-           <button class="btn-primary w-100 glow-btn" routerLink="/membresias">Reservar Sesión de Entrenamiento</button>
-        </div>
       </div>
-    </div>
+    }
   </div>
 </section>

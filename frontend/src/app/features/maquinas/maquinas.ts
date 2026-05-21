@@ -1,19 +1,41 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { MachinesService, Machine } from '../../core/services/machines.service';
 
 @Component({
   selector: 'app-maquinas',
-  imports: [RouterLink],
+  imports: [RouterLink, CommonModule],
   templateUrl: './maquinas.component.html',
   styleUrls: ['./maquinas.component.scss'],
 })
-export class MaquinasComponent {
-  maquinas = [
-    { name: 'Prensa Atlética 45°', cat: 'Fuerza', desc: 'Máxima resistencia biomecánica.' },
-    { name: 'Caminadora Curva', cat: 'Cardio', desc: 'Eco-amigable, sin motor, mayor exigencia.' },
-    { name: 'Polea Cruzada 360', cat: 'Multifuncional', desc: 'Versatilidad total para rutinas full body.' },
-    { name: 'Hack Squat Pro', cat: 'Fuerza', desc: 'Asegura la postura y focaliza el cuádriceps.' },
-    { name: 'Remo Hidráulico', cat: 'Cardio', desc: 'Resistencia mediante agua para impacto cero.' },
-    { name: 'Smith Machine', cat: 'Pesas Libres', desc: 'Seguridad garantizada para levantamiento pesado.' }
-  ];
+export class MaquinasComponent implements OnInit {
+  private machinesService = inject(MachinesService);
+
+  maquinas: Machine[] = [];
+  loading = true;
+  errorMessage = '';
+
+  ngOnInit() {
+    this.machinesService.getMachinesPublic().subscribe({
+      next: (data) => {
+        this.maquinas = data;
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error cargando máquinas:', err);
+        this.errorMessage = 'No se pudo cargar el equipamiento. Intenta de nuevo más tarde.';
+        this.loading = false;
+      }
+    });
+  }
+
+  getStatusText(status: string): string {
+    switch (status) {
+      case 'AVAILABLE': return 'Disponible';
+      case 'IN_MAINTENANCE': return 'En Mantenimiento';
+      case 'OUT_OF_SERVICE': return 'Fuera de Servicio';
+      default: return status;
+    }
+  }
 }

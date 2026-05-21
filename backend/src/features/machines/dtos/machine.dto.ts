@@ -18,20 +18,6 @@ export class CreateMachineDto {
     @ApiProperty({ example: 'NordicTrack', required: false })
     readonly brand?: string;
 
-    @IsString()
-    @IsOptional()
-    @ApiProperty({ example: 'X500', required: false })
-    readonly model?: string;
-
-    @IsString()
-    @IsOptional()
-    @ApiProperty({ example: 'SN-12345678', required: false })
-    readonly serialNumber?: string;
-
-    @IsString()
-    @IsOptional()
-    @ApiProperty({ example: 'Área de cardio', required: false })
-    readonly location?: string;
 
     @IsEnum(MachineStatus)
     @IsOptional()
@@ -47,6 +33,32 @@ export class CreateMachineDto {
     @IsOptional()
     @ApiProperty({ example: '2025-01-15', required: false })
     readonly acquisitionDate?: string;
+
+    @IsString()
+    @IsOptional()
+    @ApiProperty({ example: 'Fuerza', required: false })
+    readonly category?: string;
+
+    @IsString()
+    @IsOptional()
+    @ApiProperty({ example: 'https://youtube.com/...', required: false })
+    readonly videoUrl?: string;
+
+    @IsString()
+    @IsOptional()
+    @ApiProperty({ example: '450 kg', required: false })
+    readonly maxLoad?: string;
+
+
+    @IsString()
+    @IsOptional()
+    @ApiProperty({ example: 'Tren Inferior Completo', required: false })
+    readonly muscleFocus?: string;
+
+    @IsString()
+    @IsOptional()
+    @ApiProperty({ example: 'Intermedio / Avanzado', required: false })
+    readonly recommendedLevel?: string;
 }
 
 export class UpdateMachineDto extends PartialType(CreateMachineDto) {}
