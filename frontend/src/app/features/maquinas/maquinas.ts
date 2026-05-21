@@ -10,7 +10,7 @@ import { MachinesService, Machine } from '../../core/services/machines.service';
   styleUrls: ['./maquinas.component.scss'],
 })
 export class MaquinasComponent implements OnInit {
-  private machinesService = inject(MachinesService);
+  public machinesService = inject(MachinesService);
 
   maquinas: Machine[] = [];
   loading = true;

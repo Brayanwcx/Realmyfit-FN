@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TrainersService } from '../../core/services/trainers.service';
 import { environment } from '../../../environments/environment';
+import Swal from 'sweetalert2';
 
 
 @Component({
@@ -425,13 +426,31 @@ export class AdminTrainersComponent implements OnInit {
 
       obs.subscribe({
         next: () => { 
-          this.submitting = false; 
-          this.cancelForm(); 
-          this.fetchTrainers(); 
+          this.submitting = false;
+          this.cancelForm();
+          this.fetchTrainers();
+          Swal.fire({
+            icon: 'success',
+            title: '¡Guardado!',
+            text: this.editMode ? 'Entrenador actualizado correctamente.' : 'Entrenador creado correctamente.',
+            background: '#fff',
+            color: '#1a1a2e',
+            confirmButtonColor: '#0ea5e9',
+            timer: 2000,
+            showConfirmButton: false
+          });
         },
         error: err => {
           this.submitting = false;
-          this.errorMessage = err.error?.message || 'No se pudo guardar el entrenador.';
+          const msg = err.error?.message || 'No se pudo guardar el entrenador.';
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: msg,
+            background: '#fff',
+            color: '#1a1a2e',
+            confirmButtonColor: '#0ea5e9'
+          });
           this.cdr.detectChanges();
         }
       });
@@ -452,13 +471,29 @@ export class AdminTrainersComponent implements OnInit {
   }
 
   confirmDelete(id: number) {
-    if (!window.confirm('¿Eliminar este entrenador? Esta acción no se puede deshacer.')) return;
-    this.trainersService.deleteTrainer(id).subscribe({
-      next: () => { this.fetchTrainers(); },
-      error: () => { 
-        this.errorMessage = 'No se pudo eliminar el entrenador.'; 
-        this.cdr.detectChanges();
-      }
+    Swal.fire({
+      title: '¿Eliminar entrenador?',
+      text: 'Esta acción no se puede deshacer.',
+      icon: 'warning',
+      showCancelButton: true,
+      background: '#fff',
+      color: '#1a1a2e',
+      confirmButtonColor: '#ff4d4d',
+      cancelButtonColor: '#94a3b8',
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then(result => {
+      if (!result.isConfirmed) return;
+      this.trainersService.deleteTrainer(id).subscribe({
+        next: () => {
+          this.fetchTrainers();
+          Swal.fire({ title: 'Eliminado', icon: 'success', background: '#fff', color: '#1a1a2e', confirmButtonColor: '#0ea5e9', timer: 1500, showConfirmButton: false });
+        },
+        error: () => {
+          Swal.fire({ title: 'Error', text: 'No se pudo eliminar el entrenador.', icon: 'error', background: '#fff', color: '#1a1a2e', confirmButtonColor: '#0ea5e9' });
+          this.cdr.detectChanges();
+        }
+      });
     });
   }
 

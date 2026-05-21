@@ -53,41 +53,43 @@
         <h2>Envíanos un <span class="text-primary">Mensaje</span></h2>
         <p class="form-desc">Completa el formulario y te responderemos en menos de 24 horas.</p>
 
-        <form class="contact-form" (submit)="submitForm($event)">
-          <div class="form-group-row">
-            <div class="form-group">
-              <label>Nombre Completo</label>
-              <input type="text" class="form-control" placeholder="Ej. Juan Pérez" required>
+        <form class="contact-form" (ngSubmit)="submitForm($event)">
+            <div class="form-group-row">
+              <div class="form-group">
+                <label>Nombre Completo</label>
+                <input type="text" class="form-control" placeholder="Ej. Juan Pérez" [(ngModel)]="form.name" name="name" required>
+              </div>
+              <div class="form-group">
+                <label>Teléfono</label>
+                <input type="tel" class="form-control" placeholder="Opcional" [(ngModel)]="form.phone" name="phone">
+              </div>
             </div>
+
             <div class="form-group">
-              <label>Teléfono</label>
-              <input type="tel" class="form-control" placeholder="Opcional">
+              <label>Correo Electrónico</label>
+              <input type="email" class="form-control" placeholder="tu@correo.com" [(ngModel)]="form.email" name="email" required>
             </div>
-          </div>
 
-          <div class="form-group">
-            <label>Correo Electrónico</label>
-            <input type="email" class="form-control" placeholder="tu@correo.com" required>
-          </div>
+            <div class="form-group">
+              <label>Asunto</label>
+              <select class="form-control" [(ngModel)]="form.subject" name="subject" required>
+                <option value="" disabled>Selecciona un tema...</option>
+                <option value="Consultas sobre Membersías">Consultas sobre Membersías</option>
+                <option value="Soporte con Eventos">Soporte con Eventos</option>
+                <option value="Asignar Entrenador">Asignar Entrenador</option>
+                <option value="Otros">Otros</option>
+              </select>
+            </div>
 
-          <div class="form-group">
-            <label>Asunto</label>
-            <select class="form-control" required>
-              <option value="" disabled selected>Selecciona un tema...</option>
-              <option value="membresias">Consultas sobre Membresías</option>
-              <option value="eventos">Soporte con Eventos</option>
-              <option value="entrenadores">Asignar Entrenador</option>
-              <option value="otro">Otros</option>
-            </select>
-          </div>
+            <div class="form-group">
+              <label>Mensaje</label>
+              <textarea class="form-control" rows="5" placeholder="¿Cómo podemos ayudarte hoy?" [(ngModel)]="form.message" name="message" required></textarea>
+            </div>
 
-          <div class="form-group">
-            <label>Mensaje</label>
-            <textarea class="form-control" rows="5" placeholder="¿Cómo podemos ayudarte hoy?" required></textarea>
-          </div>
-
-          <button type="submit" class="btn-primary w-100 glow-btn">Enviar Mensaje</button>
-        </form>
+            <button type="submit" class="btn-primary w-100 glow-btn" [disabled]="isSubmitting">
+              {{ isSubmitting ? 'Enviando...' : 'Enviar Mensaje' }}
+            </button>
+          </form>
       </div>
 
       <!-- Google Maps Integration -->

@@ -2,7 +2,7 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MachinesService, Machine } from '../../core/services/machines.service';
-import { finalize } from 'rxjs';
+import { finalize, switchMap, of } from 'rxjs';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -166,8 +166,21 @@ import Swal from 'sweetalert2';
             </div>
 
             <div class="form-group">
-              <label>URL de Imagen</label>
-              <input type="url" name="imageUrl" [(ngModel)]="newMachine.imageUrl" placeholder="https://..." class="glass-input">
+              <label>Imagen de la Máquina</label>
+              <div class="image-upload-area" (click)="imageFileInput.click()">
+                @if (imagePreview) {
+                  <img [src]="imagePreview" class="image-preview" alt="Preview">
+                  <div class="image-overlay">Cambiar imagen</div>
+                } @else {
+                  <div class="image-placeholder">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    <span>Haz clic para subir una imagen</span>
+                    <small>JPG, PNG, WEBP o GIF · Máx. 5 MB</small>
+                  </div>
+                }
+              </div>
+              <input #imageFileInput type="file" accept="image/jpg,image/jpeg,image/png,image/webp,image/gif"
+                     style="display:none" (change)="onImageSelected($event)">
             </div>
   
             <div class="form-group">
@@ -235,6 +248,12 @@ import Swal from 'sweetalert2';
     
     select.glass-input option { background: #1a1a2e; color: #fff; }
 
+    /* Image upload */
+    .image-upload-area { position: relative; width: 100%; height: 180px; border: 2px dashed rgba(255,255,255,0.2); border-radius: 12px; cursor: pointer; overflow: hidden; display: flex; align-items: center; justify-content: center; transition: border-color 0.3s; &:hover { border-color: var(--color-primary, #4ade80); } }
+    .image-preview { width: 100%; height: 100%; object-fit: cover; }
+    .image-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 0.9rem; opacity: 0; transition: opacity 0.3s; .image-upload-area:hover & { opacity: 1; } }
+    .image-placeholder { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; color: rgba(255,255,255,0.4); text-align: center; padding: 1rem; svg { color: rgba(255,255,255,0.3); } small { font-size: 0.75rem; } }
+
     .modal-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem; }
     .btn-secondary { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; transition: 0.3s; &:hover { background: rgba(255,255,255,0.1); } }
     
@@ -281,7 +300,9 @@ export class AdminMachinesComponent implements OnInit {
   isSubmitting = false;
   isEditing = false;
   editingId: number | null = null;
-  
+  selectedFile: File | null = null;
+  imagePreview: string | null = null;
+
   newMachine: Partial<Machine> = this.getEmptyMachine();
 
   ngOnInit() {
@@ -347,6 +368,8 @@ export class AdminMachinesComponent implements OnInit {
     this.isEditing = false;
     this.editingId = null;
     this.newMachine = this.getEmptyMachine();
+    this.selectedFile = null;
+    this.imagePreview = null;
   }
 
   editMachine(machine: Machine) {
@@ -354,31 +377,67 @@ export class AdminMachinesComponent implements OnInit {
     this.isEditing = true;
     this.editingId = machine.id!;
     this.newMachine = { ...machine };
+    this.selectedFile = null;
+    this.imagePreview = machine.imageUrl
+      ? this.machinesService.getImageUrl(machine.imageUrl)
+      : null;
   }
 
   closeModal() {
     this.showModal = false;
+    this.selectedFile = null;
+    this.imagePreview = null;
+  }
+
+  onImageSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+    this.selectedFile = input.files[0];
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.imagePreview = e.target?.result as string;
+      this.cdr.detectChanges();
+    };
+    reader.readAsDataURL(this.selectedFile);
   }
 
   submitMachine() {
     this.isSubmitting = true;
 
-    const payload = { ...this.newMachine };
-    if (!payload.acquisitionDate) {
-      delete payload.acquisitionDate;
-    }
+    const uploadThenSave$ = this.selectedFile
+      ? this.machinesService.uploadImage(this.selectedFile).pipe(
+          switchMap(res => {
+            this.newMachine.imageUrl = res.imageUrl;
+            return of(null);
+          })
+        )
+      : of(null);
 
-    if (this.isEditing && this.editingId) {
-        this.machinesService.updateMachine(this.editingId, payload).subscribe({
+    uploadThenSave$.subscribe({
+      next: () => {
+        const payload: any = { ...this.newMachine };
+        
+        // Strip empty strings and nulls to avoid validation errors for optional fields
+        Object.keys(payload).forEach(key => {
+          if (payload[key] === '' || payload[key] === null) {
+            delete payload[key];
+          }
+        });
+
+        if (this.isEditing && this.editingId) {
+          this.machinesService.updateMachine(this.editingId, payload).subscribe({
             next: () => this.onSaveSuccess(),
             error: (err) => this.onSaveError(err)
-        });
-    } else {
-        this.machinesService.createMachine(payload).subscribe({
+          });
+        } else {
+          this.machinesService.createMachine(payload).subscribe({
             next: () => this.onSaveSuccess(),
             error: (err) => this.onSaveError(err)
-        });
-    }
+          });
+        }
+      },
+      error: (err) => this.onSaveError(err)
+    });
   }
 
   private onSaveSuccess() {
@@ -389,8 +448,8 @@ export class AdminMachinesComponent implements OnInit {
       icon: 'success',
       title: '¡Guardado!',
       text: 'La máquina ha sido guardada exitosamente',
-      background: '#1a1a2e',
-      color: '#fff',
+      background: '#fff',
+      color: '#1a1a2e',
       confirmButtonColor: '#4ade80'
     });
   }
@@ -398,12 +457,17 @@ export class AdminMachinesComponent implements OnInit {
   private onSaveError(err: any) {
     console.error('Error saving machine', err);
     this.isSubmitting = false;
+    
+    // Extract actual error message from backend if available
+    const errorMsg = err?.error?.message || err?.message || 'Hubo un problema al guardar la máquina';
+    let formattedError = Array.isArray(errorMsg) ? errorMsg.join('<br>') : errorMsg;
+
     Swal.fire({
       icon: 'error',
       title: 'Error',
-      text: 'Hubo un problema al guardar la máquina',
-      background: '#1a1a2e',
-      color: '#fff',
+      html: formattedError,
+      background: '#fff',
+      color: '#1a1a2e',
       confirmButtonColor: '#4ade80'
     });
   }
@@ -414,10 +478,10 @@ export class AdminMachinesComponent implements OnInit {
       text: "No podrás revertir esta acción.",
       icon: 'warning',
       showCancelButton: true,
-      background: '#1a1a2e',
-      color: '#fff',
+      background: '#fff',
+      color: '#1a1a2e',
       confirmButtonColor: '#ff4d4d',
-      cancelButtonColor: 'rgba(255,255,255,0.1)',
+      cancelButtonColor: '#94a3b8',
       confirmButtonText: 'Sí, eliminar',
       cancelButtonText: 'Cancelar'
     }).then((result) => {
@@ -429,8 +493,8 @@ export class AdminMachinesComponent implements OnInit {
               icon: 'success',
               title: 'Eliminado',
               text: 'La máquina ha sido eliminada.',
-              background: '#1a1a2e',
-              color: '#fff',
+              background: '#fff',
+              color: '#1a1a2e',
               confirmButtonColor: '#4ade80'
             });
           },
@@ -440,8 +504,8 @@ export class AdminMachinesComponent implements OnInit {
               icon: 'error',
               title: 'Error',
               text: 'Hubo un problema al eliminar la máquina',
-              background: '#1a1a2e',
-              color: '#fff',
+              background: '#fff',
+              color: '#1a1a2e',
               confirmButtonColor: '#4ade80'
             });
           }
