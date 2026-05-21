@@ -4,7 +4,7 @@
   </div>
 
   <div class="container cart-layout">
-    <!-- Cart Items Component -->
+    <!-- Cart Items -->
     <div class="cart-items glass">
       <h3 class="section-title">Artículos Seleccionados ({{ cartItems.length }})</h3>
       <div class="cart-items-list">
@@ -33,10 +33,13 @@
             </button>
           </div>
         }
+        @if (cartItems.length === 0) {
+          <p class="text-muted" style="text-align:center; padding: 2rem 0;">Tu carrito está vacío.</p>
+        }
       </div>
     </div>
 
-    <!-- Order Summary Component -->
+    <!-- Order Summary -->
     <div class="cart-summary glass">
       <h3 class="section-title">Resumen de Orden</h3>
       
@@ -54,13 +57,34 @@
         <span class="text-primary">${{ total | number:'1.2-2' }}</span>
       </div>
 
-      <button class="btn-primary w-100 checkout-btn">Proceder al Pago Seguramente</button>
+      @if (checkoutError) {
+        <div class="checkout-error">
+          {{ checkoutError }}
+        </div>
+      }
+
+      <button
+        class="btn-primary w-100 checkout-btn"
+        [disabled]="isCheckingOut || cartItems.length === 0"
+        (click)="checkout()"
+      >
+        @if (isCheckingOut) {
+          <span>Redirigiendo a Stripe…</span>
+        } @else {
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+            <line x1="1" y1="10" x2="23" y2="10"></line>
+          </svg>
+          Pagar con Stripe
+        }
+      </button>
+
       <p class="secure-text">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
           <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
         </svg>
-        Transacción cifrada y segura
+        Transacción cifrada y segura con Stripe
       </p>
     </div>
   </div>

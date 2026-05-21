@@ -38,6 +38,16 @@
           🛒 Ver Carrito ({{ totalItems }})
         </button>
         @if (isLoggedIn) {
+        @if (isAdmin) {
+        <button class="btn-primary w-100 mb-2"
+          style="display: flex; align-items: center; justify-content: center; gap: 8px; background: #6366f1; border-color: #6366f1;" routerLink="/admin"
+          (click)="closeMobileMenu()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          Panel de Admin
+        </button>
+        }
         <button class="btn-primary w-100 mb-2"
           style="display: flex; align-items: center; justify-content: center; gap: 8px;" routerLink="/perfil"
           (click)="closeMobileMenu()">
@@ -81,6 +91,15 @@
         </svg>
         <span class="cart-badge">{{ totalItems }}</span>
       </button>
+
+      <!-- Admin Button -->
+      @if (isAdmin) {
+      <button class="icon-btn admin-btn" routerLink="/admin" aria-label="Panel de Admin" style="margin-right: 0.5rem;" title="Ir al Panel de Admin">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+      </button>
+      }
 
       <!-- User / Login button -->
       @if (isLoggedIn) {

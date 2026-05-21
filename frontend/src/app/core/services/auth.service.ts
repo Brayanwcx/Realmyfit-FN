@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { catchError, tap } from 'rxjs/operators';
+import { catchError, tap, timeout } from 'rxjs/operators';
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -26,6 +26,7 @@ export class AuthService {
 
   login(email: string, password: string): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/auth/login`, { email, password }).pipe(
+      timeout(5000),
       tap(response => {
         if (response.access_token) {
           localStorage.setItem('gym_token', response.access_token);
@@ -37,7 +38,15 @@ export class AuthService {
       }),
       catchError(error => {
         console.error('Error en el login', error);
-        return throwError(() => new Error('Credenciales inválidas o error de red'));
+        // Timeout o sin conexión al servidor
+        if (error?.name === 'TimeoutError' || error?.status === 0) {
+          return throwError(() => new Error('No se pudo conectar al servidor. Verifica tu conexión.'));
+        }
+        // Credenciales incorrectas (401)
+        if (error?.status === 401) {
+          return throwError(() => new Error('INVALID_CREDENTIALS'));
+        }
+        return throwError(() => new Error('Error inesperado. Intenta de nuevo.'));
       })
     );
   }
@@ -104,6 +113,16 @@ export class AuthService {
     this.userSubject.next(null);
   }
 
+  setSession(token: string, user: any): void {
+    localStorage.setItem('gym_token', token);
+    if (user) {
+      localStorage.setItem('gym_user', JSON.stringify(user));
+      this.userSubject.next(user);
+    } else {
+      this.userSubject.next(null);
+    }
+  }
+
   isAuthenticated(): boolean {
     return !!localStorage.getItem('gym_token');
   }
@@ -126,5 +145,23 @@ export class AuthService {
   getUserRoles(): string[] {
     const user = this.getUser();
     return user && user.roles ? user.roles : [];
+  }
+
+  forgotPassword(email: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/auth/forgot-password`, { email }).pipe(
+      catchError(error => {
+        const message = error.error?.message || 'Error al solicitar el restablecimiento';
+        return throwError(() => new Error(Array.isArray(message) ? message.join(', ') : message));
+      })
+    );
+  }
+
+  resetPassword(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/auth/reset-password`, data).pipe(
+      catchError(error => {
+        const message = error.error?.message || 'Error al restablecer la contraseña';
+        return throwError(() => new Error(Array.isArray(message) ? message.join(', ') : message));
+      })
+    );
   }
 }

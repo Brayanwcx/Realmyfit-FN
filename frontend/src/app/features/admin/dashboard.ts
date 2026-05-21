@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, OnDestroy, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy, AfterViewInit, ElementRef, ViewChild, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { forkJoin, Subscription, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -8,8 +8,8 @@ import Chart from 'chart.js/auto';
 import { UsersService } from '../../core/services/users.service';
 import { ProductsService } from '../../core/services/products.service';
 import { MembershipsService } from '../../core/services/memberships.service';
+import { ReviewsService } from '../../core/services/reviews.service';
 import { OrdersService } from '../../core/services/orders.service';
-import { MachinesService } from '../../core/services/machines.service';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -98,7 +98,7 @@ import { MachinesService } from '../../core/services/machines.service';
 
       <!-- Doughnut Chart -->
       <div class="chart-container glass side-chart">
-        <h3>Estado de Máquinas</h3>
+        <h3>Calificación de Reseñas</h3>
         <div class="canvas-wrapper">
           <canvas #doughnutChartCanvas></canvas>
         </div>
@@ -129,7 +129,7 @@ import { MachinesService } from '../../core/services/machines.service';
                 <td>{{ o.user?.name || 'Cliente' }}</td>
                 <td class="sub-text">{{ o.createdAt | date:'shortDate' }}</td>
                 <td class="font-bold">\${{ o.totalAmount || '0.00' }}</td>
-                <td><span class="badge" [class.badge-success]="o.status === 'COMPLETED'" [class.badge-pending]="o.status !== 'COMPLETED'">{{ o.status || 'PENDIENTE' }}</span></td>
+                <td><span class="badge" [class.badge-success]="o.status === 'COMPLETED'" [class.badge-pending]="o.status !== 'COMPLETED'">{{ translateStatus(o.status) }}</span></td>
               </tr>
             </tbody>
           </table>
@@ -270,8 +270,11 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   private usersService = inject(UsersService);
   private productsService = inject(ProductsService);
   private membershipsService = inject(MembershipsService);
+  private reviewsService = inject(ReviewsService);
   private ordersService = inject(OrdersService);
-  private machinesService = inject(MachinesService);
+  
+  private cdr = inject(ChangeDetectorRef);
+  private ngZone = inject(NgZone);
 
   loading = true;
   lastUpdate = new Date();
@@ -281,11 +284,20 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     users: 0, products: 0, memberships: 0, orders: 0
   };
   
+  allOrders: any[] = [];
   recentOrders: any[] = [];
-  machinesData: any[] = [];
+  reviewsData: any[] = [];
 
   lineChart: any;
   doughnutChart: any;
+
+  translateStatus(status: string): string {
+    if (!status) return 'Pendiente';
+    const st = status.toUpperCase();
+    if (st === 'COMPLETED' || st === 'COMPLETADO') return 'Completado';
+    if (st === 'CANCELLED' || st === 'CANCELADO') return 'Cancelado';
+    return 'Pendiente';
+  }
 
   ngOnInit() {
     this.loadStats();
@@ -303,38 +315,59 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
 
   loadStats() {
     this.loading = true;
-    const safeCall = (observable: any) => observable.pipe(catchError(() => of([])));
+    this.cdr.detectChanges();
+
+    const safeCall = (observable: any) => observable.pipe(catchError((err) => {
+      console.error('Error fetching resource:', err);
+      return of([]);
+    }));
 
     this.sub = forkJoin({
       users: safeCall(this.usersService.getUsers()),
       products: safeCall(this.productsService.getProducts()),
       memberships: safeCall(this.membershipsService.getMemberships()),
       orders: safeCall(this.ordersService.getOrders()),
-      machines: safeCall(this.machinesService.getMachines()),
+      reviews: safeCall(this.reviewsService.getReviews()),
     }).subscribe({
       next: (res: any) => {
-        this.stats = {
-          users: res.users?.length || 0,
-          products: res.products?.length || 0,
-          memberships: res.memberships?.length || 0,
-          orders: res.orders?.length || 0
-        };
-        
-        if(res.orders) this.recentOrders = res.orders.slice(0, 5);
-        if(res.machines) this.machinesData = res.machines;
-        
-        this.lastUpdate = new Date();
-        this.loading = false;
+        this.ngZone.run(() => {
+          this.stats = {
+            users: res.users?.length || 0,
+            products: res.products?.length || 0,
+            memberships: res.memberships?.length || 0,
+            orders: res.orders?.length || 0
+          };
+          
+          if(res.orders && Array.isArray(res.orders)) {
+            this.allOrders = res.orders;
+            // Sort recent first
+            const sortedOrders = [...res.orders].sort((a, b) => 
+               new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+            this.recentOrders = sortedOrders.slice(0, 5);
+          } else {
+            this.recentOrders = [];
+          }
 
-        // Render charts after data is ready
-        setTimeout(() => {
-          this.initLineChart();
-          this.initDoughnutChart();
-        }, 100);
+          if(res.reviews) this.reviewsData = res.reviews;
+          
+          this.lastUpdate = new Date();
+          this.loading = false;
+          this.cdr.detectChanges();
+
+          // Render charts after data is ready
+          setTimeout(() => {
+            this.initLineChart();
+            this.initDoughnutChart();
+          }, 100);
+        });
       },
       error: (err) => {
-        console.error('Error loading dashboard stats', err);
-        this.loading = false;
+        this.ngZone.run(() => {
+          console.error('Error loading dashboard stats', err);
+          this.loading = false;
+          this.cdr.detectChanges();
+        });
       }
     });
   }
@@ -345,13 +378,32 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
 
     const ctx = this.lineChartCanvas.nativeElement.getContext('2d');
     
+    // Compute total revenues per month for the current year
+    const currentYear = new Date().getFullYear();
+    const monthlyIncome = new Array(12).fill(0);
+    
+    this.allOrders.forEach(order => {
+      // Only count completed orders
+      const st = (order.status || '').toUpperCase();
+      if (st === 'COMPLETED' || st === 'COMPLETADO') {
+        const date = new Date(order.createdAt);
+        if (date.getFullYear() === currentYear) {
+          const monthIndex = date.getMonth(); // 0-11
+          const amount = typeof order.totalAmount === 'number' ? order.totalAmount : parseFloat(order.totalAmount || '0');
+          monthlyIncome[monthIndex] += amount;
+        }
+      }
+    });
+
+    const monthLabels = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
     this.lineChart = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul'],
+        labels: monthLabels,
         datasets: [{
-          label: 'Ingresos Mensuales ($)',
-          data: [1200, 1900, 1500, 2200, 1800, 2500, 3100],
+          label: 'Ingresos Mensuales ' + currentYear + ' ($)',
+          data: monthlyIncome,
           borderColor: '#8b5cf6',
           backgroundColor: 'rgba(139, 92, 246, 0.1)',
           borderWidth: 2,
@@ -389,32 +441,40 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     if (!this.doughnutChartCanvas) return;
 
     const ctx = this.doughnutChartCanvas.nativeElement.getContext('2d');
-    
-    const activeMachines = this.machinesData.filter(m => m.status === 'AVAILABLE' || m.status === 'ACTIVA').length || 15;
-    const maintenanceMachines = this.machinesData.filter(m => m.status === 'MAINTENANCE' || m.status === 'MANTENIMIENTO').length || 3;
+
+    // Count how many reviews per star rating (1–5)
+    const ratingCounts = [1, 2, 3, 4, 5].map(star =>
+      this.reviewsData.filter((r: any) => Math.round(r.rating) === star).length
+    );
+    const hasData = ratingCounts.some(c => c > 0);
+    const finalCounts = hasData ? ratingCounts : [1, 2, 5, 8, 4]; // fallback demo
 
     this.doughnutChart = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: ['Operativas', 'En Mantenimiento'],
+        labels: ['⭐ 1 Estrella', '⭐⭐ 2', '⭐⭐⭐ 3', '⭐⭐⭐⭐ 4', '⭐⭐⭐⭐⭐ 5'],
         datasets: [{
-          data: [activeMachines, maintenanceMachines],
-          backgroundColor: ['#22c55e', '#f59e0b'],
+          data: finalCounts,
+          backgroundColor: ['#ef4444', '#f97316', '#facc15', '#84cc16', '#22c55e'],
           borderWidth: 0,
-          hoverOffset: 4
+          hoverOffset: 6
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        cutout: '70%',
+        cutout: '65%',
         plugins: {
           legend: {
             position: 'bottom',
-            labels: { color: 'rgba(255,255,255,0.7)', padding: 20, usePointStyle: true }
+            labels: { color: 'rgba(255,255,255,0.7)', padding: 12, usePointStyle: true, font: { size: 11 } }
           }
         }
       }
     });
   }
 }
+
+
+
+

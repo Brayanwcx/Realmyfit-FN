@@ -6,7 +6,7 @@ import { getDataSourceToken } from '@nestjs/typeorm';
 import { seedRoles } from './core/database/seeds/roles.seed';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
 
   // ── Auto-seed: ensure default roles exist ──────────────────────────────────

@@ -22,23 +22,32 @@ export class User {
     @Column({ type: 'varchar', length: 255 })
     name;
 
-    @Column({ type: 'varchar', length: 255 })
+    @Column({ type: 'varchar', length: 255, nullable: true })
     lastName;
 
-    @Column({ type: 'varchar', length: 255 })
+    @Column({ type: 'varchar', length: 255, default: 'OTRO' })
     docType;
 
-    @Column({ type: 'varchar', length: 255 })
+    @Column({ type: 'varchar', length: 255, default: '0' })
     docNumber;
 
     @Column({ unique: true })
     email: string;
 
-    @Column()
+    @Column({ nullable: true })
     password: string;
+
+    @Column({ type: 'varchar', length: 255, nullable: true, unique: true })
+    googleId: string;
 
     @Column({ default: true })
     isActive: boolean;
+
+    @Column({ type: 'varchar', length: 255, nullable: true })
+    recoveryCode: string | null;
+
+    @Column({ type: 'timestamp', nullable: true })
+    recoveryCodeExpiresAt: Date | null;
 
     @Column({ type: 'varchar', length: 500, nullable: true })
     profilePicture: string;

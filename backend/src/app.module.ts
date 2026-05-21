@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { MailerModule } from '@nestjs-modules/mailer';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './core/database/database.module';
@@ -22,6 +23,7 @@ import { PaymentsModule } from './features/payments/payments.module';
 import { TrainersModule } from './features/trainers/trainers.module';
 import { MachinesModule } from './features/machines/machines.module';
 import { OrdersModule } from './features/orders/orders.module';
+import { FilesModule } from './features/files/files.module';
 import config from './core/config';
 
 @Module({
@@ -38,7 +40,29 @@ import config from './core/config';
         POSTGRES_HOST: Joi.string().required(),
         JWT_SECRET: Joi.string().required(),
         JWT_EXPIRES_IN: Joi.number().required(),
+        GOOGLE_CLIENT_ID: Joi.string().optional(),
+        GOOGLE_CLIENT_SECRET: Joi.string().optional(),
+        GOOGLE_CALLBACK_URL: Joi.string().optional(),
+        FRONTEND_URL: Joi.string().optional(),
+        SMTP_USER: Joi.string().optional(),
+        SMTP_PASSWORD: Joi.string().optional(),
+        STRIPE_SECRET_KEY: Joi.string().optional(),
+        STRIPE_WEBHOOK_SECRET: Joi.string().optional(),
       }),
+    }),
+    MailerModule.forRoot({
+      transport: {
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASSWORD,
+        },
+      },
+      defaults: {
+        from: '"No Reply" <noreply@realmyfit.com>',
+      },
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'uploads'),
@@ -58,6 +82,7 @@ import config from './core/config';
     TrainersModule,
     MachinesModule,
     OrdersModule,
+    FilesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -21,6 +21,14 @@ export class UsersService {
     return this.http.get<any[]>(`${this.apiUrl}/users`, { headers: this.getHeaders() });
   }
 
+  createUser(user: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/users`, user, { headers: this.getHeaders() });
+  }
+
+  updateUser(id: number, user: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/users/${id}`, user, { headers: this.getHeaders() });
+  }
+
   deleteUser(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/users/${id}`, { headers: this.getHeaders() });
   }

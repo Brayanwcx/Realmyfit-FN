@@ -21,6 +21,10 @@ export class ProductsService {
     return this.http.get<any[]>(`${this.apiUrl}/products`, { headers: this.getHeaders() });
   }
 
+  getProduct(id: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/products/${id}`, { headers: this.getHeaders() });
+  }
+
   createProduct(product: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/products`, product, { headers: this.getHeaders() });
   }

@@ -1,36 +1,68 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CartService } from '../../core/services/cart.service';
 import { WishlistService } from '../../core/services/wishlist.service';
 import { AuthService } from '../../core/services/auth.service';
+import { ProductsService } from '../../core/services/products.service';
+import { environment } from '../../../environments/environment';
+import Swal from 'sweetalert2';
+
+import { RouterLink, Router } from '@angular/router';
 
 @Component({
   selector: 'app-productos',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './productos.component.html',
   styleUrls: ['./productos.component.scss'],
 })
-export class ProductosComponent {
+export class ProductosComponent implements OnInit {
   categories = ['Todos', 'Suplementos', 'Rendimiento', 'Recuperación', 'Ropa', 'Accesorios', 'Energía'];
   selectedCategory = 'Todos';
   searchQuery = '';
 
-  productos: any[] = [
-    { id: 1, name: '100% Whey Protein', cat: 'Suplementos', price: 59.99, tag: 'Más Vendido', qty: 1, rating: 4.8 },
-    { id: 2, name: 'Creatina Monohidratada', cat: 'Rendimiento', price: 24.99, tag: '', qty: 1, rating: 4.6 },
-    { id: 3, name: 'BCAAs Energy', cat: 'Recuperación', price: 34.50, tag: '', qty: 1, rating: 4.5 },
-    { id: 4, name: 'Camiseta RealMyFit', cat: 'Ropa', price: 19.99, tag: 'Nuevo', qty: 1, rating: 4.9 },
-    { id: 5, name: 'Shaker Pro', cat: 'Accesorios', price: 9.99, tag: '', qty: 1, rating: 4.3 },
-    { id: 6, name: 'Pre-Workout Explosive', cat: 'Energía', price: 39.90, tag: 'Agotado', qty: 1, rating: 4.7 }
-  ];
+  productos: any[] = [];
 
   constructor(
     private cartService: CartService,
     private wishlistService: WishlistService,
-    private authService: AuthService
+    private authService: AuthService,
+    private productsService: ProductsService,
+    private router: Router,
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone
   ) { }
+
+  ngOnInit() {
+    this.productsService.getProducts().subscribe({
+      next: (data) => {
+        this.ngZone.run(() => {
+          // filter out inactive products, map properties
+          this.productos = data.filter((p: any) => p.isActive !== false).map((p: any) => ({
+            ...p,
+            cat: p.category || 'Otros',
+            qty: 1,
+            rating: 4.5, // placeholder
+            tag: p.stock === 0 ? 'Agotado' : ''
+          }));
+          this.cdr.detectChanges();
+        });
+      },
+      error: (err) => this.ngZone.run(() => console.error('Error fetching public products', err))
+    });
+
+    // Suscribirse a la wishlist para actualizar la vista inmediatamente
+    this.wishlistService.wishlist$.subscribe(() => {
+      this.cdr.detectChanges();
+    });
+  }
+
+  getImageUrl(url: string | undefined): string {
+    if (!url) return 'assets/placeholder.jpg';
+    if (url.startsWith('http')) return url;
+    return `${environment.apiUrl}${url.startsWith('/') ? url : '/' + url}`;
+  }
 
   get filteredProductos() {
     return this.productos.filter(p => {
@@ -45,8 +77,19 @@ export class ProductosComponent {
   }
 
   increaseQty(producto: any) {
-    if (producto.qty < 99) {
+    if (producto.qty < producto.stock) {
       producto.qty++;
+    } else {
+      Swal.fire({
+        toast: true,
+        position: 'bottom-end',
+        title: 'Stock máximo alcanzado',
+        icon: 'info',
+        timer: 2000,
+        showConfirmButton: false,
+        background: '#1e2024',
+        color: '#ffffff'
+      });
     }
   }
 
@@ -57,9 +100,58 @@ export class ProductosComponent {
   }
 
   addToCart(producto: any) {
+    if (!this.authService.isAuthenticated()) {
+      Swal.fire({
+        title: 'Inicio de sesión requerido',
+        text: 'Para agregar productos al carrito, debes acceder a tu cuenta.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#22c55e',
+        cancelButtonColor: '#ef4444',
+        confirmButtonText: 'Iniciar sesión',
+        cancelButtonText: 'Cancelar',
+        background: '#1e2024',
+        color: '#ffffff'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.router.navigate(['/login']);
+        }
+      });
+      return;
+    }
     if (producto.tag === 'Agotado') return;
-    this.cartService.addToCart(producto, producto.qty);
+    
+    const result = this.cartService.addToCart(producto, producto.qty);
+    
+    if (!result.success) {
+      Swal.fire({
+        toast: true,
+        position: 'bottom-end',
+        title: result.message,
+        icon: 'warning',
+        timer: 3000,
+        showConfirmButton: false,
+        background: '#1e2024',
+        color: '#ffffff'
+      });
+      return;
+    }
+
     producto.added = true;
+
+    Swal.fire({
+      toast: true,
+      position: 'bottom-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      icon: 'success',
+      title: 'Agregado al carrito',
+      background: '#22c55e',
+      color: '#ffffff',
+      iconColor: '#ffffff'
+    });
+
     setTimeout(() => {
       producto.added = false;
       producto.qty = 1;
@@ -72,7 +164,22 @@ export class ProductosComponent {
 
   toggleWishlist(producto: any) {
     if (!this.authService.isAuthenticated()) {
-      alert('Debes iniciar sesión para guardar productos en tu lista de deseos.');
+      Swal.fire({
+        title: 'Inicio de sesión requerido',
+        text: 'Para guardar productos en favoritos, debes acceder a tu cuenta.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#22c55e',
+        cancelButtonColor: '#ef4444',
+        confirmButtonText: 'Iniciar sesión',
+        cancelButtonText: 'Cancelar',
+        background: '#1e2024',
+        color: '#ffffff'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.router.navigate(['/login']);
+        }
+      });
       return;
     }
     

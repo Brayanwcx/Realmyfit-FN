@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -9,7 +9,7 @@ import { ChangeDetectorRef } from '@angular/core';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, RouterModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
@@ -75,6 +75,15 @@ export class LoginComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    if (this.authService.isAuthenticated()) {
+      const user = this.authService.getUser();
+      const isAdmin = user?.roles?.some((r: any) =>
+        r.name === 'ADMIN' || r.name === 'admin' || r === 'ADMIN'
+      );
+      this.router.navigate([isAdmin ? '/admin' : '/']);
+      return;
+    }
+
     this.initParticles();
     this.loadLockState();
   }
@@ -281,6 +290,11 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
   }
 
+  loginWithGoogle() {
+    // Redirige al backend que inicia el flujo OAuth con Google
+    window.location.href = 'http://localhost:3005/auth/google';
+  }
+
   private loginUser() {
     if (this.isLocked) {
       this.isLoading = false;
@@ -332,7 +346,14 @@ export class LoginComponent implements OnInit, OnDestroy {
             hideClass: { popup: 'animate__animated animate__fadeOutDown animate__faster' }
           });
         } else {
-          this.errorMessage = `Credenciales inválidas. Te quedan ${this.attemptsRemaining} intento${this.attemptsRemaining !== 1 ? 's' : ''}.`;
+          // Error de red o servidor caído
+          if (err.message && err.message !== 'INVALID_CREDENTIALS') {
+            this.errorMessage = err.message;
+          } else {
+            // Credenciales inválidas → mostrar intentos restantes
+            this.errorMessage = `Credenciales inválidas. Te quedan ${this.attemptsRemaining} intento${this.attemptsRemaining !== 1 ? 's' : ''}.`;
+          }
+          this.cdr.detectChanges();
         }
       }
     });
@@ -384,6 +405,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.isLoading = false;
         this.errorMessage = err.message || 'Error al crear la cuenta';
+        this.cdr.detectChanges();
       }
     });
   }

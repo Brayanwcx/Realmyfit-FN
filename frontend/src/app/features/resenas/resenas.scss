@@ -130,6 +130,29 @@
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
+
+    .btn-secondary {
+      padding: 0.8rem 1.5rem;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--color-text-main);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+    }
   }
 
   .fade-in {
@@ -197,13 +220,13 @@
 }
 
 /* Reviews Grid */
-/* We'll use CSS Columns for a cool masonry effect */
 .reviews-grid {
-  column-count: 3;
-  column-gap: 2rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
   
-  @media (max-width: 1024px) { column-count: 2; }
-  @media (max-width: 700px) { column-count: 1; }
+  @media (max-width: 768px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 500px) { grid-template-columns: 1fr; }
 }
 
 .review-card {

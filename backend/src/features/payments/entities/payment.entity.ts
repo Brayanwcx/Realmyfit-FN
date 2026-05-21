@@ -12,6 +12,7 @@ export enum PaymentMethod {
     CASH = 'CASH',
     CARD = 'CARD',
     TRANSFER = 'TRANSFER',
+    STRIPE = 'STRIPE',
 }
 
 export enum PaymentStatus {
@@ -48,6 +49,9 @@ export class Payment {
 
     @Column({ type: 'text', nullable: true })
     description: string;
+
+    @Column({ type: 'varchar', length: 255, nullable: true })
+    stripeSessionId: string;
 
     @CreateDateColumn()
     createdAt: Date;

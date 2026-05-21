@@ -1,13 +1,16 @@
-import { Body, Controller, Get, Post, Req, UseGuards, UseInterceptors, UploadedFile, BadRequestException, Delete, Param } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res, UseGuards, UseInterceptors, UploadedFile, BadRequestException, Delete, Param } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import * as fs from 'fs';
 import { LoginDto } from '../dtos/login.dto';
+import { ForgotPasswordDto } from '../dtos/forgot-password.dto';
+import { ResetPasswordDto } from '../dtos/reset-password.dto';
 import { AuthService } from '../services/auth.service';
 import { UsersService } from '../../features/users/services/users/users.service';
 import { CreateUserDto } from '../../features/users/dtos/user.dto';
 import { JwtAuthGuard } from '../guards/auth.guard';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
@@ -29,6 +32,16 @@ export class AuthController {
     @Post('register')
     async register(@Body() body: CreateUserDto) {
         return this.usersService.create(body);
+    }
+
+    @Post('forgot-password')
+    async forgotPassword(@Body() body: ForgotPasswordDto) {
+        return this.authService.forgotPassword(body.email);
+    }
+
+    @Post('reset-password')
+    async resetPassword(@Body() body: ResetPasswordDto) {
+        return this.authService.resetPassword(body);
     }
 
     @UseGuards(JwtAuthGuard)
@@ -102,4 +115,26 @@ export class AuthController {
         const userId = req.user.sub || req.user.id;
         return this.usersService.removeFromWishlist(userId, parseInt(productId, 10));
     }
+
+    // ============================================================
+    //  Google OAuth
+    // ============================================================
+
+    @Get('google')
+    @UseGuards(AuthGuard('google'))
+    async googleAuth() {
+        // Passport redirige automáticamente a Google
+    }
+
+    @Get('google/callback')
+    @UseGuards(AuthGuard('google'))
+    async googleAuthCallback(@Req() req: any, @Res() res: any) {
+        const result = await this.authService.loginWithGoogle(req.user);
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+        // Redirigir al frontend con el token en la URL
+        res.redirect(
+            `${frontendUrl}/auth/google-callback?token=${result.access_token}&user=${encodeURIComponent(JSON.stringify(result.user))}`
+        );
+    }
 }
+

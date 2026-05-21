@@ -10,15 +10,15 @@ import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
 import { Role } from '../../../auth/models/roles.model';
 
-@ApiBearerAuth()
-@Roles(Role.ADMIN)
-@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiTags('Products')
 @Controller('products')
 export class ProductsController {
     constructor(private readonly productsService: ProductsService) {}
 
     @Post()
+    @ApiBearerAuth()
+    @Roles(Role.ADMIN)
+    @UseGuards(JwtAuthGuard, RolesGuard)
     @ApiOperation({ summary: 'Create a new product' })
     @ApiResponse({ status: 201, description: 'Product created successfully' })
     create(@Body() dto: CreateProductDto) {
@@ -38,6 +38,9 @@ export class ProductsController {
     }
 
     @Patch(':id')
+    @ApiBearerAuth()
+    @Roles(Role.ADMIN)
+    @UseGuards(JwtAuthGuard, RolesGuard)
     @ApiOperation({ summary: 'Update a product by id' })
     update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateProductDto) {
         return this.productsService.update(id, dto);
@@ -45,6 +48,9 @@ export class ProductsController {
 
     @Delete(':id')
     @HttpCode(204)
+    @ApiBearerAuth()
+    @Roles(Role.ADMIN)
+    @UseGuards(JwtAuthGuard, RolesGuard)
     @ApiOperation({ summary: 'Delete a product by id' })
     remove(@Param('id', ParseIntPipe) id: number) {
         return this.productsService.remove(id);
