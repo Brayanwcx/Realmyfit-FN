@@ -235,13 +235,27 @@
                   <div class="data-card">
                     <div class="data-card-header">
                       <h4>{{ reg.event?.title || 'Evento #' + reg.id }}</h4>
-                      <span class="data-badge active">Inscrito</span>
+                      <span class="data-badge" 
+                            [class.active]="reg.status !== 'CANCELLED'"
+                            [class.cancelled]="reg.status === 'CANCELLED'">
+                        {{ reg.status === 'CANCELLED' ? 'Cancelado' : 'Inscrito' }}
+                      </span>
                     </div>
                     <div class="data-card-body">
                       <div class="data-row">
                         <span>Fecha inscripción:</span>
                         <span>{{ reg.registrationDate | date:'dd/MM/yyyy' }}</span>
                       </div>
+                      <div class="data-row" *ngIf="reg.event?.date">
+                        <span>Fecha evento:</span>
+                        <span>{{ reg.event.date | date:'dd/MM/yyyy' }}</span>
+                      </div>
+                      
+                      @if (reg.status !== 'CANCELLED') {
+                        <button class="cancel-reg-btn" (click)="cancelRegistration(reg)">
+                          Cancelar Inscripción
+                        </button>
+                      }
                     </div>
                   </div>
                 }

@@ -1,10 +1,12 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 import { WishlistService } from '../../core/services/wishlist.service';
 import { CartService } from '../../core/services/cart.service';
+import { EventRegistrationsService } from '../../core/services/event-registrations.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-perfil',
@@ -14,6 +16,9 @@ import { CartService } from '../../core/services/cart.service';
   styleUrls: ['./perfil.scss']
 })
 export class PerfilComponent implements OnInit {
+  private regService = inject(EventRegistrationsService);
+  private ngZone = inject(NgZone);
+
   user: any = null;
   activeTab = 'info';
   isLoading = true;
@@ -160,6 +165,36 @@ export class PerfilComponent implements OnInit {
     const productToAdd = { ...producto, qty: producto.qty || 1 };
     this.cartService.addToCart(productToAdd, productToAdd.qty);
     alert('Producto añadido al carrito');
+  }
+
+  cancelRegistration(reg: any) {
+    this.ngZone.run(() => {
+      Swal.fire({
+        title: '¿Cancelar inscripción?',
+        text: `¿Estás seguro de que deseas cancelar tu asistencia a "${reg.event?.title}"?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#22c55e',
+        cancelButtonColor: '#ef4444',
+        confirmButtonText: 'Sí, cancelar',
+        cancelButtonText: 'No, mantener'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.regService.cancel(reg.id).subscribe({
+            next: () => {
+              Swal.fire('¡Cancelado!', 'Tu inscripción ha sido cancelada con éxito.', 'success');
+              // Update local state instead of reloading everything
+              reg.status = 'CANCELLED';
+              this.cdr.detectChanges();
+            },
+            error: (err) => {
+              const msg = err?.error?.message || 'No se pudo cancelar la inscripción.';
+              Swal.fire('Error', msg, 'error');
+            }
+          });
+        }
+      });
+    });
   }
 }
 

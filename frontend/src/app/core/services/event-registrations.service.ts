@@ -31,4 +31,8 @@ export class EventRegistrationsService {
   remove(id: number): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/${id}`, { headers: this.authService.getHeaders() });
   }
+
+  cancel(id: number): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/${id}/cancel`, {}, { headers: this.authService.getHeaders() });
+  }
 }
