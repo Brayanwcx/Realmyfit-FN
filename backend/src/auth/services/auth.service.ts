@@ -15,7 +15,13 @@ export class AuthService {
     ) { }
 
     async validateUser(email: string, password: string) {
-        const user: User = await this.usersService.findByEmail(email);
+        let user: User | null = null;
+        try {
+            user = await this.usersService.findByEmail(email);
+        } catch (err) {
+            // Si no existe o hay otro error al buscar, tratamos como credenciales inválidas
+            throw new UnauthorizedException('Invalid credentials');
+        }
 
         if (!user || !(await bcrypt.compare(password, user.password))) {
             throw new UnauthorizedException('Invalid credentials');

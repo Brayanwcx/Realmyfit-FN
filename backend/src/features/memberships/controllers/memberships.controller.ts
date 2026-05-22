@@ -31,6 +31,16 @@ export class PublicMembershipsController {
         const userId = req.user.id || req.user.sub;
         return this.membershipsService.subscribeUser(userId, membershipId);
     }
+
+    @Delete('subscriptions/:id')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Cancel current user subscription by subscription id' })
+    @ApiResponse({ status: 200, description: 'Subscription cancelled' })
+    cancelSubscription(@Req() req: any, @Param('id', ParseIntPipe) id: number) {
+        const userId = req.user.id || req.user.sub;
+        return this.membershipsService.cancelUserMembership(userId, id);
+    }
 }
 
 // --- Admin CRUD (requires ADMIN role) ---

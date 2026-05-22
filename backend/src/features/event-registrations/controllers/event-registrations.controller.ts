@@ -1,6 +1,6 @@
 import {
     Controller, Get, Post, Patch, Delete,
-    Param, Body, ParseIntPipe, HttpCode, UseGuards,
+    Param, Body, ParseIntPipe, HttpCode, UseGuards, Req,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { EventRegistrationsService } from '../services/event-registrations.service';
@@ -23,6 +23,16 @@ export class EventRegistrationsController {
     @ApiResponse({ status: 201, description: 'Registration created successfully' })
     create(@Body() dto: CreateEventRegistrationDto) {
         return this.regService.create(dto);
+    }
+
+    @Delete('cancel/:id')
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    @ApiOperation({ summary: 'Cancel current user registration by id' })
+    @ApiResponse({ status: 200, description: 'Registration cancelled' })
+    cancelForCurrentUser(@Req() req: any, @Param('id', ParseIntPipe) id: number) {
+        const userId = req.user.id || req.user.sub;
+        return this.regService.cancelUserRegistration(userId, id);
     }
 
     @Get()

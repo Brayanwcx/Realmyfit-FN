@@ -112,4 +112,13 @@ export class MembershipsService {
         const um = await this.findOneUserMembership(id);
         return this.userMembershipRepo.remove(um);
     }
+
+    async cancelUserMembership(userId: number, id: number) {
+        const um = await this.findOneUserMembership(id);
+        if (um.user_id !== userId) {
+            throw new NotFoundException('Subscription not found for this user');
+        }
+        um.status = MembershipStatus.CANCELLED;
+        return this.userMembershipRepo.save(um);
+    }
 }

@@ -41,4 +41,13 @@ export class EventRegistrationsService {
         const reg = await this.findOne(id);
         return this.regRepo.remove(reg);
     }
+
+    async cancelUserRegistration(userId: number, id: number) {
+        const reg = await this.findOne(id);
+        if (reg.user_id !== userId) {
+            throw new NotFoundException('Registration not found for this user');
+        }
+        reg.status = ("CANCELLED" as any);
+        return this.regRepo.save(reg);
+    }
 }
