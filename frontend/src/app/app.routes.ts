@@ -34,6 +34,7 @@ import { AdminProductsComponent } from './features/admin/products';
 import { AdminTrainersComponent } from './features/admin/trainers';
 import { AdminEventsComponent } from './features/admin/events';
 import { AdminEventRegistrationsComponent } from './features/admin/event-registrations';
+import { AdminContactsComponent } from './features/admin/contacts';
 import { AdminMembershipsComponent } from './features/admin/memberships';
 import { AdminReviewsComponent } from './features/admin/reviews';
 import { AdminOrdersComponent } from './features/admin/orders';
@@ -85,6 +86,7 @@ export const routes: Routes = [
       { path: 'machines', component: AdminMachinesComponent },
       { path: 'events', component: AdminEventsComponent },
       { path: 'event-registrations', component: AdminEventRegistrationsComponent },
+      { path: 'contacts', component: AdminContactsComponent },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   },

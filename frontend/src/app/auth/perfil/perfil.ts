@@ -29,7 +29,6 @@ export class PerfilComponent implements OnInit {
     { id: 'info', label: 'Mi Información', icon: 'user' },
     { id: 'wishlist', label: 'Lista de Deseos', icon: 'heart' },
     { id: 'memberships', label: 'Membresías', icon: 'card' },
-    { id: 'orders', label: 'Mis Pedidos', icon: 'bag' },
     { id: 'events', label: 'Mis Eventos', icon: 'calendar' }
   ];
 
@@ -122,6 +121,12 @@ export class PerfilComponent implements OnInit {
       
       if (this.croppedImageUrl) {
         this.localImageUrl = this.croppedImageUrl;
+        // Instantly push new avatar to all subscribers (navbar, admin layout)
+        const currentUser = this.authService.getUser();
+        if (currentUser) {
+          const preview = { ...currentUser, profilePicture: this.croppedImageUrl };
+          this.authService['userSubject'].next(preview);
+        }
       }
       this.cdr.detectChanges();
 

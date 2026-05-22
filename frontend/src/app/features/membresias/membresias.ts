@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MembershipsService, Membership } from '../../core/services/memberships.service';
 import { AuthService } from '../../core/services/auth.service';
+import { PaymentService } from '../../core/services/payment.service';
 
 interface PlanCard {
   id: number;
@@ -12,6 +13,7 @@ interface PlanCard {
   description: string;
   features: string[];
   recommended: boolean;
+  owned: boolean;
 }
 
 @Component({
@@ -24,6 +26,7 @@ interface PlanCard {
 export class MembresiasComponent implements OnInit {
   private membershipsService = inject(MembershipsService);
   private authService = inject(AuthService);
+  private paymentService = inject(PaymentService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
@@ -50,6 +53,11 @@ export class MembresiasComponent implements OnInit {
 
     this.membershipsService.getPublicMemberships().subscribe({
       next: (memberships) => {
+        const user = this.authService.getUser();
+        
+        // Find which plans are active for the current user
+        const activeMemberships = (user?.userMemberships || []).filter((m: any) => m.status === 'ACTIVE');
+
         this.planes = memberships.map((m, index) => {
           let desc = m.description || '';
           if (desc.length > 90) {
@@ -60,7 +68,6 @@ export class MembresiasComponent implements OnInit {
             ? m.benefits.split(/[,\n]+/).map(b => b.trim()).filter(b => b.length > 0)
             : [];
             
-          // Limitar a máximo 5 beneficios para no alargar la tarjeta infinitamente
           if (feats.length > 5) {
             feats = feats.slice(0, 5);
           }
@@ -72,11 +79,12 @@ export class MembresiasComponent implements OnInit {
             durationDays: m.durationDays,
             description: desc,
             features: feats,
-            recommended: index === 1 // Middle plan is recommended by default
+            recommended: index === 1,
+            owned: activeMemberships.some((um: any) => um.membership?.id === m.id)
           };
         });
         this.loading = false;
-        this.cdr.detectChanges(); // Forzar actualización de la vista al instante
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error loading memberships:', err);
@@ -105,18 +113,17 @@ export class MembresiasComponent implements OnInit {
   confirmSubscription() {
     if (!this.selectedPlan || this.subscribing) return;
 
+    const user = this.authService.getUser();
+    if (!user) return;
+
     this.subscribing = true;
 
-    this.membershipsService.subscribeToPlan(this.selectedPlan.id).subscribe({
-      next: () => {
+    this.paymentService.createMembershipCheckoutSession(this.selectedPlan.id, user.id).subscribe({
+      next: (res) => {
         this.subscribing = false;
-        this.closeModal();
-        this.showToast('¡Te has suscrito exitosamente! Revisa tu perfil.', 'success');
-
-        // Redirect to profile after a short delay
-        setTimeout(() => {
-          this.router.navigate(['/perfil']);
-        }, 2500);
+        if (res.url) {
+          window.location.href = res.url;
+        }
       },
       error: (err) => {
         this.subscribing = false;

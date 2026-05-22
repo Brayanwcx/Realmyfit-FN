@@ -7,7 +7,8 @@ import { Payment, PaymentMethod, PaymentStatus } from '../entities/payment.entit
 import { Order } from '../../orders/entities/order.entity';
 import { OrderItem } from '../../orders/entities/order-item.entity';
 import { Product } from '../../products/entities/product.entity';
-import { CreatePaymentDto, UpdatePaymentDto, CreateCheckoutSessionDto } from '../dtos/payment.dto';
+import { CreatePaymentDto, UpdatePaymentDto, CreateCheckoutSessionDto, CreateMembershipCheckoutDto } from '../dtos/payment.dto';
+import { MembershipsService } from '../../memberships/services/memberships.service';
 
 @Injectable()
 export class PaymentsService {
@@ -19,6 +20,7 @@ export class PaymentsService {
         @InjectRepository(OrderItem) private orderItemRepo: Repository<OrderItem>,
         @InjectRepository(Product) private productRepo: Repository<Product>,
         private configService: ConfigService,
+        private membershipsService: MembershipsService,
     ) {
         const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
         if (!secretKey) {
@@ -74,6 +76,52 @@ export class PaymentsService {
     }
 
     // ─── STRIPE ──────────────────────────────────────────────────────────────────
+
+    async createMembershipCheckoutSession(dto: CreateMembershipCheckoutDto) {
+        if (!this.stripe) throw new BadRequestException('Stripe not configured.');
+
+        const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:4200';
+        const successUrl = dto.successUrl || `${frontendUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
+        const cancelUrl = dto.cancelUrl || `${frontendUrl}/checkout/cancel`;
+
+        const membership = await this.membershipsService.findOne(dto.membershipId);
+        if (!membership || !membership.isActive) {
+            throw new BadRequestException('Membership is not available');
+        }
+
+        const session = await this.stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            mode: 'payment',
+            line_items: [{
+                quantity: 1,
+                price_data: {
+                    currency: 'usd',
+                    unit_amount: Math.round(membership.price * 100),
+                    product_data: { name: `Membresía: ${membership.name}` },
+                },
+            }],
+            success_url: successUrl,
+            cancel_url: cancelUrl,
+            metadata: {
+                type: 'MEMBERSHIP',
+                userId: String(dto.userId),
+                membershipId: String(membership.id),
+            },
+        });
+
+        // Save a Pending Payment for the Membership (No Order is created)
+        const payment = this.paymentRepo.create({
+            amount: membership.price,
+            paymentMethod: PaymentMethod.STRIPE,
+            status: PaymentStatus.PENDING,
+            stripeSessionId: session.id,
+            description: `Membresía Checkout - ${membership.name}`,
+            user_id: dto.userId,
+        });
+        await this.paymentRepo.save(payment);
+
+        return { url: session.url, sessionId: session.id };
+    }
 
     async createCheckoutSession(dto: CreateCheckoutSessionDto) {
         if (!this.stripe) {
@@ -153,6 +201,16 @@ export class PaymentsService {
             
             // Si el pago ya fue procesado correctamente:
             if (session.payment_status === 'paid') {
+                if (session.metadata?.type === 'MEMBERSHIP') {
+                    const paymentDoc = await this.paymentRepo.findOne({ where: { stripeSessionId: session.id } });
+                    if (paymentDoc && paymentDoc.status !== PaymentStatus.COMPLETED) {
+                        await this.paymentRepo.update({ id: paymentDoc.id }, { status: PaymentStatus.COMPLETED });
+                        await this.membershipsService.subscribeUser(Number(session.metadata.userId), Number(session.metadata.membershipId));
+                        return { success: true, status: 'paid', type: 'membership' };
+                    }
+                    return { success: true, status: 'already_processed', type: 'membership' };
+                }
+
                 const orderDoc = await this.orderRepo.findOne({ where: { notes: session.id } });
                 
                 // Solo si encontramos la orden y aun esta pendiente para evitar restar multiple veces
@@ -205,15 +263,24 @@ export class PaymentsService {
                 { status: PaymentStatus.COMPLETED },
             );
             
-            const orderDoc = await this.orderRepo.findOne({ where: { notes: session.id } });
-            if (orderDoc) {
-                await this.orderRepo.update(
-                    { id: orderDoc.id },
-                    { status: 'CONFIRMED' as any },
-                );
-                await this.deductStock(orderDoc.id);
+            if (session.metadata?.type === 'MEMBERSHIP') {
+                try {
+                    await this.membershipsService.subscribeUser(Number(session.metadata.userId), Number(session.metadata.membershipId));
+                    console.log(`[Stripe] Membership activated for session ${session.id}`);
+                } catch (e) {
+                    console.error('[Stripe] Failed to assign membership on webhook:', e);
+                }
+            } else {
+                const orderDoc = await this.orderRepo.findOne({ where: { notes: session.id } });
+                if (orderDoc) {
+                    await this.orderRepo.update(
+                        { id: orderDoc.id },
+                        { status: 'CONFIRMED' as any },
+                    );
+                    await this.deductStock(orderDoc.id);
+                }
+                console.log(`[Stripe] Payment completed for session ${session.id}`);
             }
-            console.log(`[Stripe] Payment completed for session ${session.id}`);
         }
 
         if (event.type === 'checkout.session.expired') {

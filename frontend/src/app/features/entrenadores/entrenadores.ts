@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TrainersService } from '../../core/services/trainers.service';
 import { environment } from '../../../environments/environment';
@@ -13,6 +13,8 @@ import { environment } from '../../../environments/environment';
 export class EntrenadoresComponent implements OnInit {
   private trainersService = inject(TrainersService);
   private apiBase = environment.apiUrl.replace('/api', '');
+  private ngZone = inject(NgZone);
+  private cdr = inject(ChangeDetectorRef);
 
   entrenadores: any[] = [];
   loading = true;
@@ -21,12 +23,18 @@ export class EntrenadoresComponent implements OnInit {
   ngOnInit() {
     this.trainersService.getTrainersPublic().subscribe({
       next: (data) => {
-        this.entrenadores = data.filter(t => t.isActive);
-        this.loading = false;
+        this.ngZone.run(() => {
+          this.entrenadores = data.filter((t: any) => t.isActive);
+          this.loading = false;
+        });
+        this.cdr.detectChanges();
       },
       error: () => {
-        this.error = 'No se pudo cargar la lista de entrenadores.';
-        this.loading = false;
+        this.ngZone.run(() => {
+          this.error = 'No se pudo cargar la lista de entrenadores.';
+          this.loading = false;
+        });
+        this.cdr.detectChanges();
       }
     });
   }

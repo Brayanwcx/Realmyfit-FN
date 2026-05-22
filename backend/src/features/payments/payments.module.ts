@@ -7,11 +7,13 @@ import { OrderItem } from '../orders/entities/order-item.entity';
 import { Product } from '../products/entities/product.entity';
 import { PaymentsService } from './services/payments.service';
 import { PaymentsController } from './controllers/payments.controller';
+import { MembershipsModule } from '../memberships/memberships.module'; // Added Import
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([Payment, Order, OrderItem, Product]),
         ConfigModule,
+        MembershipsModule // Included here
     ],
     providers: [PaymentsService],
     controllers: [PaymentsController],

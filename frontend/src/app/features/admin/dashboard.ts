@@ -10,6 +10,7 @@ import { ProductsService } from '../../core/services/products.service';
 import { MembershipsService } from '../../core/services/memberships.service';
 import { ReviewsService } from '../../core/services/reviews.service';
 import { OrdersService } from '../../core/services/orders.service';
+import { PaymentService } from '../../core/services/payment.service';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -272,6 +273,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   private membershipsService = inject(MembershipsService);
   private reviewsService = inject(ReviewsService);
   private ordersService = inject(OrdersService);
+  private paymentService = inject(PaymentService);
   
   private cdr = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone);
@@ -285,6 +287,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   };
   
   allOrders: any[] = [];
+  allPayments: any[] = [];
   recentOrders: any[] = [];
   reviewsData: any[] = [];
 
@@ -328,6 +331,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
       memberships: safeCall(this.membershipsService.getMemberships()),
       orders: safeCall(this.ordersService.getOrders()),
       reviews: safeCall(this.reviewsService.getReviews()),
+      payments: safeCall(this.paymentService.getPayments()),
     }).subscribe({
       next: (res: any) => {
         this.ngZone.run(() => {
@@ -340,7 +344,6 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
           
           if(res.orders && Array.isArray(res.orders)) {
             this.allOrders = res.orders;
-            // Sort recent first
             const sortedOrders = [...res.orders].sort((a, b) => 
                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
             );
@@ -349,13 +352,16 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
             this.recentOrders = [];
           }
 
+          if(res.payments && Array.isArray(res.payments)) {
+             this.allPayments = res.payments;
+          }
+
           if(res.reviews) this.reviewsData = res.reviews;
           
           this.lastUpdate = new Date();
           this.loading = false;
           this.cdr.detectChanges();
 
-          // Render charts after data is ready
           setTimeout(() => {
             this.initLineChart();
             this.initDoughnutChart();
@@ -378,19 +384,23 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
 
     const ctx = this.lineChartCanvas.nativeElement.getContext('2d');
     
-    // Compute total revenues per month for the current year
+    // Compute total revenues per month for the current year based on PAYMENTS
     const currentYear = new Date().getFullYear();
     const monthlyIncome = new Array(12).fill(0);
     
-    this.allOrders.forEach(order => {
-      // Only count completed orders
-      const st = (order.status || '').toUpperCase();
+    this.allPayments.forEach(payment => {
+      // Only count completed payments
+      const st = (payment.status || '').toUpperCase();
       if (st === 'COMPLETED' || st === 'COMPLETADO') {
-        const date = new Date(order.createdAt);
-        if (date.getFullYear() === currentYear) {
-          const monthIndex = date.getMonth(); // 0-11
-          const amount = typeof order.totalAmount === 'number' ? order.totalAmount : parseFloat(order.totalAmount || '0');
-          monthlyIncome[monthIndex] += amount;
+        // Payments usually have createdAt or created_at
+        const dateString = payment.createdAt || payment.created_at;
+        if (dateString) {
+            const date = new Date(dateString);
+            if (date.getFullYear() === currentYear) {
+            const monthIndex = date.getMonth(); // 0-11
+            const amount = typeof payment.amount === 'number' ? payment.amount : parseFloat(payment.amount || '0');
+            monthlyIncome[monthIndex] += amount;
+            }
         }
       }
     });

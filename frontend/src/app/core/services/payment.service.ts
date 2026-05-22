@@ -28,6 +28,10 @@ export class PaymentService {
     return new HttpHeaders({ Authorization: `Bearer ${token}` });
   }
 
+  getPayments(): Observable<any[]> {
+    return this.http.get<any[]>(this.apiUrl + '/payments', { headers: this.getHeaders() });
+  }
+
   createCheckoutSession(
     items: CheckoutItem[],
     userId: number
@@ -35,6 +39,19 @@ export class PaymentService {
     return this.http.post<CheckoutSessionResponse>(
       `${this.apiUrl}/payments/stripe/checkout-session`,
       { items, userId },
+      { headers: this.getHeaders() }
+    );
+  }
+
+  createMembershipCheckoutSession(
+    membershipId: number,
+    userId: number,
+    successUrl?: string,
+    cancelUrl?: string
+  ): Observable<CheckoutSessionResponse> {
+    return this.http.post<CheckoutSessionResponse>(
+      `${this.apiUrl}/payments/stripe/checkout-session/membership`,
+      { membershipId, userId, successUrl, cancelUrl },
       { headers: this.getHeaders() }
     );
   }

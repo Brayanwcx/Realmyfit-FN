@@ -222,40 +222,6 @@
           </div>
         }
 
-        <!-- ORDERS TAB -->
-        @if (activeTab === 'orders') {
-          <div class="content-section animate-tab">
-            <h3 class="section-title">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-              Mis Pedidos
-            </h3>
-            @if (user?.orders?.length) {
-              <div class="cards-list">
-                @for (order of user.orders; track order.id) {
-                  <div class="data-card">
-                    <div class="data-card-header">
-                      <h4>Pedido #{{ order.id }}</h4>
-                      <span class="data-badge">{{ order.status || 'Procesado' }}</span>
-                    </div>
-                    <div class="data-card-body">
-                      <div class="data-row">
-                        <span>Total:</span>
-                        <span class="data-highlight">${{ order.total | number:'1.0-0' }}</span>
-                      </div>
-                    </div>
-                  </div>
-                }
-              </div>
-            } @else {
-              <div class="empty-state">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                <p>Aún no tienes pedidos</p>
-                <span>Explora nuestros productos y haz tu primera compra</span>
-              </div>
-            }
-          </div>
-        }
-
         <!-- EVENTS TAB -->
         @if (activeTab === 'events') {
           <div class="content-section animate-tab">

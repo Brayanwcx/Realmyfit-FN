@@ -25,7 +25,7 @@
 
             <div class="machine-image">
               @if (machine.imageUrl) {
-                <img [src]="machine.imageUrl" [alt]="machine.name" class="machine-img">
+                <img [src]="machinesService.getImageUrl(machine.imageUrl)" [alt]="machine.name" class="machine-img" (error)="machine.imageUrl = ''">
               } @else {
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" class="machine-icon" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M6 3v18"></path>

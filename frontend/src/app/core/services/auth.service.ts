@@ -92,12 +92,12 @@ export class AuthService {
       headers: this.getAuthHeaders() // HttpClient handles multipart/form-data boundary automatically when sending FormData
     }).pipe(
       tap(response => {
-        // Update user locally
+        // Update user locally with a NEW object reference so Angular CD fires everywhere
         const currentUser = this.getUser();
         if (currentUser) {
-          currentUser.profilePicture = response.profilePicture;
-          localStorage.setItem('gym_user', JSON.stringify(currentUser));
-          this.userSubject.next(currentUser);
+          const updatedUser = { ...currentUser, profilePicture: response.profilePicture };
+          localStorage.setItem('gym_user', JSON.stringify(updatedUser));
+          this.userSubject.next(updatedUser);
         }
       }),
       catchError(error => {

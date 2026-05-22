@@ -1,22 +1,25 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { EventRegistrationsService } from '../../core/services/event-registrations.service';
 import { finalize } from 'rxjs';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-admin-event-registrations',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule],
   template: `
     <div class="view-header">
       <h2>Inscripciones a Eventos</h2>
-      <p class="subtitle">Monitorea los usuarios inscritos</p>
+      <p class="subtitle">Monitorea los usuarios inscritos y gestiona sus registros</p>
     </div>
     
     <div class="table-container glass">
       @if (loading) {
-        <div class="loading-state">Cargando inscripciones...</div>
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Cargando inscripciones...</p>
+        </div>
       }
 
       @if (errorMessage) {
@@ -27,23 +30,25 @@ import { finalize } from 'rxjs';
       }
       
       @if (!loading && !errorMessage && registrations.length > 0) {
-        <table>
+        <!-- Desktop table -->
+        <table class="desktop-table">
           <thead>
             <tr>
-              <th>ID</th>
+              <th>#</th>
               <th>Evento</th>
               <th>Usuario</th>
-              <th>Fecha Registro</th>
-              <th>Estado de Pago</th>
+              <th>Fecha de Registro</th>
+              <th>Estado</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             @for (reg of registrations; track reg.id) {
               <tr>
-                <td>#{{ reg.id }}</td>
+                <td class="id-col">#{{ reg.id }}</td>
                 <td>
                   <div class="fw-bold">{{ reg.event?.title || 'Evento Desconocido' }}</div>
+                  <div class="text-sm op-7">{{ reg.event?.date ? (reg.event.date | date:'mediumDate') : '' }}</div>
                 </td>
                 <td>
                   <div class="fw-bold">{{ reg.user?.name || '---' }} {{ reg.user?.lastName || '' }}</div>
@@ -51,57 +56,138 @@ import { finalize } from 'rxjs';
                 </td>
                 <td>{{ reg.registrationDate | date:'short' }}</td>
                 <td>
-                  <span class="status-badge" [class.success]="reg.paymentStatus === 'PAID'" [class.warning]="reg.paymentStatus === 'PENDING'" [class.error]="reg.paymentStatus === 'FAILED'">
-                    {{ reg.paymentStatus }}
+                  <span class="status-badge"
+                    [class.success]="reg.status === 'CONFIRMED'"
+                    [class.warning]="reg.status === 'PENDING'"
+                    [class.error]="reg.status === 'CANCELLED'">
+                    {{ getStatusLabel(reg.status) }}
                   </span>
                 </td>
                 <td>
-                  <button class="btn-icon delete" (click)="deleteRegistration(reg.id)">Eliminar</button>
+                  <div class="actions-cell">
+                    @if (reg.status === 'PENDING') {
+                      <button class="btn-icon confirm" (click)="confirmRegistration(reg)" title="Confirmar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        Confirmar
+                      </button>
+                    }
+                    <button class="btn-icon delete" (click)="deleteRegistration(reg.id)" title="Eliminar">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                      Eliminar
+                    </button>
+                  </div>
                 </td>
               </tr>
             }
           </tbody>
         </table>
+
+        <!-- Mobile cards -->
+        <div class="mobile-cards">
+          @for (reg of registrations; track reg.id) {
+            <div class="mobile-card glass">
+              <div class="card-row">
+                <span class="card-label">Evento</span>
+                <span class="card-value fw-bold">{{ reg.event?.title || '—' }}</span>
+              </div>
+              <div class="card-row">
+                <span class="card-label">Usuario</span>
+                <span class="card-value">{{ reg.user?.name || '—' }} {{ reg.user?.lastName || '' }}</span>
+              </div>
+              <div class="card-row">
+                <span class="card-label">Email</span>
+                <span class="card-value text-sm op-7">{{ reg.user?.email || 'N/A' }}</span>
+              </div>
+              <div class="card-row">
+                <span class="card-label">Fecha</span>
+                <span class="card-value">{{ reg.registrationDate | date:'short' }}</span>
+              </div>
+              <div class="card-row">
+                <span class="card-label">Estado</span>
+                <span class="status-badge"
+                  [class.success]="reg.status === 'CONFIRMED'"
+                  [class.warning]="reg.status === 'PENDING'"
+                  [class.error]="reg.status === 'CANCELLED'">
+                  {{ getStatusLabel(reg.status) }}
+                </span>
+              </div>
+              <div class="card-actions">
+                @if (reg.status === 'PENDING') {
+                  <button class="btn-icon confirm" (click)="confirmRegistration(reg)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Confirmar
+                  </button>
+                }
+                <button class="btn-icon delete" (click)="deleteRegistration(reg.id)">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          }
+        </div>
       }
 
       @if (!loading && !errorMessage && registrations.length === 0) {
         <div class="empty-state">
-          No hay inscripciones registradas.
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          <p>No hay inscripciones registradas.</p>
         </div>
       }
     </div>
   `,
   styles: [`
     .view-header { margin-bottom: 2rem; }
-    .view-header h2 { margin: 0; }
+    .view-header h2 { margin: 0; font-size: 1.8rem; font-weight: 700; background: linear-gradient(to right, #fff, rgba(255,255,255,0.7)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .subtitle { color: rgba(255,255,255,0.6); margin: 0.25rem 0 0; font-size: 0.9rem; }
     
-    .table-container { padding: 1.25rem; overflow-x: auto; margin-bottom: 2rem; }
-    table { width: 100%; border-collapse: collapse; text-align: left; color: #fff; }
-    th { padding: 0.85rem 1rem; color: rgba(255,255,255,0.7); font-weight: 600; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid rgba(255,255,255,0.08); }
-    td { padding: 0.85rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
+    .table-container { padding: 1.5rem; overflow-x: auto; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); }
+    .desktop-table { width: 100%; min-width: 700px; border-collapse: separate; border-spacing: 0; text-align: left; }
+    .desktop-table th { padding: 1rem; color: rgba(255,255,255,0.6); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .desktop-table td { padding: 1.1rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; color: #fff; }
+    .id-col { color: rgba(255,255,255,0.5); font-size: 0.85rem; }
     
-    .loading-state, .empty-state, .error-state { padding: 3rem; text-align: center; color: rgba(255,255,255,0.55); }
+    .loading-state, .empty-state, .error-state { padding: 3rem; text-align: center; color: rgba(255,255,255,0.55); display: flex; flex-direction: column; align-items: center; gap: 1rem; }
     .error-state { color: #ff6b6b; }
+    .spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--color-primary, #0ea5e9); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
     
     .fw-bold { font-weight: 600; }
     .text-sm { font-size: 0.8rem; }
     .op-7 { opacity: 0.7; }
     
-    .status-badge { font-size: 0.75rem; font-weight: 500; padding: 0.25rem 0.6rem; border-radius: 20px; background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); }
-    .status-badge.success { background: rgba(39, 174, 96, 0.15); color: #4ade80; border: 1px solid rgba(39, 174, 96, 0.3); }
-    .status-badge.warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
-    .status-badge.error { background: rgba(255, 77, 77, 0.15); color: #ff6b6b; border: 1px solid rgba(255, 77, 77, 0.3); }
+    .status-badge { font-size: 0.75rem; font-weight: 600; padding: 0.3rem 0.7rem; border-radius: 20px; background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); display: inline-block; letter-spacing: 0.4px; }
+    .status-badge.success { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+    .status-badge.warning { background: rgba(250,204,21,0.15); color: #fbbf24; border: 1px solid rgba(250,204,21,0.3); }
+    .status-badge.error { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
     
-    .btn-icon { background: none; border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 0.45rem 0.8rem; border-radius: 8px; cursor: pointer; margin-right: 0.4rem; transition: 0.2s; font-size: 0.8rem; }
-    .btn-icon:hover { background: rgba(255,255,255,0.06); }
-    .btn-icon.delete { border-color: rgba(255,77,77,0.35); color: #ff9090; }
-    .btn-icon.delete:hover { background: rgba(255,77,77,0.1); }
+    .actions-cell { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .btn-icon { display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 0.45rem 0.85rem; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 500; transition: 0.2s; }
+    .btn-icon:hover { background: rgba(255,255,255,0.1); }
+    .btn-icon.confirm { border-color: rgba(34,197,94,0.35); color: #4ade80; }
+    .btn-icon.confirm:hover { background: rgba(34,197,94,0.1); }
+    .btn-icon.delete { border-color: rgba(239,68,68,0.35); color: #f87171; }
+    .btn-icon.delete:hover { background: rgba(239,68,68,0.1); }
+
+    .btn-primary { display: inline-flex; align-items: center; justify-content: center; background: var(--color-primary, #0ea5e9); color: #000; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; }
+
+    .mobile-cards { display: none; }
+    @media (max-width: 768px) {
+      .desktop-table { display: none; }
+      .mobile-cards { display: flex; flex-direction: column; gap: 1rem; }
+      .mobile-card { padding: 1.25rem; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); }
+      .card-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+      .card-label { font-size: 0.85rem; color: rgba(255,255,255,0.6); }
+      .card-value { color: white; font-weight: 500; font-size: 0.9rem; }
+      .card-actions { display: flex; gap: 0.5rem; margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.05); }
+      .card-actions .btn-icon { flex: 1; justify-content: center; text-align: center; }
+    }
   `]
 })
 export class AdminEventRegistrationsComponent implements OnInit {
   private regService = inject(EventRegistrationsService);
   private cdr = inject(ChangeDetectorRef);
+  private ngZone = inject(NgZone);
   
   registrations: any[] = [];
   loading = true;
@@ -132,12 +218,66 @@ export class AdminEventRegistrationsComponent implements OnInit {
       });
   }
 
-  deleteRegistration(id: number) {
-    if (confirm('¿Estás seguro de eliminar esta inscripción? El cupo del evento podría ser restaurado automáticamente.')) {
-      this.regService.remove(id).subscribe({
-        next: () => this.fetchRegistrations(),
-        error: (err) => alert('No se pudo eliminar la inscripción.')
-      });
+  getStatusLabel(status: string): string {
+    switch (status) {
+      case 'CONFIRMED': return 'Confirmado';
+      case 'PENDING': return 'Pendiente';
+      case 'CANCELLED': return 'Cancelado';
+      default: return status || '—';
     }
+  }
+
+  confirmRegistration(reg: any) {
+    this.ngZone.run(() => {
+      Swal.fire({
+        title: '¿Confirmar inscripción?',
+        html: `Confirmar asistencia de <b>${reg.user?.name || 'usuario'}</b> al evento <b>${reg.event?.title || ''}</b>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#22c55e',
+        cancelButtonColor: '#ef4444',
+        confirmButtonText: 'Sí, confirmar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.regService.update(reg.id, { status: 'CONFIRMED' }).subscribe({
+            next: () => {
+              this.fetchRegistrations();
+              Swal.fire('¡Confirmado!', 'La inscripción ha sido confirmada.', 'success');
+            },
+            error: () => {
+              Swal.fire('Error', 'No se pudo confirmar la inscripción.', 'error');
+            }
+          });
+        }
+      });
+    });
+  }
+
+  deleteRegistration(id: number) {
+    this.ngZone.run(() => {
+      Swal.fire({
+        title: '¿Eliminar inscripción?',
+        text: 'No podrás revertir esta acción.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#22c55e',
+        cancelButtonColor: '#ef4444',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.regService.remove(id).subscribe({
+            next: () => {
+              this.fetchRegistrations();
+              Swal.fire('¡Eliminado!', 'La inscripción ha sido eliminada.', 'success');
+            },
+            error: () => {
+              Swal.fire('Error', 'No se pudo eliminar la inscripción.', 'error');
+            }
+          });
+        }
+      });
+    });
   }
 }

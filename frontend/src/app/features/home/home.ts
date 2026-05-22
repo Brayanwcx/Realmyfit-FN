@@ -1,7 +1,8 @@
-import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, inject, ChangeDetectorRef } from '@angular/core';
 import { HeroComponent } from '../hero/hero';
 import { FeaturesComponent } from '../features/features';
 import { RouterLink } from '@angular/router';
+import { ReviewsService } from '../../core/services/reviews.service';
 
 @Component({
   selector: 'app-home',
@@ -36,6 +37,9 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
   private statsObserver: IntersectionObserver | null = null;
   private statsAnimated = false;
 
+  private reviewsService = inject(ReviewsService);
+  private cdr = inject(ChangeDetectorRef);
+
   // Stat definitions — must match the ids added to home.component.html
   private stats = [
     { prefix: '+', target: 5000, suffix: '',   id: 'stat-members' },
@@ -46,6 +50,23 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnInit() {
     this.startCarousel();
+    
+    this.reviewsService.getReviews().subscribe({
+      next: (data) => {
+        const activeReviews = data.filter((r: any) => r.isActive);
+        if (activeReviews.length > 0) {
+          this.testimonials = activeReviews.map((r: any) => ({
+            text: `"${r.comment}"`,
+            author: `${r.user?.name || 'Usuario'} ${r.user?.lastName || ''}`,
+            role: 'Atleta RealMyFit',
+            avatar: '🌟'
+          }));
+          this.currentIndex = 0;
+          this.cdr.detectChanges();
+        }
+      },
+      error: (e) => console.log('Error fetching real reviews', e)
+    });
   }
 
   ngAfterViewInit() {

@@ -324,6 +324,8 @@ export class AdminOrdersComponent implements OnInit {
 
   onStatusChange(order: any, newStatus: string) {
     const oldStatus = order.status;
+    const statusMap: any = { PENDING: 'Pendiente', CONFIRMED: 'Confirmado', DELIVERED: 'Entregado', CANCELLED: 'Cancelado' };
+    const statusEs = statusMap[newStatus] || newStatus;
 
     this.ordersService.updateOrder(order.id, { status: newStatus }).subscribe({
       next: (updated) => {
@@ -331,15 +333,7 @@ export class AdminOrdersComponent implements OnInit {
           order.status = updated.status;
           this.cdr.detectChanges();
         });
-        Swal.fire({
-          title: 'Estado actualizado',
-          text: `Pedido #${order.id} → ${newStatus}`,
-          icon: 'success',
-          timer: 1500,
-          showConfirmButton: false,
-          background: '#1a1a2e',
-          color: '#f5f5f5'
-        });
+        Swal.fire('¡Estado actualizado!', `El pedido #${order.id} ahora está en estado '${statusEs}'`, 'success');
       },
       error: () => {
         this.ngZone.run(() => {
@@ -394,16 +388,14 @@ export class AdminOrdersComponent implements OnInit {
 
   deleteOrder(order: any) {
     Swal.fire({
-      title: '¿Eliminar pedido?',
-      html: `<span style="color:rgba(255,255,255,0.6)">Pedido <strong style="color:#f87171">#${order.id}</strong> de <strong style="color:#fff">${order.user?.name}</strong> será eliminado permanentemente.</span>`,
+      title: '¿Estás seguro?',
+      text: "No podrás revertir esto. Se eliminará el pedido permanentemente.",
       icon: 'warning',
       showCancelButton: true,
+      confirmButtonColor: '#22c55e',
+      cancelButtonColor: '#ef4444',
       confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#374151',
-      background: '#1a1a2e',
-      color: '#f5f5f5'
+      cancelButtonText: 'Cancelar'
     }).then(result => {
       if (result.isConfirmed) {
         this.ordersService.deleteOrder(order.id).subscribe({
@@ -412,7 +404,7 @@ export class AdminOrdersComponent implements OnInit {
               this.orders = this.orders.filter(o => o.id !== order.id);
               this.cdr.detectChanges();
             });
-            Swal.fire({ title: 'Eliminado', icon: 'success', timer: 1500, showConfirmButton: false, background: '#1a1a2e', color: '#f5f5f5' });
+            Swal.fire('¡Eliminado!', 'El pedido ha sido eliminado.', 'success');
           },
           error: () => Swal.fire('Error', 'No se pudo eliminar el pedido.', 'error')
         });

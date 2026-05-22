@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
-import { Machine } from '../../core/services/machines.service';
+import { Machine, MachinesService } from '../../core/services/machines.service';
 
 @Component({
   selector: 'app-maquina-detalle',
@@ -11,6 +11,7 @@ import { Machine } from '../../core/services/machines.service';
   styleUrl: './maquina-detalle.scss',
 })
 export class MaquinaDetalle implements OnInit {
+  public machinesService = inject(MachinesService);
   videoUrl!: SafeResourceUrl | null;
   maquina: Machine | null = null;
 

@@ -92,11 +92,13 @@
             
             <button 
               class="btn-select"
-              [class.btn-primary-gradient]="plan.recommended"
-              [class.btn-outline]="!plan.recommended"
+              [class.btn-primary-gradient]="plan.recommended && !plan.owned"
+              [class.btn-outline]="!plan.recommended && !plan.owned"
+              [class.btn-disabled]="plan.owned"
+              [disabled]="plan.owned"
               (click)="selectPlan(plan)"
               id="select-plan-{{ plan.id }}">
-              Elegir {{ plan.name }}
+              {{ plan.owned ? 'Plan Adquirido' : 'Elegir ' + plan.name }}
             </button>
           </div>
         }

@@ -5,7 +5,7 @@ import {
 import type { Request } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { PaymentsService } from '../services/payments.service';
-import { CreatePaymentDto, UpdatePaymentDto, CreateCheckoutSessionDto } from '../dtos/payment.dto';
+import { CreatePaymentDto, UpdatePaymentDto, CreateCheckoutSessionDto, CreateMembershipCheckoutDto } from '../dtos/payment.dto';
 import { JwtAuthGuard } from '../../../auth/guards/auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
@@ -26,6 +26,16 @@ export class PaymentsController {
     @ApiResponse({ status: 201, description: 'Returns { url, sessionId }' })
     createCheckoutSession(@Body() dto: CreateCheckoutSessionDto) {
         return this.paymentsService.createCheckoutSession(dto);
+    }
+
+    /** Creates a Stripe Checkout session specifically for Memberships */
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    @Post('stripe/checkout-session/membership')
+    @ApiOperation({ summary: 'Create a Stripe Checkout session for Memberships' })
+    @ApiResponse({ status: 201, description: 'Returns { url, sessionId }' })
+    createMembershipCheckoutSession(@Body() dto: CreateMembershipCheckoutDto) {
+        return this.paymentsService.createMembershipCheckoutSession(dto);
     }
 
     /** Stripe webhook – public endpoint (no JWT) so Stripe can POST freely. */

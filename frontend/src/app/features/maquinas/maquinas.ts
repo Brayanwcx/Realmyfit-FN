@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MachinesService, Machine } from '../../core/services/machines.service';
@@ -10,7 +10,8 @@ import { MachinesService, Machine } from '../../core/services/machines.service';
   styleUrls: ['./maquinas.component.scss'],
 })
 export class MaquinasComponent implements OnInit {
-  private machinesService = inject(MachinesService);
+  public machinesService = inject(MachinesService);
+  private cdr = inject(ChangeDetectorRef);
 
   maquinas: Machine[] = [];
   loading = true;
@@ -21,11 +22,13 @@ export class MaquinasComponent implements OnInit {
       next: (data) => {
         this.maquinas = data;
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error cargando máquinas:', err);
         this.errorMessage = 'No se pudo cargar el equipamiento. Intenta de nuevo más tarde.';
         this.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }

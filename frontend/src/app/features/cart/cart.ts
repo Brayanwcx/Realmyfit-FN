@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { CartService } from '../../core/services/cart.service';
 import { PaymentService } from '../../core/services/payment.service';
 import { AuthService } from '../../core/services/auth.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-cart',
@@ -34,7 +35,13 @@ export class CartComponent implements OnInit {
   }
 
   get total() {
-    return this.subtotal > 0 ? this.subtotal + 5.00 : 0;
+    return this.subtotal;
+  }
+
+  getImageUrl(url: string | null | undefined): string {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    return `${environment.apiUrl}${url}`;
   }
 
   removeItem(item: any) {

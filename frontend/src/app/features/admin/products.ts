@@ -447,16 +447,12 @@ export class AdminProductsComponent implements OnInit {
   removeImage() {
     this.selectedFile = null;
     this.imagePreview = null;
+    this.newProduct.imageUrl = '';
     const input = document.getElementById('fileInput') as HTMLInputElement;
     if (input) input.value = '';
   }
 
   submitProduct() {
-    if (!this.selectedFile && !this.isEditing) {
-      alert('Por favor selecciona una imagen');
-      return;
-    }
-
     this.isSubmitting = true;
 
     if (this.selectedFile) {
@@ -519,13 +515,28 @@ export class AdminProductsComponent implements OnInit {
   }
 
   deleteProduct(id: number) {
-    if (confirm('¿Estás seguro de eliminar este producto?')) {
-      this.productsService.deleteProduct(id).subscribe(() => {
-        this.fetchProducts();
-
-
-      });
-    }
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: "No podrás revertir esto. Se eliminará el producto permanentemente.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#22c55e',
+      cancelButtonColor: '#ef4444',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.productsService.deleteProduct(id).subscribe({
+          next: () => {
+            Swal.fire('¡Eliminado!', 'El producto ha sido eliminado.', 'success');
+            this.fetchProducts();
+          },
+          error: () => {
+            Swal.fire('Error', 'No se pudo eliminar el producto.', 'error');
+          }
+        });
+      }
+    });
   }
 }
 

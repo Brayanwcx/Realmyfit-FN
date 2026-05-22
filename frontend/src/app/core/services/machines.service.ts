@@ -55,4 +55,27 @@ export class MachinesService {
   deleteMachine(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/machines/${id}`, { headers: this.getHeaders() });
   }
+
+  uploadImage(file: File): Observable<{ imageUrl: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ imageUrl: string }>(
+      `${this.apiUrl}/machines/upload-image`,
+      formData,
+      { headers: new HttpHeaders({ 'Authorization': `Bearer ${localStorage.getItem('gym_token')}` }) }
+    );
+  }
+
+  /**
+   * Returns the full URL for a machine image.
+   * If imageUrl is a relative path (e.g. /uploads/...) stored by the backend,
+   * it prepends the backend host so the browser loads from the correct server.
+   */
+  getImageUrl(imageUrl: string | undefined): string {
+    if (!imageUrl) return '';
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return imageUrl;
+    }
+    return `${this.apiUrl}${imageUrl}`;
+  }
 }

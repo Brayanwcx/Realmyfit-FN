@@ -90,3 +90,25 @@ export class CreateCheckoutSessionDto {
     @ApiProperty({ required: false })
     readonly cancelUrl?: string;
 }
+
+export class CreateMembershipCheckoutDto {
+    @IsNumber()
+    @IsNotEmpty()
+    @ApiProperty({ example: 1, description: 'ID of the Membership plan to purchase' })
+    readonly membershipId: number;
+
+    @IsNumber()
+    @IsNotEmpty()
+    @ApiProperty({ example: 1 })
+    readonly userId: number;
+
+    @IsString()
+    @IsOptional()
+    @ApiProperty({ required: false })
+    readonly successUrl?: string;
+
+    @IsString()
+    @IsOptional()
+    @ApiProperty({ required: false })
+    readonly cancelUrl?: string;
+}

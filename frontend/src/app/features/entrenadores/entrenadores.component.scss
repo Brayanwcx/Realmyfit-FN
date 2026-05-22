@@ -33,7 +33,7 @@
 /* ── Grid ── */
 .trainers-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
   gap: 2.5rem;
 }
 
@@ -57,7 +57,7 @@
   }
 
   .trainer-photo {
-    height: 220px;
+    height: 380px;
     background: rgba(255,255,255,0.02);
     display: flex;
     align-items: center;
