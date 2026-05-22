@@ -34,12 +34,15 @@ export class EventosComponent implements OnInit {
   ngOnInit() {
     this.eventsService.getEventsPublic().subscribe({
       next: (data) => {
-        this.eventos = data.filter((e: any) => e.isActive).map((e: any) => ({
-          ...e,
-          instructor: e.instructor || 'Inst. Profesional',
-          spots: e.capacity || 0,
-          image: e.imageUrl ? this.resolveImageUrl(e.imageUrl) : 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b',
-        }));
+        this.eventos = data.filter((e: any) => e.isActive).map((e: any) => {
+          const activeRegs = (e.registrations || []).filter((r: any) => r.status !== 'CANCELLED').length;
+          return {
+            ...e,
+            instructor: e.instructor || 'Inst. Profesional',
+            spots: Math.max(0, (e.capacity || 0) - activeRegs),
+            image: e.imageUrl ? this.resolveImageUrl(e.imageUrl) : 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b',
+          };
+        });
         this.loading = false;
         this.cdr.detectChanges();
       },
