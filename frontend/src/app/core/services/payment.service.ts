@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -23,13 +23,9 @@ export class PaymentService {
 
   constructor(private http: HttpClient) {}
 
-  private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem('gym_token');
-    return new HttpHeaders({ Authorization: `Bearer ${token}` });
-  }
-
+  // Token injected globally by authInterceptor — no manual headers needed
   getPayments(): Observable<any[]> {
-    return this.http.get<any[]>(this.apiUrl + '/payments', { headers: this.getHeaders() });
+    return this.http.get<any[]>(this.apiUrl + '/payments');
   }
 
   createCheckoutSession(
@@ -38,8 +34,7 @@ export class PaymentService {
   ): Observable<CheckoutSessionResponse> {
     return this.http.post<CheckoutSessionResponse>(
       `${this.apiUrl}/payments/stripe/checkout-session`,
-      { items, userId },
-      { headers: this.getHeaders() }
+      { items, userId }
     );
   }
 
@@ -51,8 +46,7 @@ export class PaymentService {
   ): Observable<CheckoutSessionResponse> {
     return this.http.post<CheckoutSessionResponse>(
       `${this.apiUrl}/payments/stripe/checkout-session/membership`,
-      { membershipId, userId, successUrl, cancelUrl },
-      { headers: this.getHeaders() }
+      { membershipId, userId, successUrl, cancelUrl }
     );
   }
 
@@ -62,15 +56,13 @@ export class PaymentService {
   ): Observable<{ success: boolean; paymentId: number }> {
     return this.http.post<{ success: boolean; paymentId: number }>(
       `${this.apiUrl}/payments/simulate`,
-      { items, userId },
-      { headers: this.getHeaders() }
+      { items, userId }
     );
   }
 
   verifyCheckoutSession(sessionId: string): Observable<{ success: boolean; status: string; orderId?: number }> {
     return this.http.get<{ success: boolean; status: string; orderId?: number }>(
-      `${this.apiUrl}/payments/stripe/verify-session/${sessionId}`,
-      { headers: this.getHeaders() }
+      `${this.apiUrl}/payments/stripe/verify-session/${sessionId}`
     );
   }
 }

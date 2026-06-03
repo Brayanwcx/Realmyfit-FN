@@ -179,13 +179,20 @@ export class PaymentsService {
         await this.orderRepo.save(order);
 
         // Create OrderItems
-        const orderItemsList = dto.items.map(item => this.orderItemRepo.create({
-            order_id: order.id,
-            product_id: item.productId || 1, // Fallback if missing
-            quantity: item.quantity,
-            unitPrice: item.price,
-            subtotal: item.price * item.quantity,
-        }));
+        // Bug #5 fix: lanzar error si falta productId en vez de usar fallback silencioso a 1
+        const orderItemsList = dto.items.map(item => {
+            const productId = item.productId;
+            if (!productId) {
+                throw new BadRequestException(`El \`productId\` es requerido para cada item. Item sin productId: '${item.name}'`);
+            }
+            return this.orderItemRepo.create({
+                order_id: order.id,
+                product_id: productId,
+                quantity: item.quantity,
+                unitPrice: item.price,
+                subtotal: item.price * item.quantity,
+            });
+        });
         await this.orderItemRepo.save(orderItemsList);
 
         return { url: session.url, sessionId: session.id };
@@ -273,11 +280,15 @@ export class PaymentsService {
             } else {
                 const orderDoc = await this.orderRepo.findOne({ where: { notes: session.id } });
                 if (orderDoc) {
-                    await this.orderRepo.update(
-                        { id: orderDoc.id },
-                        { status: 'CONFIRMED' as any },
-                    );
-                    await this.deductStock(orderDoc.id);
+                    // Bug #6 fix: verificar que la orden no fue ya confirmada antes de deducir stock
+                    // (puede ocurrir si verifyCheckoutSession() se ejecutó antes que el webhook)
+                    if (orderDoc.status !== 'CONFIRMED' as any) {
+                        await this.orderRepo.update(
+                            { id: orderDoc.id },
+                            { status: 'CONFIRMED' as any },
+                        );
+                        await this.deductStock(orderDoc.id);
+                    }
                 }
                 console.log(`[Stripe] Payment completed for session ${session.id}`);
             }
@@ -323,13 +334,20 @@ export class PaymentsService {
         });
         await this.orderRepo.save(order);
 
-        const orderItemsList = dto.items.map(item => this.orderItemRepo.create({
-            order_id: order.id,
-            product_id: item.productId || 1,
-            quantity: item.quantity,
-            unitPrice: item.price,
-            subtotal: item.price * item.quantity,
-        }));
+        // Bug #5 fix: misma guarda en simulación
+        const orderItemsList = dto.items.map(item => {
+            const productId = item.productId;
+            if (!productId) {
+                throw new BadRequestException(`productId requerido para item '${item.name}'`);
+            }
+            return this.orderItemRepo.create({
+                order_id: order.id,
+                product_id: productId,
+                quantity: item.quantity,
+                unitPrice: item.price,
+                subtotal: item.price * item.quantity,
+            });
+        });
         await this.orderItemRepo.save(orderItemsList);
 
         // Deduct stock for simulated purchase

@@ -42,7 +42,7 @@ import Swal from 'sweetalert2';
             </tr>
           </thead>
           <tbody>
-            @for (msg of messages; track msg.id) {
+            @for (msg of pagedMessages; track msg.id) {
               <tr [class.unread]="!msg.isRead">
                 <td style="text-align: center;">
                   <span class="dot" [class.unread-dot]="!msg.isRead" [class.read-dot]="msg.isRead"
@@ -80,7 +80,7 @@ import Swal from 'sweetalert2';
 
         <!-- Mobile cards -->
         <div class="mobile-cards">
-          @for (msg of messages; track msg.id) {
+          @for (msg of pagedMessages; track msg.id) {
             <div class="mobile-card glass" [class.unread-card]="!msg.isRead">
               <div class="card-row">
                 <span class="card-label">Estado</span>
@@ -109,6 +109,20 @@ import Swal from 'sweetalert2';
             </div>
           }
         </div>
+
+        <!-- Paginación -->
+        @if (totalPages > 1) {
+          <div class="pagination">
+            <button class="page-btn" (click)="page = 1" [disabled]="page === 1">«</button>
+            <button class="page-btn" (click)="page = page - 1" [disabled]="page === 1">‹</button>
+            @for (p of pageNumbers; track p) {
+              <button class="page-btn" [class.active]="p === page" (click)="page = p">{{ p }}</button>
+            }
+            <button class="page-btn" (click)="page = page + 1" [disabled]="page === totalPages">›</button>
+            <button class="page-btn" (click)="page = totalPages" [disabled]="page === totalPages">»</button>
+            <span class="page-info">{{ (page-1)*pageSize+1 }}–{{ min(page*pageSize, messages.length) }} de {{ messages.length }}</span>
+          </div>
+        }
       }
 
       @if (!loading && !errorMessage && messages.length === 0) {
@@ -155,6 +169,13 @@ import Swal from 'sweetalert2';
     .btn-icon.delete:hover { background: rgba(239,68,68,0.1); }
     .btn-primary { display: inline-flex; align-items: center; justify-content: center; background: var(--color-primary, #0ea5e9); color: #000; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; }
 
+    .pagination { display: flex; align-items: center; gap: 0.4rem; justify-content: center; padding: 1.5rem 0 0.5rem; flex-wrap: wrap; }
+    .page-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; }
+    .page-btn:hover:not(:disabled) { background: rgba(255,255,255,0.12); }
+    .page-btn.active { background: #0ea5e9; color: #000; font-weight: 700; border-color: transparent; }
+    .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .page-info { font-size: 0.8rem; color: rgba(255,255,255,0.45); margin-left: 0.5rem; }
+
     .mobile-cards { display: none; }
     @media (max-width: 768px) {
       .desktop-table { display: none; }
@@ -176,6 +197,13 @@ export class AdminContactsComponent implements OnInit {
   messages: any[] = [];
   loading = true;
   errorMessage = '';
+  page = 1;
+  pageSize = 10;
+
+  get totalPages() { return Math.ceil(this.messages.length / this.pageSize); }
+  get pagedMessages() { return this.messages.slice((this.page-1)*this.pageSize, this.page*this.pageSize); }
+  get pageNumbers() { return Array.from({length: this.totalPages}, (_, i) => i + 1); }
+  min(a: number, b: number) { return Math.min(a, b); }
 
   ngOnInit() { this.fetchMessages(); }
 
@@ -187,7 +215,7 @@ export class AdminContactsComponent implements OnInit {
     this.contactsService.findAll()
       .pipe(finalize(() => { this.loading = false; this.cdr.detectChanges(); }))
       .subscribe({
-        next: (data: any[]) => { this.messages = data.sort((a: any, b: any) => +new Date(b.createdAt) - +new Date(a.createdAt)); },
+        next: (data: any[]) => { this.messages = data.sort((a: any, b: any) => +new Date(b.createdAt) - +new Date(a.createdAt)); this.page = 1; },
         error: () => { this.errorMessage = 'No se pudieron cargar los mensajes.'; }
       });
   }
@@ -210,8 +238,8 @@ export class AdminContactsComponent implements OnInit {
     }
     this.ngZone.run(() => {
       Swal.fire({
-        title: 'Mensaje de <br><span style="color: var(--color-primary); font-size: 1.4rem;">' + msg.name + '</span>',
-        html: 
+        title: `Mensaje de <br><span style="color: #7c3aed; font-size: 1.4rem;">${msg.name}</span>`,
+        html:
           '<div style="text-align: left; padding: 1.5rem; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">' +
             '<p style="margin-bottom: 0.75rem; font-size: 0.95rem; color: rgba(255,255,255,0.6);"><strong>Correo:</strong> <span style="color: #fff;">' + msg.email + '</span></p>' +
             (msg.phone ? '<p style="margin-bottom: 0.75rem; font-size: 0.95rem; color: rgba(255,255,255,0.6);"><strong>Teléfono:</strong> <span style="color: #fff;">' + msg.phone + '</span></p>' : '') +
@@ -219,10 +247,10 @@ export class AdminContactsComponent implements OnInit {
             '<hr style="border-color: rgba(255,255,255,0.05); margin: 1.5rem 0;">' +
             '<div style="white-space: pre-wrap; font-size: 1.05rem; line-height: 1.6; color: rgba(255,255,255,0.9);">' + msg.message + '</div>' +
           '</div>',
-        background: '#121212',
-        color: '#fff',
+        background: '#1a1a2e',
+        color: '#f5f5f5',
         confirmButtonText: 'Cerrar Mensaje',
-        confirmButtonColor: '#0ea5e9',
+        confirmButtonColor: '#7c3aed',
         width: '600px'
       });
     });
@@ -234,8 +262,6 @@ export class AdminContactsComponent implements OnInit {
         title: '¿Eliminar mensaje?',
         text: 'Esta acción no se puede deshacer.',
         icon: 'warning',
-        background: '#121212',
-        color: '#fff',
         showCancelButton: true,
         confirmButtonColor: '#22c55e',
         cancelButtonColor: '#ef4444',

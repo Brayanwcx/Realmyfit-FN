@@ -28,6 +28,10 @@ export class EventRegistrationsService {
     return this.http.patch<any>(`${this.apiUrl}/${id}`, data, { headers: this.authService.getHeaders() });
   }
 
+  cancelOwn(id: number): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/${id}/cancel`, {}, { headers: this.authService.getHeaders() });
+  }
+
   remove(id: number): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/${id}`, { headers: this.authService.getHeaders() });
   }

@@ -12,6 +12,8 @@ import { ResetPasswordDto } from '../dtos/reset-password.dto';
 @Injectable()
 export class AuthService {
 
+    private forgotPasswordLimits = new Map<string, number>();
+
     constructor(
         private readonly usersService: UsersService,
         private readonly jwtService: JwtService,
@@ -107,6 +109,22 @@ export class AuthService {
     }
 
     async forgotPassword(email: string) {
+        const now = Date.now();
+        const lastRequest = this.forgotPasswordLimits.get(email);
+        
+        // Limitar peticiones a 1 cada 2 minutos por correo
+        if (lastRequest && (now - lastRequest) < 120000) {
+            return { message: 'Si el correo está registrado, recibirás un código de recuperación.' };
+        }
+        
+        // Registrar el intento
+        this.forgotPasswordLimits.set(email, now);
+
+        // Limpieza de caché simple
+        if (this.forgotPasswordLimits.size > 5000) {
+            this.forgotPasswordLimits.clear();
+        }
+
         const user = await this.usersService.findByEmail(email);
         if (!user) {
             // No revelamos si el correo existe o no por seguridad, pero sí podemos devolver un mensaje de éxito genérico

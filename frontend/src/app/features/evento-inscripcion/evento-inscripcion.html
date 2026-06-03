@@ -69,28 +69,37 @@
             </div>
             <div class="summary-row" *ngIf="evento.capacity">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              <span class="summary-label">Capacidad</span>
-              <span class="summary-value">{{ evento.capacity }} personas</span>
+              <span class="summary-label">Disponibilidad</span>
+              <span class="summary-value">{{ evento.spots }} / {{ evento.capacity }} cupos</span>
             </div>
           </div>
 
           <!-- Notice box -->
           <div class="info-box glass">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="info-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-            <div>
-              <p style="margin:0 0 0.5rem;font-weight:600;">Política de Reserva</p>
-              <ul class="policy-list">
-                <li>Tu cupo quedará reservado automáticamente al confirmar.</li>
-                <li>Por favor, llega <strong>10 minutos antes</strong> del inicio.</li>
-                <li>Trae ropa cómoda y agua para la sesión.</li>
-                <li>Si no puedes asistir, cancela con anticipación.</li>
-              </ul>
-            </div>
+            @if (evento.spots > 0) {
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="info-icon"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              <div>
+                <p style="margin:0 0 0.5rem;font-weight:600;">Política de Reserva</p>
+                <ul class="policy-list">
+                  <li>Tu cupo quedará reservado automáticamente al confirmar.</li>
+                  <li>Por favor, llega <strong>10 minutos antes</strong> del inicio.</li>
+                  <li>Trae ropa cómoda y agua para la sesión.</li>
+                </ul>
+              </div>
+            } @else {
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="info-icon" style="color: #ef4444;"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+              <div>
+                <p style="margin:0 0 0.5rem;font-weight:600;color: #ef4444;">Evento Agotado</p>
+                <p style="margin:0; font-size: 0.85rem;">Lo sentimos, ya no quedan cupos disponibles para este evento. Intenta con otra fecha o sesión.</p>
+              </div>
+            }
           </div>
 
-          <button class="btn-primary w-100 mt-4 glow-btn" (click)="confirmarAsistencia($event)" [disabled]="isSubmitting">
+          <button class="btn-primary w-100 mt-4 glow-btn" (click)="confirmarAsistencia($event)" [disabled]="isSubmitting || evento.spots === 0">
             @if(isSubmitting) {
               <span class="spinner-small" style="display:inline-block; width:16px; height:16px; border:2px solid; border-radius:50%; border-top-color:transparent; animation:spin 1s linear infinite; vertical-align:middle; margin-right:8px;"></span> Registrando...
+            } @else if (evento.spots === 0) {
+              No disponible
             } @else {
               ✓ &nbsp;Confirmar Asistencia
             }

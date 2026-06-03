@@ -122,6 +122,11 @@ export class MembresiasComponent implements OnInit {
       next: (res) => {
         this.subscribing = false;
         if (res.url) {
+          sessionStorage.setItem('last_checkout', JSON.stringify([{
+            name: `Membresía ${this.selectedPlan!.name}`,
+            price: this.selectedPlan!.price,
+            quantity: 1
+          }]));
           window.location.href = res.url;
         }
       },

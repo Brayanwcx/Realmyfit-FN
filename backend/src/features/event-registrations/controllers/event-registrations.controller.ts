@@ -1,6 +1,6 @@
 import {
     Controller, Get, Post, Patch, Delete,
-    Param, Body, ParseIntPipe, HttpCode, UseGuards,
+    Param, Body, ParseIntPipe, HttpCode, UseGuards, Req,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { EventRegistrationsService } from '../services/event-registrations.service';
@@ -46,9 +46,18 @@ export class EventRegistrationsController {
     @ApiBearerAuth()
     @Roles(Role.ADMIN)
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @ApiOperation({ summary: 'Update an event registration by id' })
+    @ApiOperation({ summary: 'Update an event registration by id (admin only)' })
     update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateEventRegistrationDto) {
         return this.regService.update(id, dto);
+    }
+
+    @Patch(':id/cancel')
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    @ApiOperation({ summary: 'Cancel own event registration (any authenticated user)' })
+    cancelOwn(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
+        const userId = req.user?.id || req.user?.sub;
+        return this.regService.cancelOwn(id, userId);
     }
 
     @Delete(':id')
@@ -61,4 +70,3 @@ export class EventRegistrationsController {
         return this.regService.remove(id);
     }
 }
-

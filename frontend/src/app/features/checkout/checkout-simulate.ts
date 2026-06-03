@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { take } from 'rxjs/operators';
 import { CartService } from '../../core/services/cart.service';
 import { PaymentService } from '../../core/services/payment.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -152,15 +153,16 @@ export class CheckoutSimulateComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.cartService.cart$.subscribe(items => {
+    // Bug #4 fix: mover el check de carrito vacío DENTRO del subscribe
+    // para evitar la race condition donde cartItems[] siempre estaba vacío al llegar al if.
+    this.cartService.cart$.pipe(take(1)).subscribe(items => {
       this.cartItems = items;
       this.total = items.reduce((acc, item) => acc + (Number(item.price) * item.qty), 0);
       if (this.total > 0) this.total += 5; // Shipping fee
+      if (this.cartItems.length === 0) {
+        this.router.navigate(['/cart']);
+      }
     });
-
-    if (this.cartItems.length === 0) {
-      this.router.navigate(['/cart']);
-    }
   }
 
   processPayment() {
@@ -186,7 +188,13 @@ export class CheckoutSimulateComponent implements OnInit {
     this.paymentService.simulatePayment(items, currentUser.id).subscribe({
       next: (res) => {
         if (res.success) {
-          // Nav to success screen
+          // Bug #1 fix: guardar items en sessionStorage para que checkout-success muestre el recibo
+          const receipt = this.cartItems.map(item => ({
+            name: item.name,
+            price: Number(item.price),
+            quantity: item.qty,
+          }));
+          sessionStorage.setItem('last_checkout', JSON.stringify(receipt));
           this.router.navigate(['/checkout/success']);
         }
       },

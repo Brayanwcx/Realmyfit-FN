@@ -5,6 +5,8 @@ import { AuthService } from '../../core/services/auth.service';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 import { WishlistService } from '../../core/services/wishlist.service';
 import { CartService } from '../../core/services/cart.service';
+import { EventRegistrationsService } from '../../core/services/event-registrations.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-perfil',
@@ -39,7 +41,8 @@ export class PerfilComponent implements OnInit {
     private router: Router,
     private cdr: ChangeDetectorRef,
     private wishlistService: WishlistService,
-    private cartService: CartService
+    private cartService: CartService,
+    private regService: EventRegistrationsService
   ) {}
 
   ngOnInit() {
@@ -121,11 +124,11 @@ export class PerfilComponent implements OnInit {
       
       if (this.croppedImageUrl) {
         this.localImageUrl = this.croppedImageUrl;
-        // Instantly push new avatar to all subscribers (navbar, admin layout)
+        // Bug #9 fix: usar método público en vez de acceder directamente a userSubject privado
         const currentUser = this.authService.getUser();
         if (currentUser) {
           const preview = { ...currentUser, profilePicture: this.croppedImageUrl };
-          this.authService['userSubject'].next(preview);
+          this.authService.updateUserLocally(preview);
         }
       }
       this.cdr.detectChanges();
@@ -156,10 +159,42 @@ export class PerfilComponent implements OnInit {
   }
 
   addToCartFromWishlist(producto: any) {
-    // Si el producto no tiene qty, le asignamos 1
     const productToAdd = { ...producto, qty: producto.qty || 1 };
     this.cartService.addToCart(productToAdd, productToAdd.qty);
     alert('Producto añadido al carrito');
+  }
+
+  cancelarAsistencia(reg: any) {
+    Swal.fire({
+      title: '¿Cancelar Inscripción?',
+      text: 'Liberarás tu cupo para que otra persona pueda asistir.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, cancelar',
+      cancelButtonText: 'No, mantener',
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#94a3b8'
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+
+      this.regService.cancelOwn(reg.id).subscribe({
+        next: () => {
+          // Actualizar estado localmente sin recargar la página
+          reg.status = 'CANCELLED';
+          // Actualizar el contador en el sidebar
+          if (this.user?.eventRegistrations) {
+            this.user.eventRegistrations = this.user.eventRegistrations.filter(
+              (r: any) => r.id !== reg.id || r.status !== 'CANCELLED'
+            );
+          }
+          this.cdr.detectChanges();
+          Swal.fire('¡Cancelada!', 'Tu inscripción ha sido cancelada exitosamente.', 'success');
+        },
+        error: () => {
+          Swal.fire('Error', 'No se pudo cancelar. Intenta más tarde.', 'error');
+        }
+      });
+    });
   }
 }
 

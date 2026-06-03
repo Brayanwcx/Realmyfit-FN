@@ -42,7 +42,7 @@ import Swal from 'sweetalert2';
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let trainer of trainers">
+          <tr *ngFor="let trainer of pagedTrainers">
             <td>
               <div class="product-thumb glass">
                 <img *ngIf="trainer.imageUrl" [src]="resolveImageUrl(trainer.imageUrl)" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" (error)="$any($event.target).src='https://placehold.co/80x80/1a1a2e/555?text=?' " />
@@ -80,6 +80,16 @@ import Swal from 'sweetalert2';
           </tr>
         </tbody>
       </table>
+
+      <!-- Paginación -->
+      <div *ngIf="totalPages > 1" class="pagination">
+        <button class="page-btn" (click)="page = 1" [disabled]="page === 1">«</button>
+        <button class="page-btn" (click)="page = page - 1" [disabled]="page === 1">‹</button>
+        <button *ngFor="let p of pageNumbers" class="page-btn" [class.active]="p === page" (click)="page = p">{{ p }}</button>
+        <button class="page-btn" (click)="page = page + 1" [disabled]="page === totalPages">›</button>
+        <button class="page-btn" (click)="page = totalPages" [disabled]="page === totalPages">»</button>
+        <span class="page-info">{{ (page-1)*pageSize+1 }}–{{ min(page*pageSize, trainers.length) }} de {{ trainers.length }}</span>
+      </div>
 
       <div *ngIf="!loading && !errorMessage && trainers.length === 0" class="empty-state">
         <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
@@ -245,6 +255,13 @@ import Swal from 'sweetalert2';
     .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--color-primary, #0ea5e9); border-radius: 50%; animation: spin 1s linear infinite; }
     .spinner-small { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5rem; vertical-align: middle; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    .pagination { display: flex; align-items: center; gap: 0.4rem; justify-content: center; padding: 1.5rem 0 0.5rem; flex-wrap: wrap; }
+    .page-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; }
+    .page-btn:hover:not(:disabled) { background: rgba(255,255,255,0.12); }
+    .page-btn.active { background: var(--color-primary, #0ea5e9); color: #000; font-weight: 700; border-color: transparent; }
+    .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .page-info { font-size: 0.8rem; color: rgba(255,255,255,0.45); margin-left: 0.5rem; }
   `]
 })
 export class AdminTrainersComponent implements OnInit {
@@ -256,6 +273,14 @@ export class AdminTrainersComponent implements OnInit {
   trainers: any[] = [];
   loading = true;
   errorMessage = '';
+  page = 1;
+  pageSize = 10;
+
+  get totalPages() { return Math.ceil(this.trainers.length / this.pageSize); }
+  get pagedTrainers() { return this.trainers.slice((this.page-1)*this.pageSize, this.page*this.pageSize); }
+  get pageNumbers() { return Array.from({length: this.totalPages}, (_, i) => i + 1); }
+  min(a: number, b: number) { return Math.min(a, b); }
+
   showForm = false;
   editMode = false;
   submitting = false;
@@ -288,6 +313,7 @@ export class AdminTrainersComponent implements OnInit {
       next: data => {
         this.trainers = data;
         this.loading = false;
+        this.page = 1;
         this.cdr.detectChanges();
       },
       error: err => {

@@ -46,7 +46,7 @@ import Swal from 'sweetalert2';
             </tr>
           </thead>
           <tbody>
-            @for (membership of memberships; track membership.id) {
+            @for (membership of pagedMemberships; track membership.id) {
               <tr>
                 <td>
                   <div class="product-name">{{ membership.name }}</div>
@@ -80,7 +80,7 @@ import Swal from 'sweetalert2';
 
         <!-- Vista Mobile -->
         <div class="mobile-cards">
-          @for (membership of memberships; track membership.id) {
+          @for (membership of pagedMemberships; track membership.id) {
             <div class="mobile-card glass">
               <div class="card-header">
                 <div class="card-title" style="margin-left: 0;">
@@ -112,6 +112,20 @@ import Swal from 'sweetalert2';
             </div>
           }
         </div>
+
+        <!-- Paginación -->
+        @if (totalPages > 1) {
+          <div class="pagination">
+            <button class="page-btn" (click)="page = 1" [disabled]="page === 1">«</button>
+            <button class="page-btn" (click)="page = page - 1" [disabled]="page === 1">‹</button>
+            @for (p of pageNumbers; track p) {
+              <button class="page-btn" [class.active]="p === page" (click)="page = p">{{ p }}</button>
+            }
+            <button class="page-btn" (click)="page = page + 1" [disabled]="page === totalPages">›</button>
+            <button class="page-btn" (click)="page = totalPages" [disabled]="page === totalPages">»</button>
+            <span class="page-info">{{ (page-1)*pageSize+1 }}–{{ min(page*pageSize, memberships.length) }} de {{ memberships.length }}</span>
+          </div>
+        }
       }
 
       @if (!loading && !errorMessage && memberships.length === 0) {
@@ -255,6 +269,13 @@ import Swal from 'sweetalert2';
     .spinner-small { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(0,0,0,0.1); border-top-color: #000; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5rem; vertical-align: middle; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    .pagination { display: flex; align-items: center; gap: 0.4rem; justify-content: center; padding: 1.5rem 0 0.5rem; flex-wrap: wrap; }
+    .page-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; }
+    .page-btn:hover:not(:disabled) { background: rgba(255,255,255,0.12); }
+    .page-btn.active { background: var(--color-primary, #22c55e); color: #000; font-weight: 700; border-color: transparent; }
+    .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .page-info { font-size: 0.8rem; color: rgba(255,255,255,0.45); margin-left: 0.5rem; }
+
     .mobile-cards { display: none; }
 
     /* Mobile Responsive */
@@ -290,6 +311,13 @@ export class AdminMembershipsComponent implements OnInit {
   memberships: Membership[] = [];
   loading = true;
   errorMessage = '';
+  page = 1;
+  pageSize = 10;
+
+  get totalPages() { return Math.ceil(this.memberships.length / this.pageSize); }
+  get pagedMemberships() { return this.memberships.slice((this.page-1)*this.pageSize, this.page*this.pageSize); }
+  get pageNumbers() { return Array.from({length: this.totalPages}, (_, i) => i + 1); }
+  min(a: number, b: number) { return Math.min(a, b); }
   
   showModal = false;
   isSubmitting = false;
@@ -323,6 +351,7 @@ export class AdminMembershipsComponent implements OnInit {
         next: (data) => {
           this.ngZone.run(() => {
             this.memberships = data;
+            this.page = 1;
             this.cdr.detectChanges();
           });
         },

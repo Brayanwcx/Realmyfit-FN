@@ -77,7 +77,8 @@
   height: 100vh;
   border-radius: 0;
   border-right: 1px solid rgba(255, 255, 255, 0.07);
-  overflow: hidden;   /* NO scrollbar on sidebar */
+  overflow: hidden;
+  /* NO scrollbar on sidebar */
 }
 
 .sidebar-header {
@@ -103,7 +104,8 @@
   flex-direction: column;
   gap: 0.35rem;
   flex-grow: 1;
-  overflow: hidden;  /* never let nav overflow */
+  overflow: hidden;
+  /* never let nav overflow */
 }
 
 .nav-item {
@@ -114,7 +116,7 @@
   text-decoration: none;
   color: rgba(255, 255, 255, 0.6);
   transition: all 0.3s ease;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
 
   &:hover {
     background: rgba(255, 255, 255, 0.05);
@@ -175,7 +177,8 @@
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  margin-left: 300px;      /* same as sidebar width */
+  margin-left: 300px;
+  /* same as sidebar width */
   height: 100vh;
   overflow: hidden;
   z-index: 5;
@@ -187,7 +190,8 @@
   align-items: center;
   padding: 1rem 2rem;
   margin: 1rem 1rem 0 1rem;
-  flex-shrink: 0;   /* never compress the top bar */
+  flex-shrink: 0;
+  /* never compress the top bar */
 }
 
 .page-title {

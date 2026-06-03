@@ -123,13 +123,43 @@ export class AuthService {
     }
   }
 
+  /** Bug #9 fix: método público para actualizar el usuario localmente sin acceder a userSubject desde fuera */
+  updateUserLocally(user: any): void {
+    if (user) {
+      localStorage.setItem('gym_user', JSON.stringify(user));
+      this.userSubject.next(user);
+    }
+  }
+
   isAuthenticated(): boolean {
-    return !!localStorage.getItem('gym_token');
+    const token = localStorage.getItem('gym_token');
+    if (!token) return false;
+
+    // Bug #8 fix: verificar expiración del JWT decodificando el payload
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.exp && payload.exp * 1000 < Date.now()) {
+        // Token expirado: limpiar sesión silenciosamente
+        localStorage.removeItem('gym_token');
+        localStorage.removeItem('gym_user');
+        this.userSubject.next(null);
+        return false;
+      }
+    } catch {
+      // Si el token no se puede decodificar, es inválido
+      localStorage.removeItem('gym_token');
+      localStorage.removeItem('gym_user');
+      this.userSubject.next(null);
+      return false;
+    }
+
+    return true;
   }
 
   isAdmin(): boolean {
     const user = this.getUser();
     if (!user?.roles) return false;
+    // Bug #14 fix: soportar tanto { name: 'ADMIN' } como string 'ADMIN'
     return user.roles.some((r: any) => r.name === 'ADMIN' || r === 'ADMIN');
   }
 

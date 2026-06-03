@@ -25,10 +25,20 @@ export class EventoInscripcion implements OnInit {
     const navigation = this.router.getCurrentNavigation();
     if (navigation?.extras.state) {
       this.evento = navigation.extras.state['evento'];
+      // Bug #10 fix: guardar en sessionStorage para sobrevivir F5
+      sessionStorage.setItem('inscripcion_evento', JSON.stringify(this.evento));
     }
   }
 
   ngOnInit() {
+    // Bug #10 fix: si se recargó la página, recuperar el evento desde sessionStorage
+    if (!this.evento) {
+      const saved = sessionStorage.getItem('inscripcion_evento');
+      if (saved) {
+        try { this.evento = JSON.parse(saved); } catch { /* ignore */ }
+      }
+    }
+
     if (!this.evento) {
       this.router.navigate(['/eventos']);
       return;

@@ -19,7 +19,7 @@ import { PaymentService } from '../../core/services/payment.service';
               </svg>
             </div>
             <h1>Pago Exitoso</h1>
-            <p class="order-id">Orden #{{sessionId.slice(-8).toUpperCase()}}</p>
+            <p class="order-id">Orden #{{ sessionId ? sessionId.slice(-8).toUpperCase() : 'SIMULADA' }}</p>
           </div>
 
           <div class="receipt-body">
@@ -220,9 +220,9 @@ export class CheckoutSuccessComponent implements OnInit {
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
-      this.sessionId = params['session_id'] || 'TEST-999';
-      
-      if (this.sessionId && this.sessionId !== 'TEST-999') {
+      this.sessionId = params['session_id'] || '';
+
+      if (this.sessionId) {
         this.paymentService.verifyCheckoutSession(this.sessionId).subscribe({
           next: () => {
              console.log('[CheckoutSuccess] Sesión de pago validada correctamente');
@@ -242,7 +242,7 @@ export class CheckoutSuccessComponent implements OnInit {
         this.purchasedItems = items.map((i: any) => ({
           name: i.name,
           price: Number(i.price),
-          qty: Number(i.quantity)
+          qty: Number(i.quantity || i.qty || 1)
         }));
         this.subtotal = this.purchasedItems.reduce((acc, i) => acc + (i.price * i.qty), 0);
       } catch (e) {

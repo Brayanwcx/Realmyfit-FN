@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import Swal from 'sweetalert2';
 import { ChangeDetectorRef } from '@angular/core';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -291,8 +292,14 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   loginWithGoogle() {
-    // Redirige al backend que inicia el flujo OAuth con Google
-    window.location.href = 'http://localhost:3005/auth/google';
+    // Bug #3 fix: usar environment.apiUrl en vez de URL hardcodeada
+    // Bug #15 fix: mostrar feedback si la URL no es accesible
+    try {
+      window.location.href = `${environment.apiUrl}/auth/google`;
+    } catch {
+      this.errorMessage = 'No se pudo conectar con el servidor de Google. Intenta de nuevo.';
+      this.cdr.detectChanges();
+    }
   }
 
   private loginUser() {

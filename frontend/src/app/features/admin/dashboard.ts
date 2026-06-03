@@ -384,23 +384,26 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
 
     const ctx = this.lineChartCanvas.nativeElement.getContext('2d');
     
-    // Compute total revenues per month for the current year based on PAYMENTS
+    // Compute total revenues per month for the current year based on ORDERS.
+    // Only count orders that are CONFIRMED, COMPLETED, or DELIVERED.
+    // CANCELLED and PENDING orders are excluded from revenue.
+    const VALID_STATUSES = ['CONFIRMED', 'COMPLETED', 'COMPLETADO', 'DELIVERED', 'ENTREGADO'];
     const currentYear = new Date().getFullYear();
     const monthlyIncome = new Array(12).fill(0);
     
-    this.allPayments.forEach(payment => {
-      // Only count completed payments
-      const st = (payment.status || '').toUpperCase();
-      if (st === 'COMPLETED' || st === 'COMPLETADO') {
-        // Payments usually have createdAt or created_at
-        const dateString = payment.createdAt || payment.created_at;
+    this.allOrders.forEach(order => {
+      const st = (order.status || '').toUpperCase();
+      if (VALID_STATUSES.includes(st)) {
+        const dateString = order.createdAt || order.created_at;
         if (dateString) {
-            const date = new Date(dateString);
-            if (date.getFullYear() === currentYear) {
+          const date = new Date(dateString);
+          if (date.getFullYear() === currentYear) {
             const monthIndex = date.getMonth(); // 0-11
-            const amount = typeof payment.amount === 'number' ? payment.amount : parseFloat(payment.amount || '0');
+            const amount = typeof order.totalAmount === 'number'
+              ? order.totalAmount
+              : parseFloat(order.totalAmount || '0');
             monthlyIncome[monthIndex] += amount;
-            }
+          }
         }
       }
     });

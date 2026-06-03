@@ -232,18 +232,34 @@
             @if (user?.eventRegistrations?.length) {
               <div class="cards-list">
                 @for (reg of user.eventRegistrations; track reg.id) {
-                  <div class="data-card">
-                    <div class="data-card-header">
-                      <h4>{{ reg.event?.title || 'Evento #' + reg.id }}</h4>
-                      <span class="data-badge active">Inscrito</span>
-                    </div>
-                    <div class="data-card-body">
-                      <div class="data-row">
-                        <span>Fecha inscripción:</span>
-                        <span>{{ reg.registrationDate | date:'dd/MM/yyyy' }}</span>
+                  @if (reg.status !== 'CANCELLED') {
+                    <div class="data-card">
+                      <div class="data-card-header">
+                        <h4>{{ reg.event?.title || 'Evento #' + reg.id }}</h4>
+                        <span class="data-badge" [class.active]="reg.status !== 'CANCELLED'">
+                          {{ reg.status === 'CONFIRMED' ? 'Confirmado' : reg.status === 'PENDING' ? 'Pendiente' : 'Inscrito' }}
+                        </span>
+                      </div>
+                      <div class="data-card-body">
+                        <div class="data-row">
+                          <span>Fecha inscripción:</span>
+                          <span>{{ reg.registrationDate | date:'dd/MM/yyyy' }}</span>
+                        </div>
+                        @if (reg.event?.date) {
+                          <div class="data-row">
+                            <span>Fecha del evento:</span>
+                            <span>{{ reg.event.date }}</span>
+                          </div>
+                        }
+                      </div>
+                      <div class="data-card-footer">
+                        <button class="btn-cancel-event" (click)="cancelarAsistencia(reg)">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                          Cancelar Inscripción
+                        </button>
                       </div>
                     </div>
-                  </div>
+                  }
                 }
               </div>
             } @else {

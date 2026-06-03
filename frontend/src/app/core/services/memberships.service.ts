@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -28,13 +28,6 @@ export class MembershipsService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/memberships`;
 
-  private getHeaders() {
-    const token = localStorage.getItem('gym_token');
-    return new HttpHeaders({
-      'Authorization': `Bearer ${token}`
-    });
-  }
-
   // --- Public (no auth required) ---
   getPublicMemberships(): Observable<Membership[]> {
     return this.http.get<Membership[]>(`${environment.apiUrl}/public/memberships`);
@@ -43,29 +36,28 @@ export class MembershipsService {
   subscribeToPlan(membershipId: number): Observable<UserMembership> {
     return this.http.post<UserMembership>(
       `${environment.apiUrl}/public/memberships/subscribe`,
-      { membershipId },
-      { headers: this.getHeaders() }
+      { membershipId }
     );
   }
 
-  // --- Admin CRUD (auth required) ---
+  // --- Admin CRUD (auth required — token injected by authInterceptor) ---
   getMemberships(): Observable<Membership[]> {
-    return this.http.get<Membership[]>(this.apiUrl, { headers: this.getHeaders() });
+    return this.http.get<Membership[]>(this.apiUrl);
   }
 
   getMembership(id: number): Observable<Membership> {
-    return this.http.get<Membership>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() });
+    return this.http.get<Membership>(`${this.apiUrl}/${id}`);
   }
 
   createMembership(data: Partial<Membership>): Observable<Membership> {
-    return this.http.post<Membership>(this.apiUrl, data, { headers: this.getHeaders() });
+    return this.http.post<Membership>(this.apiUrl, data);
   }
 
   updateMembership(id: number, data: Partial<Membership>): Observable<Membership> {
-    return this.http.patch<Membership>(`${this.apiUrl}/${id}`, data, { headers: this.getHeaders() });
+    return this.http.patch<Membership>(`${this.apiUrl}/${id}`, data);
   }
 
   deleteMembership(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() });
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }

@@ -25,9 +25,9 @@ import Swal from 'sweetalert2';
     <div class="filters-row">
       <div class="search-box">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-        <input type="text" [(ngModel)]="searchTerm" placeholder="Buscar por cliente o ID..." />
+        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="page = 1" placeholder="Buscar por cliente o ID..." />
       </div>
-      <select [(ngModel)]="statusFilter" class="filter-select">
+      <select [(ngModel)]="statusFilter" (ngModelChange)="page = 1" class="filter-select">
         <option value="">Todos los estados</option>
         <option value="PENDING">Pendiente</option>
         <option value="CONFIRMED">Confirmado</option>
@@ -59,7 +59,7 @@ import Swal from 'sweetalert2';
             </tr>
           </thead>
           <tbody>
-            @for (order of filteredOrders; track order.id) {
+            @for (order of pagedOrders; track order.id) {
               <tr>
                 <td><span class="order-id">#{{ order.id }}</span></td>
                 <td>
@@ -109,7 +109,7 @@ import Swal from 'sweetalert2';
 
         <!-- Mobile Cards -->
         <div class="mobile-cards">
-          @for (order of filteredOrders; track order.id) {
+          @for (order of pagedOrders; track order.id) {
             <div class="mobile-card glass">
               <div class="card-header">
                 <div class="card-title" style="margin-left:0">
@@ -141,6 +141,20 @@ import Swal from 'sweetalert2';
             </div>
           }
         </div>
+
+        <!-- Paginación -->
+        @if (totalPages > 1) {
+          <div class="pagination">
+            <button class="page-btn" (click)="page = 1" [disabled]="page === 1">«</button>
+            <button class="page-btn" (click)="page = page - 1" [disabled]="page === 1">‹</button>
+            @for (p of pageNumbers; track p) {
+              <button class="page-btn" [class.active]="p === page" (click)="page = p">{{ p }}</button>
+            }
+            <button class="page-btn" (click)="page = page + 1" [disabled]="page === totalPages">›</button>
+            <button class="page-btn" (click)="page = totalPages" [disabled]="page === totalPages">»</button>
+            <span class="page-info">{{ (page-1)*pageSize+1 }}–{{ min(page*pageSize, filteredOrders.length) }} de {{ filteredOrders.length }}</span>
+          </div>
+        }
       }
 
       @if (!loading && filteredOrders.length === 0) {
@@ -242,6 +256,13 @@ import Swal from 'sweetalert2';
     .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--color-primary, #22c55e); border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    .pagination { display: flex; align-items: center; gap: 0.4rem; justify-content: center; padding: 1.5rem 0 0.5rem; flex-wrap: wrap; }
+    .page-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; }
+    .page-btn:hover:not(:disabled) { background: rgba(255,255,255,0.12); }
+    .page-btn.active { background: var(--color-primary, #22c55e); color: #000; font-weight: 700; border-color: transparent; }
+    .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .page-info { font-size: 0.8rem; color: rgba(255,255,255,0.45); margin-left: 0.5rem; }
+
     .mobile-cards { display: none; }
     @media (max-width: 768px) {
       .desktop-table { display: none; }
@@ -265,6 +286,13 @@ export class AdminOrdersComponent implements OnInit {
   loading = true;
   searchTerm = '';
   statusFilter = '';
+  page = 1;
+  pageSize = 10;
+
+  get totalPages() { return Math.ceil(this.filteredOrders.length / this.pageSize); }
+  get pagedOrders() { return this.filteredOrders.slice((this.page-1)*this.pageSize, this.page*this.pageSize); }
+  get pageNumbers() { return Array.from({length: this.totalPages}, (_, i) => i + 1); }
+  min(a: number, b: number) { return Math.min(a, b); }
 
   ngOnInit() {
     this.loadOrders();
@@ -291,6 +319,7 @@ export class AdminOrdersComponent implements OnInit {
           this.orders = data.sort((a, b) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           );
+          this.page = 1;
           this.cdr.detectChanges();
         });
       });
@@ -298,9 +327,11 @@ export class AdminOrdersComponent implements OnInit {
 
   get filteredOrders() {
     return this.orders.filter(o => {
-      const matchSearch = !this.searchTerm ||
-        `${o.user?.name} ${o.user?.lastName} ${o.user?.email} #${o.id}`
-          .toLowerCase().includes(this.searchTerm.toLowerCase());
+      let term = (this.searchTerm || '').toLowerCase().trim();
+      if (term.startsWith('#')) term = term.substring(1);
+      
+      const searchString = `${o.user?.name || ''} ${o.user?.lastName || ''} ${o.user?.email || ''} ${o.id || ''}`.toLowerCase();
+      const matchSearch = !term || searchString.includes(term);
       const matchStatus = !this.statusFilter || o.status === this.statusFilter;
       return matchSearch && matchStatus;
     });

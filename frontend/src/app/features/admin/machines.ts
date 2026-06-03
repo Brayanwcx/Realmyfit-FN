@@ -46,7 +46,7 @@ import Swal from 'sweetalert2';
             </tr>
           </thead>
           <tbody>
-            @for (machine of machines; track machine.id) {
+            @for (machine of pagedMachines; track machine.id) {
               <tr>
                 <td>
                   @if (machine.imageUrl) {
@@ -89,7 +89,7 @@ import Swal from 'sweetalert2';
 
         <!-- Vista Mobile -->
         <div class="mobile-cards">
-          @for (machine of machines; track machine.id) {
+          @for (machine of pagedMachines; track machine.id) {
             <div class="mobile-card glass">
               <div class="card-row">
                 <span class="card-label">Imagen</span>
@@ -131,6 +131,20 @@ import Swal from 'sweetalert2';
             </div>
           }
         </div>
+
+        <!-- Paginación -->
+        @if (totalPages > 1) {
+          <div class="pagination">
+            <button class="page-btn" (click)="page = 1" [disabled]="page === 1">«</button>
+            <button class="page-btn" (click)="page = page - 1" [disabled]="page === 1">‹</button>
+            @for (p of pageNumbers; track p) {
+              <button class="page-btn" [class.active]="p === page" (click)="page = p">{{ p }}</button>
+            }
+            <button class="page-btn" (click)="page = page + 1" [disabled]="page === totalPages">›</button>
+            <button class="page-btn" (click)="page = totalPages" [disabled]="page === totalPages">»</button>
+            <span class="page-info">{{ (page-1)*pageSize+1 }}–{{ min(page*pageSize, machines.length) }} de {{ machines.length }}</span>
+          </div>
+        }
       }
 
       @if (!loading && !errorMessage && machines.length === 0) {
@@ -301,6 +315,13 @@ import Swal from 'sweetalert2';
     .spinner-small { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 0.5rem; vertical-align: middle; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    .pagination { display: flex; align-items: center; gap: 0.4rem; justify-content: center; padding: 1.5rem 0 0.5rem; flex-wrap: wrap; }
+    .page-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; }
+    .page-btn:hover:not(:disabled) { background: rgba(255,255,255,0.12); }
+    .page-btn.active { background: var(--color-primary, #0ea5e9); color: #000; font-weight: 700; border-color: transparent; }
+    .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .page-info { font-size: 0.8rem; color: rgba(255,255,255,0.45); margin-left: 0.5rem; }
+
     .image-upload-area { height: 180px; border: 2px dashed rgba(255,255,255,0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; background: rgba(255,255,255,0.02); transition: 0.3s; }
     .image-upload-area:hover { border-color: var(--color-primary, #0ea5e9); background: rgba(255,255,255,0.05); }
     .image-placeholder { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; color: rgba(255,255,255,0.4); text-align: center; padding: 1rem; }
@@ -335,6 +356,13 @@ export class AdminMachinesComponent implements OnInit {
   machines: Machine[] = [];
   loading = true;
   errorMessage = '';
+  page = 1;
+  pageSize = 10;
+
+  get totalPages() { return Math.ceil(this.machines.length / this.pageSize); }
+  get pagedMachines() { return this.machines.slice((this.page-1)*this.pageSize, this.page*this.pageSize); }
+  get pageNumbers() { return Array.from({length: this.totalPages}, (_, i) => i + 1); }
+  min(a: number, b: number) { return Math.min(a, b); }
   
   showModal = false;
   isSubmitting = false;
@@ -378,6 +406,7 @@ export class AdminMachinesComponent implements OnInit {
       .subscribe({
         next: (data) => {
           this.machines = data;
+          this.page = 1;
         },
         error: (err) => {
           console.error('Error fetching machines:', err);

@@ -29,17 +29,29 @@ export class EventosComponent implements OnInit {
   /** Track which event IDs are currently submitting */
   submitting: Set<number> = new Set();
   /** Track which event IDs the user already registered */
-  registered: Set<number> = new Set();
+  userRegsIds: Map<number, number> = new Map(); // eventId -> registrationId
 
   ngOnInit() {
     this.eventsService.getEventsPublic().subscribe({
       next: (data) => {
-        this.eventos = data.filter((e: any) => e.isActive).map((e: any) => ({
-          ...e,
-          instructor: e.instructor || 'Inst. Profesional',
-          spots: e.capacity || 0,
-          image: e.imageUrl ? this.resolveImageUrl(e.imageUrl) : 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b',
-        }));
+        const user = this.authService.getUser();
+        this.eventos = data.filter((e: any) => e.isActive).map((e: any) => {
+          const activeRegs = (e.registrations || []).filter((r: any) => r.status !== 'CANCELLED');
+          
+          if (user) {
+            const myReg = activeRegs.find((r: any) => r.user_id === user.id || r.userId === user.id || r.user?.id === user.id);
+            if (myReg) {
+              this.userRegsIds.set(e.id, myReg.id);
+            }
+          }
+
+          return {
+            ...e,
+            instructor: e.instructor || 'Inst. Profesional',
+            spots: Math.max(0, (e.capacity || 0) - activeRegs.length),
+            image: e.imageUrl ? this.resolveImageUrl(e.imageUrl) : 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b',
+          };
+        });
         this.loading = false;
         this.cdr.detectChanges();
       },
@@ -78,7 +90,7 @@ export class EventosComponent implements OnInit {
       return;
     }
 
-    if (this.registered.has(evento.id)) {
+    if (this.userRegsIds.has(evento.id)) {
       Swal.fire('¡Ya inscrito!', 'Ya confirmaste tu asistencia a este evento.', 'info');
       return;
     }
@@ -99,9 +111,9 @@ export class EventosComponent implements OnInit {
         this.submitting.add(evento.id);
 
         this.regService.create({ user_id: user.id, event_id: evento.id }).subscribe({
-          next: () => {
+          next: (created) => {
             this.submitting.delete(evento.id);
-            this.registered.add(evento.id);
+            this.userRegsIds.set(evento.id, created?.id || -1);
             // Reduce displayed spots locally
             const ev = this.eventos.find(e => e.id === evento.id);
             if (ev && ev.spots > 0) ev.spots--;
@@ -126,6 +138,7 @@ export class EventosComponent implements OnInit {
   }
 
   isRegistered(id: number): boolean {
-    return this.registered.has(id);
+    return this.userRegsIds.has(id);
   }
+
 }

@@ -53,7 +53,8 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
     
     this.reviewsService.getReviews().subscribe({
       next: (data) => {
-        const activeReviews = data.filter((r: any) => r.isActive);
+        // Limita a un máximo de 5-10 reseñas para evitar saturar de puntos el carrusel
+        const activeReviews = data.filter((r: any) => r.isActive).slice(0, 10);
         if (activeReviews.length > 0) {
           this.testimonials = activeReviews.map((r: any) => ({
             text: `"${r.comment}"`,

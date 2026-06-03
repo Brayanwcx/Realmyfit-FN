@@ -8,6 +8,7 @@ import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-cart',
+  standalone: true,
   imports: [CommonModule],
   templateUrl: './cart.component.html',
   styleUrls: ['./cart.component.scss'],

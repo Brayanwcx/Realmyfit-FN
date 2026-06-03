@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EventRegistration } from '../entities/event-registration.entity';
@@ -37,8 +37,17 @@ export class EventRegistrationsService {
         return this.regRepo.save(reg);
     }
 
+    async cancelOwn(id: number, userId: number) {
+        const reg = await this.regRepo.findOne({ where: { id }, relations: ['user'] });
+        if (!reg) throw new NotFoundException(`Event Registration #${id} not found`);
+        if (reg.user?.id !== userId) throw new ForbiddenException('No puedes cancelar una inscripción que no es tuya.');
+        reg.status = 'CANCELLED' as any;
+        return this.regRepo.save(reg);
+    }
+
     async remove(id: number) {
         const reg = await this.findOne(id);
         return this.regRepo.remove(reg);
     }
 }
+
