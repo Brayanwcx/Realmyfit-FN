@@ -74,7 +74,7 @@
         </div>
 
         <h1 class="product-title">{{ producto.name }}</h1>
-        <p class="product-price">${{ producto.price }}</p>
+        <p class="product-price">{{ formatCurrency(producto.price) }}</p>
 
         <p class="product-description">{{ producto.description }}</p>
 

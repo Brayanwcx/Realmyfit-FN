@@ -87,6 +87,11 @@ export class PerfilComponent implements OnInit {
     return 'Miembro activo';
   }
 
+  get activeEventsCount(): number {
+    if (!this.user?.eventRegistrations) return 0;
+    return this.user.eventRegistrations.filter((r: any) => r.status !== 'CANCELLED').length;
+  }
+
   setTab(tabId: string) {
     this.activeTab = tabId;
   }
@@ -159,9 +164,26 @@ export class PerfilComponent implements OnInit {
   }
 
   addToCartFromWishlist(producto: any) {
+    if (!producto.stock || producto.stock <= 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Agotado',
+        text: 'Este producto se encuentra agotado actualmente.',
+        confirmButtonColor: '#ef4444'
+      });
+      return;
+    }
+
     const productToAdd = { ...producto, qty: producto.qty || 1 };
     this.cartService.addToCart(productToAdd, productToAdd.qty);
-    alert('Producto añadido al carrito');
+    
+    Swal.fire({
+      icon: 'success',
+      title: '¡Añadido!',
+      text: 'El producto ha sido añadido a tu carrito correctamente',
+      showConfirmButton: false,
+      timer: 1500
+    });
   }
 
   cancelarAsistencia(reg: any) {

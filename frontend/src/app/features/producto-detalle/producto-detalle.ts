@@ -75,6 +75,10 @@ export class ProductoDetalleComponent implements OnInit {
     return `${environment.apiUrl}${url.startsWith('/') ? url : '/' + url}`;
   }
 
+  formatCurrency(value: number): string {
+    return '$ ' + new Intl.NumberFormat('es-CO').format(value);
+  }
+
   goBack() {
     this.location.back();
   }
@@ -156,7 +160,8 @@ export class ProductoDetalleComponent implements OnInit {
       title: 'Agregado al carrito',
       background: '#22c55e',
       color: '#ffffff',
-      iconColor: '#ffffff'
+      iconColor: '#ffffff',
+      scrollbarPadding: false
     });
 
     setTimeout(() => {

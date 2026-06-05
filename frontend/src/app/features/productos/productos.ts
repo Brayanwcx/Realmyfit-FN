@@ -64,6 +64,10 @@ export class ProductosComponent implements OnInit {
     return `${environment.apiUrl}${url.startsWith('/') ? url : '/' + url}`;
   }
 
+  formatCurrency(value: number): string {
+    return '$ ' + new Intl.NumberFormat('es-CO').format(value);
+  }
+
   get filteredProductos() {
     return this.productos.filter(p => {
       const matchesCategory = this.selectedCategory === 'Todos' || p.cat === this.selectedCategory;
@@ -88,7 +92,8 @@ export class ProductosComponent implements OnInit {
         timer: 2000,
         showConfirmButton: false,
         background: '#1e2024',
-        color: '#ffffff'
+        color: '#ffffff',
+        scrollbarPadding: false
       });
     }
   }
@@ -132,7 +137,8 @@ export class ProductosComponent implements OnInit {
         timer: 3000,
         showConfirmButton: false,
         background: '#1e2024',
-        color: '#ffffff'
+        color: '#ffffff',
+        scrollbarPadding: false
       });
       return;
     }
@@ -149,7 +155,8 @@ export class ProductosComponent implements OnInit {
       title: 'Agregado al carrito',
       background: '#22c55e',
       color: '#ffffff',
-      iconColor: '#ffffff'
+      iconColor: '#ffffff',
+      scrollbarPadding: false
     });
 
     setTimeout(() => {

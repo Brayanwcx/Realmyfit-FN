@@ -24,7 +24,7 @@
               <p class="text-muted">Cantidad: {{ item.qty }}</p>
             </div>
             <div class="item-price">
-              ${{ item.price }}
+              ${{ formatPrice(item.price) }}
             </div>
             <button class="remove-btn" title="Eliminar" (click)="removeItem(item)">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -47,12 +47,12 @@
       
       <div class="summary-line">
         <span>Subtotal</span>
-        <span>${{ subtotal | number:'1.2-2' }}</span>
+        <span>${{ formatPrice(subtotal) }}</span>
       </div>
       <div class="divider"></div>
       <div class="summary-line total-line">
         <span>Total</span>
-        <span class="text-primary">${{ total | number:'1.2-2' }}</span>
+        <span class="text-primary">${{ formatPrice(total) }}</span>
       </div>
 
       @if (checkoutError) {

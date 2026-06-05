@@ -68,7 +68,7 @@
         <h3 class="product-name" [routerLink]="['/productos', producto.id]" style="cursor: pointer;">{{ producto.name }}</h3>
         
         <div class="product-price-row">
-          <span class="product-price">${{ producto.price }}</span>
+          <span class="product-price">{{ formatCurrency(producto.price) }}</span>
         </div>
 
         <div class="product-actions">

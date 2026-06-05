@@ -56,8 +56,7 @@ import { PaymentService } from '../../core/services/payment.service';
           <div class="receipt-footer">
             <p class="text-muted">La orden se ha registrado en tu cuenta.</p>
             <div class="actions">
-              <a routerLink="/perfil" class="btn-primary w-100 mb-2">Ver mis pedidos</a>
-              <a routerLink="/" class="btn-outline w-100">Volver al inicio</a>
+              <a routerLink="/" class="btn-primary w-100">Volver al inicio</a>
             </div>
           </div>
         </div>

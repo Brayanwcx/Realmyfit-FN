@@ -132,7 +132,28 @@ export class PaymentsService {
         const successUrl = dto.successUrl || `${frontendUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
         const cancelUrl = dto.cancelUrl || `${frontendUrl}/checkout/cancel`;
 
-        const lineItems: any[] = dto.items.map((item) => ({
+        let totalAmount = 0;
+        const verifiedItems: any[] = [];
+
+        for (const item of dto.items) {
+            const productId = item.productId;
+            if (!productId) {
+                throw new BadRequestException(`El \`productId\` es requerido para cada item. Item: '${item.name}'`);
+            }
+            const product = await this.productRepo.findOne({ where: { id: productId } });
+            if (!product) throw new BadRequestException(`Producto no encontrado: ID ${productId}`);
+            if (product.stock < item.quantity) throw new BadRequestException(`Sin stock suficiente para '${product.name}'`);
+
+            totalAmount += product.price * item.quantity;
+            verifiedItems.push({
+                ...item,
+                price: product.price,
+                name: product.name,
+                productId: product.id,
+            });
+        }
+
+        const lineItems: any[] = verifiedItems.map((item) => ({
             quantity: item.quantity,
             price_data: {
                 currency: 'usd',
@@ -143,6 +164,22 @@ export class PaymentsService {
                 },
             },
         }));
+
+        if (totalAmount > 0) {
+            // Add Shipping Fee
+            totalAmount += 5;
+            lineItems.push({
+                quantity: 1,
+                price_data: {
+                    currency: 'usd',
+                    unit_amount: 500, // $5.00
+                    product_data: {
+                        name: 'Tarifa de Envío',
+                    },
+                },
+            });
+        }
+
 
         const session = await this.stripe.checkout.sessions.create({
             payment_method_types: ['card'],
@@ -155,16 +192,13 @@ export class PaymentsService {
             },
         });
 
-        // Persist a PENDING payment record
-        const totalAmount = dto.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-
         // Create Payment record
         const payment = this.paymentRepo.create({
             amount: totalAmount,
             paymentMethod: PaymentMethod.STRIPE,
             status: PaymentStatus.PENDING,
             stripeSessionId: session.id,
-            description: `Stripe Checkout – ${dto.items.length} item(s)`,
+            description: `Stripe Checkout – ${verifiedItems.length} item(s) + Envío`,
             user_id: dto.userId,
         });
         await this.paymentRepo.save(payment);
@@ -179,15 +213,10 @@ export class PaymentsService {
         await this.orderRepo.save(order);
 
         // Create OrderItems
-        // Bug #5 fix: lanzar error si falta productId en vez de usar fallback silencioso a 1
-        const orderItemsList = dto.items.map(item => {
-            const productId = item.productId;
-            if (!productId) {
-                throw new BadRequestException(`El \`productId\` es requerido para cada item. Item sin productId: '${item.name}'`);
-            }
+        const orderItemsList = verifiedItems.map(item => {
             return this.orderItemRepo.create({
                 order_id: order.id,
-                product_id: productId,
+                product_id: item.productId,
                 quantity: item.quantity,
                 unitPrice: item.price,
                 subtotal: item.price * item.quantity,
@@ -312,7 +341,29 @@ export class PaymentsService {
     // ─── Simulated Payment Flow ───────────────────────────────────────────────────
 
     async simulatePayment(dto: CreateCheckoutSessionDto) {
-        const totalAmount = dto.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+        let totalAmount = 0;
+        const verifiedItems: any[] = [];
+
+        for (const item of dto.items) {
+            const productId = item.productId;
+            if (!productId) {
+                throw new BadRequestException(`productId requerido para item '${item.name}'`);
+            }
+            const product = await this.productRepo.findOne({ where: { id: productId } });
+            if (!product) throw new BadRequestException(`Producto no encontrado: ID ${productId}`);
+            if (product.stock < item.quantity) throw new BadRequestException(`Sin stock suficiente para '${product.name}'`);
+
+            totalAmount += product.price * item.quantity;
+            verifiedItems.push({
+                ...item,
+                price: product.price,
+                name: product.name,
+                productId: product.id,
+            });
+        }
+
+        if (totalAmount > 0) totalAmount += 5; // Shipping fee
+
         const simId = `simulated_${Date.now()}`;
 
         const payment = this.paymentRepo.create({
@@ -320,7 +371,7 @@ export class PaymentsService {
             paymentMethod: PaymentMethod.STRIPE, // Treat as Stripe for record keeping
             status: PaymentStatus.COMPLETED,
             stripeSessionId: simId,
-            description: `Simulated Checkout – ${dto.items.length} item(s)`,
+            description: `Simulated Checkout – ${verifiedItems.length} item(s) + Envío`,
             user_id: dto.userId,
         });
 
@@ -334,15 +385,10 @@ export class PaymentsService {
         });
         await this.orderRepo.save(order);
 
-        // Bug #5 fix: misma guarda en simulación
-        const orderItemsList = dto.items.map(item => {
-            const productId = item.productId;
-            if (!productId) {
-                throw new BadRequestException(`productId requerido para item '${item.name}'`);
-            }
+        const orderItemsList = verifiedItems.map(item => {
             return this.orderItemRepo.create({
                 order_id: order.id,
-                product_id: productId,
+                product_id: item.productId,
                 quantity: item.quantity,
                 unitPrice: item.price,
                 subtotal: item.price * item.quantity,

@@ -45,6 +45,10 @@ export class CartComponent implements OnInit {
     return `${environment.apiUrl}${url}`;
   }
 
+  formatPrice(price: number): string {
+    return new Intl.NumberFormat('es-CO').format(price);
+  }
+
   removeItem(item: any) {
     this.cartService.removeFromCart(item);
   }
