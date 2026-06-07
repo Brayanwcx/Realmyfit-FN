@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { getDataSourceToken } from '@nestjs/typeorm';
 import { seedRoles } from './core/database/seeds/roles.seed';
+import { seedAdmin } from './core/database/seeds/admin.seed';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,7 +14,8 @@ async function bootstrap() {
   try {
     const dataSource = app.get(getDataSourceToken());
     await seedRoles(dataSource);
-    console.log('🌱 Seed de roles completado.');
+    await seedAdmin(dataSource);
+    console.log('🌱 Seeds completados.');
   } catch (err) {
     console.error('⚠️  Error ejecutando seed de roles:', err);
   }

@@ -94,8 +94,31 @@
     }
   }
 
+  .event-price-row {
+    margin-top: 1.25rem;
+
+    .event-price {
+      display: inline-block;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--color-primary);
+      letter-spacing: 0.5px;
+    }
+
+    .event-price-free {
+      display: inline-block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #4ade80;
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.25);
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+    }
+  }
+
   .event-footer {
-    margin-top: 2rem;
+    margin-top: 1.25rem;
     border-top: 1px solid rgba(255,255,255,0.05);
     padding-top: 1.5rem;
 

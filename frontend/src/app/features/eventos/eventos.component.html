@@ -27,6 +27,14 @@
             <p class="event-instructor">Dictado por <strong>{{ evento.instructor }}</strong></p>
           </div>
           
+          <div class="event-price-row">
+            @if (isPaidEvent(evento)) {
+              <span class="event-price">{{ formatPrice(evento.price) }}</span>
+            } @else {
+              <span class="event-price-free">Entrada gratuita</span>
+            }
+          </div>
+
           <div class="event-footer">
             @if(evento.spots > 0) {
               <span class="spots-available">{{ evento.spots }} cupos libres</span>

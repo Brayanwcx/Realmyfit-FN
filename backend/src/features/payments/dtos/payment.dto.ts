@@ -1,6 +1,9 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString, IsEnum, Min } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString, IsEnum, IsArray, ValidateNested, Min, IsUrl } from 'class-validator';
+import { Type } from 'class-transformer';
 import { PartialType, ApiProperty } from '@nestjs/swagger';
 import { PaymentMethod, PaymentStatus } from '../entities/payment.entity';
+
+// ─── Admin CRUD DTOs ─────────────────────────────────────────────────────────
 
 export class CreatePaymentDto {
     @IsNumber()
@@ -35,3 +38,99 @@ export class CreatePaymentDto {
 }
 
 export class UpdatePaymentDto extends PartialType(CreatePaymentDto) {}
+
+// ─── Stripe Checkout DTOs ─────────────────────────────────────────────────────
+
+export class CheckoutItemDto {
+    @IsString()
+    @IsNotEmpty()
+    @ApiProperty({ example: 'Proteína Whey' })
+    readonly name: string;
+
+    @IsNumber()
+    @Min(0)
+    @ApiProperty({ example: 29.99 })
+    readonly price: number;
+
+    @IsNumber()
+    @Min(1)
+    @ApiProperty({ example: 2 })
+    readonly quantity: number;
+
+    @IsString()
+    @IsOptional()
+    @ApiProperty({ example: 'https://...', required: false })
+    readonly image?: string;
+
+    @IsNumber()
+    @IsOptional()
+    @ApiProperty({ example: 1, required: false })
+    readonly productId?: number;
+}
+
+export class CreateCheckoutSessionDto {
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => CheckoutItemDto)
+    @ApiProperty({ type: [CheckoutItemDto] })
+    readonly items: CheckoutItemDto[];
+
+    @IsNumber()
+    @IsNotEmpty()
+    @ApiProperty({ example: 1 })
+    readonly userId: number;
+
+    @IsString()
+    @IsOptional()
+    @ApiProperty({ required: false })
+    readonly successUrl?: string;
+
+    @IsString()
+    @IsOptional()
+    @ApiProperty({ required: false })
+    readonly cancelUrl?: string;
+}
+
+export class CreateEventCheckoutDto {
+    @IsNumber()
+    @IsNotEmpty()
+    @ApiProperty({ example: 1, description: 'ID del evento a comprar' })
+    readonly eventId: number;
+
+    @IsNumber()
+    @IsNotEmpty()
+    @ApiProperty({ example: 1 })
+    readonly userId: number;
+
+    @IsString()
+    @IsOptional()
+    @ApiProperty({ required: false })
+    readonly successUrl?: string;
+
+    @IsString()
+    @IsOptional()
+    @ApiProperty({ required: false })
+    readonly cancelUrl?: string;
+}
+
+export class CreateMembershipCheckoutDto {
+    @IsNumber()
+    @IsNotEmpty()
+    @ApiProperty({ example: 1, description: 'ID of the Membership plan to purchase' })
+    readonly membershipId: number;
+
+    @IsNumber()
+    @IsNotEmpty()
+    @ApiProperty({ example: 1 })
+    readonly userId: number;
+
+    @IsString()
+    @IsOptional()
+    @ApiProperty({ required: false })
+    readonly successUrl?: string;
+
+    @IsString()
+    @IsOptional()
+    @ApiProperty({ required: false })
+    readonly cancelUrl?: string;
+}
