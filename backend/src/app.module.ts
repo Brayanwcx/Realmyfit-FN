@@ -22,6 +22,7 @@ import { PaymentsModule } from './features/payments/payments.module';
 import { TrainersModule } from './features/trainers/trainers.module';
 import { MachinesModule } from './features/machines/machines.module';
 import { OrdersModule } from './features/orders/orders.module';
+import { FilesModule } from './features/files/files.module';
 import config from './core/config';
 
 @Module({
@@ -58,8 +59,9 @@ import config from './core/config';
     TrainersModule,
     MachinesModule,
     OrdersModule,
+    FilesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}
