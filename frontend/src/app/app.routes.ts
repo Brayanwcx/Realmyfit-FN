@@ -23,9 +23,10 @@ import { AdminComponent } from './features/admin/admin';
 import { AdminDashboardComponent } from './features/admin/dashboard';
 import { AdminUsersComponent } from './features/admin/users';
 import { AdminProductsComponent } from './features/admin/products';
-import { AdminPlaceholderComponent } from './features/admin/placeholder';
+import { AdminEventsComponent } from './features/admin/events';
 import { AdminMembershipsComponent } from './features/admin/memberships';
 import { AdminReviewsComponent } from './features/admin/reviews';
+import { AdminOrdersComponent } from './features/admin/orders';
 
 export const routes: Routes = [
   // ─── Públicas ──────────────────────────────────────────────────
@@ -46,7 +47,7 @@ export const routes: Routes = [
   {
     path: 'perfil',
     component: PerfilComponent,
-    canActivate: [authGuard]
+    canActivate: [authGuard],
   },
 
   // ─── Admin (requiere rol ADMIN) ────────────────────────────────
@@ -59,12 +60,13 @@ export const routes: Routes = [
       { path: 'users', component: AdminUsersComponent },
       { path: 'products', component: AdminProductsComponent },
       { path: 'memberships', component: AdminMembershipsComponent },
-      { path: 'events', component: AdminPlaceholderComponent },
+      { path: 'events', component: AdminEventsComponent },
       { path: 'reviews', component: AdminReviewsComponent },
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
-    ]
+      { path: 'orders', component: AdminOrdersComponent },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+    ],
   },
 
   // ─── Fallback ──────────────────────────────────────────────────
-  { path: '**', redirectTo: '' }
+  { path: '**', redirectTo: '' },
 ];

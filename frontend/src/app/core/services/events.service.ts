@@ -4,7 +4,7 @@ import { environment } from '../../../environments/environment';
 import { Observable } from 'rxjs';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class EventsService {
   private http = inject(HttpClient);
@@ -12,6 +12,10 @@ export class EventsService {
 
   getEvents(): Observable<any[]> {
     return this.http.get<any[]>(this.apiUrl);
+  }
+
+  getEventsPublic(): Observable<any[]> {
+    return this.getEvents();
   }
 
   getEvent(id: number): Observable<any> {
@@ -33,13 +37,15 @@ export class EventsService {
   uploadImage(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<any>(`${environment.apiUrl}/files/upload`, formData, { headers: this.getHeaders() });
+    return this.http.post<any>(`${environment.apiUrl}/files/upload`, formData, {
+      headers: this.getHeaders(),
+    });
   }
 
   private getHeaders(): HttpHeaders {
     const token = localStorage.getItem('gym_token');
     return new HttpHeaders({
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     });
   }
 }

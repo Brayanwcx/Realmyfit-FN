@@ -1,63 +1,65 @@
 import {
-    Column,
-    Entity,
-    PrimaryGeneratedColumn,
-    CreateDateColumn,
-    ManyToOne,
-    JoinColumn,
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 export enum PaymentMethod {
-    CASH = 'CASH',
-    CARD = 'CARD',
-    TRANSFER = 'TRANSFER',
+  CASH = 'CASH',
+  CARD = 'CARD',
+  TRANSFER = 'TRANSFER',
+  STRIPE = 'STRIPE',
 }
 
 export enum PaymentStatus {
-    PENDING = 'PENDING',
-    COMPLETED = 'COMPLETED',
-    FAILED = 'FAILED',
-    REFUNDED = 'REFUNDED',
+  PENDING = 'PENDING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  REFUNDED = 'REFUNDED',
 }
 
 @Entity('payments')
 export class Payment {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column({ type: 'decimal', precision: 10, scale: 2 })
-    amount: number;
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  amount: number;
 
-    @Column({
-        type: 'enum',
-        enum: PaymentMethod,
-        default: PaymentMethod.CASH,
-    })
-    paymentMethod: PaymentMethod;
+  @Column({
+    type: 'enum',
+    enum: PaymentMethod,
+    default: PaymentMethod.CASH,
+  })
+  paymentMethod: PaymentMethod;
 
-    @Column({
-        type: 'enum',
-        enum: PaymentStatus,
-        default: PaymentStatus.PENDING,
-    })
-    status: PaymentStatus;
+  @Column({
+    type: 'enum',
+    enum: PaymentStatus,
+    default: PaymentStatus.PENDING,
+  })
+  status: PaymentStatus;
 
-    @Column({ type: 'varchar', length: 255, nullable: true })
-    reference: string;
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  reference: string;
 
-    @Column({ type: 'text', nullable: true })
-    description: string;
+  @Column({ type: 'text', nullable: true })
+  description: string;
 
-    @CreateDateColumn()
-    createdAt: Date;
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  stripeSessionId: string;
 
-    @ManyToOne(() => User, (user) => user.payments, { eager: true })
-    @JoinColumn({ name: 'user_id' })
-    user: User;
+  @CreateDateColumn()
+  createdAt: Date;
 
-    @Column()
-    user_id: number;
+  @ManyToOne(() => User, (user) => user.payments, { eager: true })
+  @JoinColumn({ name: 'user_id' })
+  user: User;
+
+  @Column()
+  user_id: number;
 }
-
-
