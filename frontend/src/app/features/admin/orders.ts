@@ -21,6 +21,13 @@ import { OrdersService } from '../../core/services/orders.service';
       </div>
     </div>
 
+    <div class="tabs-container">
+      <button class="tab-btn" [class.active]="categoryFilter === 'ALL'" (click)="setCategory('ALL')">Todos</button>
+      <button class="tab-btn" [class.active]="categoryFilter === 'PRODUCTS'" (click)="setCategory('PRODUCTS')">Productos</button>
+      <button class="tab-btn" [class.active]="categoryFilter === 'EVENTS'" (click)="setCategory('EVENTS')">Eventos</button>
+      <button class="tab-btn" [class.active]="categoryFilter === 'MEMBERSHIPS'" (click)="setCategory('MEMBERSHIPS')">Membresías</button>
+    </div>
+
     <div class="filters-row">
       <div class="search-box">
         <svg
@@ -78,9 +85,6 @@ import { OrdersService } from '../../core/services/orders.service';
               <tr>
                 <td>
                   <div class="payment-id">#{{ payment.id }}</div>
-                  <div class="product-desc">
-                    {{ payment.reference || payment.stripeSessionId || 'Sin referencia' }}
-                  </div>
                 </td>
                 <td>
                   <div class="product-name">
@@ -98,7 +102,7 @@ import { OrdersService } from '../../core/services/orders.service';
                         <span class="product-desc">+{{ payment.items.length - 2 }} más</span>
                       }
                     } @else {
-                      <span class="product-desc">No hay artículos asociados</span>
+                      <span class="product-desc">{{ payment.description || 'Sin artículos' }}</span>
                     }
                   </div>
                 </td>
@@ -263,6 +267,34 @@ import { OrdersService } from '../../core/services/orders.service';
         background: rgba(239, 68, 68, 0.1);
         color: #f87171;
         border: 1px solid rgba(239, 68, 68, 0.2);
+      }
+      .tabs-container {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 0.5rem;
+        overflow-x: auto;
+      }
+      .tab-btn {
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.6);
+        padding: 0.5rem 1rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: 0.3s;
+        white-space: nowrap;
+      }
+      .tab-btn:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .tab-btn.active {
+        color: #4ade80;
+        background: rgba(74, 222, 128, 0.1);
       }
       .filters-row {
         display: flex;
@@ -559,8 +591,14 @@ export class AdminOrdersComponent implements OnInit {
   loading = true;
   searchTerm = '';
   statusFilter = '';
+  categoryFilter: 'ALL' | 'PRODUCTS' | 'EVENTS' | 'MEMBERSHIPS' = 'ALL';
   page = 1;
   pageSize = 10;
+
+  setCategory(cat: 'ALL' | 'PRODUCTS' | 'EVENTS' | 'MEMBERSHIPS') {
+    this.categoryFilter = cat;
+    this.page = 1;
+  }
 
   get totalPages() {
     return Math.ceil(this.filteredPayments.length / this.pageSize) || 1;
@@ -674,7 +712,18 @@ export class AdminOrdersComponent implements OnInit {
         `${payment.user?.name || ''} ${payment.user?.lastName || ''} ${payment.user?.email || ''} ${payment.id || ''} ${payment.paymentReference || ''} ${itemNames}`.toLowerCase();
       const matchSearch = !term || searchString.includes(term);
       const matchStatus = !this.statusFilter || payment.status === this.statusFilter;
-      return matchSearch && matchStatus;
+      
+      let matchCategory = true;
+      const desc = (payment.description || '').toLowerCase();
+      const isEvent = desc.includes('evento');
+      const isMembership = desc.includes('membresía') || desc.includes('membership');
+      const isProduct = !isEvent && !isMembership;
+
+      if (this.categoryFilter === 'EVENTS') matchCategory = isEvent;
+      else if (this.categoryFilter === 'MEMBERSHIPS') matchCategory = isMembership;
+      else if (this.categoryFilter === 'PRODUCTS') matchCategory = isProduct;
+
+      return matchSearch && matchStatus && matchCategory;
     });
   }
 
