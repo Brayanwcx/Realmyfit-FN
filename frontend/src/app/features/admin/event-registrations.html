@@ -1,0 +1,140 @@
+<div class="view-header">
+      <h2>Inscripciones a Eventos</h2>
+      <p class="subtitle">Monitorea los usuarios inscritos y gestiona sus registros</p>
+    </div>
+    
+    <div class="table-container glass">
+      @if (loading) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Cargando inscripciones...</p>
+        </div>
+      }
+
+      @if (errorMessage) {
+        <div class="error-state">
+          <p>Error: {{ errorMessage }}</p>
+          <button class="btn-primary" (click)="fetchRegistrations()">Reintentar</button>
+        </div>
+      }
+      
+      @if (!loading && !errorMessage && registrations.length > 0) {
+        <!-- Desktop table -->
+        <table class="desktop-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Evento</th>
+              <th>Usuario</th>
+              <th>Fecha de Registro</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (reg of pagedRegistrations; track reg.id) {
+              <tr>
+                <td class="id-col">#{{ reg.id }}</td>
+                <td>
+                  <div class="fw-bold">{{ reg.event?.title || 'Evento Desconocido' }}</div>
+                  <div class="text-sm op-7">{{ reg.event?.date ? (reg.event.date | date:'mediumDate') : '' }}</div>
+                </td>
+                <td>
+                  <div class="fw-bold">{{ reg.user?.name || '---' }} {{ reg.user?.lastName || '' }}</div>
+                  <div class="text-sm op-7">{{ reg.user?.email || 'N/A' }}</div>
+                </td>
+                <td>{{ reg.registrationDate | date:'short' }}</td>
+                <td>
+                  <span class="status-badge"
+                    [class.success]="reg.status === 'CONFIRMED'"
+                    [class.warning]="reg.status === 'PENDING'"
+                    [class.error]="reg.status === 'CANCELLED'">
+                    {{ getStatusLabel(reg.status) }}
+                  </span>
+                </td>
+                <td>
+                  <div class="actions-cell">
+                    @if (reg.status === 'PENDING') {
+                      <button class="btn-icon confirm" (click)="confirmRegistration(reg)" title="Confirmar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        Confirmar
+                      </button>
+                    }
+                    <button class="btn-icon delete" (click)="deleteRegistration(reg.id)" title="Eliminar">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                      Eliminar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <!-- Mobile cards -->
+        <div class="mobile-cards">
+          @for (reg of pagedRegistrations; track reg.id) {
+            <div class="mobile-card glass">
+              <div class="card-row">
+                <span class="card-label">Evento</span>
+                <span class="card-value fw-bold">{{ reg.event?.title || '—' }}</span>
+              </div>
+              <div class="card-row">
+                <span class="card-label">Usuario</span>
+                <span class="card-value">{{ reg.user?.name || '—' }} {{ reg.user?.lastName || '' }}</span>
+              </div>
+              <div class="card-row">
+                <span class="card-label">Email</span>
+                <span class="card-value text-sm op-7">{{ reg.user?.email || 'N/A' }}</span>
+              </div>
+              <div class="card-row">
+                <span class="card-label">Fecha</span>
+                <span class="card-value">{{ reg.registrationDate | date:'short' }}</span>
+              </div>
+              <div class="card-row">
+                <span class="card-label">Estado</span>
+                <span class="status-badge"
+                  [class.success]="reg.status === 'CONFIRMED'"
+                  [class.warning]="reg.status === 'PENDING'"
+                  [class.error]="reg.status === 'CANCELLED'">
+                  {{ getStatusLabel(reg.status) }}
+                </span>
+              </div>
+              <div class="card-actions">
+                @if (reg.status === 'PENDING') {
+                  <button class="btn-icon confirm" (click)="confirmRegistration(reg)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Confirmar
+                  </button>
+                }
+                <button class="btn-icon delete" (click)="deleteRegistration(reg.id)">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Paginación -->
+        @if (totalPages > 1) {
+          <div class="pagination">
+            <button class="page-btn" (click)="page = 1" [disabled]="page === 1">«</button>
+            <button class="page-btn" (click)="page = page - 1" [disabled]="page === 1">‹</button>
+            @for (p of pageNumbers; track p) {
+              <button class="page-btn" [class.active]="p === page" (click)="page = p">{{ p }}</button>
+            }
+            <button class="page-btn" (click)="page = page + 1" [disabled]="page === totalPages">›</button>
+            <button class="page-btn" (click)="page = totalPages" [disabled]="page === totalPages">»</button>
+            <span class="page-info">{{ (page-1)*pageSize+1 }}–{{ min(page*pageSize, registrations.length) }} de {{ registrations.length }}</span>
+          </div>
+        }
+      }
+
+      @if (!loading && !errorMessage && registrations.length === 0) {
+        <div class="empty-state">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          <p>No hay inscripciones registradas.</p>
+        </div>
+      }
+    </div>

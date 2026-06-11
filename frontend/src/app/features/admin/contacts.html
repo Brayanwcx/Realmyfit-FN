@@ -1,0 +1,123 @@
+<div class="view-header">
+      <h2>Mensajes de Contacto</h2>
+      <p class="subtitle">Mensajes recibidos desde el formulario público</p>
+    </div>
+
+    <div class="table-container glass">
+      @if (loading) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Cargando mensajes...</p>
+        </div>
+      }
+
+      @if (errorMessage) {
+        <div class="error-state">
+          <p>Error: {{ errorMessage }}</p>
+          <button class="btn-primary" (click)="fetchMessages()">Reintentar</button>
+        </div>
+      }
+
+      @if (!loading && !errorMessage && messages.length > 0) {
+        <table class="desktop-table">
+          <thead>
+            <tr>
+              <th width="40px">Est</th>
+              <th>Contacto</th>
+              <th>Asunto</th>
+              <th>Mensaje</th>
+              <th width="120px">Fecha</th>
+              <th width="260px">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (msg of pagedMessages; track msg.id) {
+              <tr [class.unread]="!msg.isRead">
+                <td style="text-align: center;">
+                  <span class="dot" [class.unread-dot]="!msg.isRead" [class.read-dot]="msg.isRead"
+                    title="{{ msg.isRead ? 'Leído' : 'No leído' }}"></span>
+                </td>
+                <td>
+                  <div class="product-name">{{ msg.name }}</div>
+                  <div class="product-desc">{{ msg.email }}</div>
+                  @if (msg.phone) { <div class="product-desc">{{ msg.phone }}</div> }
+                </td>
+                <td class="fw-bold">{{ msg.subject }}</td>
+                <td class="msg-cell">{{ msg.message.length > 50 ? (msg.message.substring(0, 50)) + '...' : msg.message }}</td>
+                <td class="product-desc">{{ msg.createdAt | date:'short' }}</td>
+                <td>
+                  <div class="actions-cell">
+                    <button class="btn-icon" style="border-color: rgba(14,165,233,0.35); color: #38bdf8;" (click)="readMessage(msg)" title="Leer Mensaje">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                      Leer
+                    </button>
+                    @if (!msg.isRead) {
+                      <button class="btn-icon confirm" (click)="markRead(msg)" title="Marcar como Leído">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      </button>
+                    }
+                    <button class="btn-icon delete" (click)="deleteMessage(msg.id)" title="Eliminar">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                      Eliminar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <!-- Mobile cards -->
+        <div class="mobile-cards">
+          @for (msg of pagedMessages; track msg.id) {
+            <div class="mobile-card glass" [class.unread-card]="!msg.isRead">
+              <div class="card-row">
+                <span class="card-label">Estado</span>
+                <span class="card-value">
+                  <span class="dot" [class.unread-dot]="!msg.isRead" [class.read-dot]="msg.isRead"></span>
+                  {{ msg.isRead ? 'Leído' : 'Nuevo' }}
+                </span>
+              </div>
+              <div class="card-row">
+                <span class="card-label">Contacto</span>
+                <span class="card-value fw-bold">{{ msg.name }} <br><span class="text-sm op-7">{{ msg.email }}</span></span>
+              </div>
+              <div class="card-row">
+                <span class="card-label">Asunto</span>
+                <span class="card-value fw-bold">{{ msg.subject }}</span>
+              </div>
+              <div class="card-actions">
+                <button class="btn-icon" style="flex: 1; border-color: rgba(14,165,233,0.35); color: #38bdf8;" (click)="readMessage(msg)">Leer</button>
+                @if (!msg.isRead) {
+                  <button class="btn-icon confirm" (click)="markRead(msg)">✓ Leído</button>
+                }
+                <button class="btn-icon delete" (click)="deleteMessage(msg.id)">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Paginación -->
+        @if (totalPages > 1) {
+          <div class="pagination">
+            <button class="page-btn" (click)="page = 1" [disabled]="page === 1">«</button>
+            <button class="page-btn" (click)="page = page - 1" [disabled]="page === 1">‹</button>
+            @for (p of pageNumbers; track p) {
+              <button class="page-btn" [class.active]="p === page" (click)="page = p">{{ p }}</button>
+            }
+            <button class="page-btn" (click)="page = page + 1" [disabled]="page === totalPages">›</button>
+            <button class="page-btn" (click)="page = totalPages" [disabled]="page === totalPages">»</button>
+            <span class="page-info">{{ (page-1)*pageSize+1 }}–{{ min(page*pageSize, messages.length) }} de {{ messages.length }}</span>
+          </div>
+        }
+      }
+
+      @if (!loading && !errorMessage && messages.length === 0) {
+        <div class="empty-state">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+          <p>Bandeja de entrada vacía.</p>
+        </div>
+      }
+    </div>

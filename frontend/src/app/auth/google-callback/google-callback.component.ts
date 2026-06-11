@@ -7,32 +7,7 @@ import { AuthService } from '../../core/services/auth.service';
   selector: 'app-google-callback',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div style="
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #0a0a12;
-      flex-direction: column;
-      gap: 1rem;
-    ">
-      <div style="
-        width: 48px;
-        height: 48px;
-        border: 3px solid rgba(39,174,96,0.2);
-        border-top-color: #27ae60;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-      "></div>
-      <p style="color: #a0a0a0; font-family: sans-serif; font-size: 0.9rem;">
-        Iniciando sesión con Google...
-      </p>
-      <style>
-        @keyframes spin { to { transform: rotate(360deg); } }
-      </style>
-    </div>
-  `,
+  templateUrl: './google-callback.component.html',
 })
 export class GoogleCallbackComponent implements OnInit {
   constructor(

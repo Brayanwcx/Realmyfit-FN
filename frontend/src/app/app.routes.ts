@@ -16,7 +16,7 @@ import { EventoInscripcion } from './features/evento-inscripcion/evento-inscripc
 import { ProductoDetalleComponent } from './features/producto-detalle/producto-detalle';
 import { CheckoutSuccessComponent } from './features/checkout/checkout-success';
 import { CheckoutCancelComponent } from './features/checkout/checkout-cancel';
-import { CheckoutSimulateComponent } from './features/checkout/checkout-simulate';
+import { CheckoutPaymentComponent } from './features/checkout/checkout-payment';
 
 
 // ─── Auth ─────────────────────────────────────────────────────────
@@ -61,7 +61,7 @@ export const routes: Routes = [
   { path: 'inscripcion', component: EventoInscripcion },
   { path: 'checkout/success', component: CheckoutSuccessComponent },
   { path: 'checkout/cancel', component: CheckoutCancelComponent },
-  { path: 'checkout/simulate', component: CheckoutSimulateComponent },
+  { path: 'checkout/pay', component: CheckoutPaymentComponent },
 
   // ─── Rutas protegidas (requieren autenticación) ────────────────
   {

@@ -1,32 +1,46 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CartService {
+  private authService = inject(AuthService);
   private items: any[] = [];
   private cartSubject = new BehaviorSubject<any[]>(this.items);
   cart$ = this.cartSubject.asObservable();
 
   constructor() {
-    this.loadCart();
+    this.authService.currentUser.subscribe(() => {
+      this.loadCart();
+    });
+  }
+
+  private getStorageKey(): string {
+    const user = this.authService.getUser();
+    return user ? `realmyfit_cart_${user.id}` : 'realmyfit_cart_guest';
   }
 
   private loadCart() {
-    const saved = localStorage.getItem('realmyfit_cart');
+    const saved = localStorage.getItem(this.getStorageKey());
     if (saved) {
       try {
         this.items = JSON.parse(saved);
         this.cartSubject.next(this.items);
       } catch (e) {
         console.error('Error loading cart', e);
+        this.items = [];
+        this.cartSubject.next(this.items);
       }
+    } else {
+      this.items = [];
+      this.cartSubject.next(this.items);
     }
   }
 
   private saveCart() {
-    localStorage.setItem('realmyfit_cart', JSON.stringify(this.items));
+    localStorage.setItem(this.getStorageKey(), JSON.stringify(this.items));
   }
 
   addToCart(item: any, quantity: number = 1): { success: boolean; message?: string } {

@@ -1,0 +1,121 @@
+<div class="welcome-banner">
+      <h2>Panel de Control General</h2>
+      <p>Resumen analítico y estado actual del sistema Realmyfit.</p>
+    </div>
+
+    <!-- Barra de estado -->
+    <div class="dashboard-header glass">
+      <div class="status-indicator">
+        <div class="pulse-dot" [class.syncing]="loading"></div>
+        <span>{{ loading ? 'Sincronizando datos...' : 'Datos actualizados' }}</span>
+      </div>
+      <div class="last-sync">
+        <span>Última actualización: {{ lastUpdate | date:'mediumTime' }}</span>
+        <button class="btn-refresh" (click)="loadStats()" [disabled]="loading">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [class.spin]="loading"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- KPIs Row (Top 4 Metrics) -->
+    <div class="kpi-row">
+      <!-- Users KPI -->
+      <div class="kpi-card glass hover-glow">
+        <div class="kpi-header">
+          <span class="kpi-title">Usuarios Totales</span>
+          <div class="kpi-icon blue"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value">{{ stats.users }}</span>
+          <span class="kpi-trend positive"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg> +12% este mes</span>
+        </div>
+      </div>
+
+      <!-- Orders KPI -->
+      <div class="kpi-card glass hover-glow">
+        <div class="kpi-header">
+          <span class="kpi-title">Órdenes Activas</span>
+          <div class="kpi-icon indigo"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg></div>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value">{{ stats.orders }}</span>
+          <span class="kpi-trend positive"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg> +5 nuevas hoy</span>
+        </div>
+      </div>
+
+      <!-- Memberships KPI -->
+      <div class="kpi-card glass hover-glow">
+        <div class="kpi-header">
+          <span class="kpi-title">Membresías Totales</span>
+          <div class="kpi-icon purple"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg></div>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value">{{ stats.memberships }}</span>
+          <span class="kpi-trend neutral"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg> Estable</span>
+        </div>
+      </div>
+
+      <!-- Products KPI -->
+      <div class="kpi-card glass hover-glow">
+        <div class="kpi-header">
+          <span class="kpi-title">Productos en Stock</span>
+          <div class="kpi-icon pink"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="16.5" y1="9.4" x2="7.5" y2="4.6"></line><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg></div>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value">{{ stats.products }}</span>
+          <span class="kpi-trend negative"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"></polyline><polyline points="16 17 22 17 22 11"></polyline></svg> -2 agotados</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="charts-row">
+      <!-- Line Chart -->
+      <div class="chart-container glass main-chart">
+        <h3>Evolución de Ingresos (Mensual)</h3>
+        <div class="canvas-wrapper">
+          <canvas #lineChartCanvas></canvas>
+        </div>
+      </div>
+
+      <!-- Doughnut Chart -->
+      <div class="chart-container glass side-chart">
+        <h3>Calificación de Reseñas</h3>
+        <div class="canvas-wrapper">
+          <canvas #doughnutChartCanvas></canvas>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Tables Row -->
+    <div class="tables-row">
+      <div class="table-panel glass">
+        <div class="table-header">
+          <h3>Órdenes Recientes</h3>
+          <button class="btn-view-all" routerLink="/admin/orders">Ver Todas</button>
+        </div>
+        <div class="table-responsive">
+          <table *ngIf="recentOrders.length > 0; else noOrders">
+            <thead>
+              <tr>
+                <th>ID Orden</th>
+                <th>Usuario</th>
+                <th>Fecha</th>
+                <th>Monto</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let o of recentOrders">
+                <td class="order-id">#{{ o.id || '---' }}</td>
+                <td>{{ o.user?.name || 'Cliente' }}</td>
+                <td class="sub-text">{{ o.createdAt | date:'shortDate' }}</td>
+                <td class="font-bold">${{ (o.amount || 0) | number:'1.0-0' }}</td>
+                <td><span class="badge" [class.badge-success]="o.status === 'COMPLETED'" [class.badge-pending]="o.status !== 'COMPLETED'">{{ translateStatus(o.status) }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <ng-template #noOrders><p class="empty-text">No hay órdenes registradas.</p></ng-template>
+        </div>
+      </div>
+    </div>

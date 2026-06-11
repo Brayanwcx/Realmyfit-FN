@@ -91,6 +91,28 @@ export class CreateCheckoutSessionDto {
     readonly cancelUrl?: string;
 }
 
+export class CreateEventCheckoutDto {
+    @IsNumber()
+    @IsNotEmpty()
+    @ApiProperty({ example: 1, description: 'ID del evento a comprar' })
+    readonly eventId: number;
+
+    @IsNumber()
+    @IsNotEmpty()
+    @ApiProperty({ example: 1 })
+    readonly userId: number;
+
+    @IsString()
+    @IsOptional()
+    @ApiProperty({ required: false })
+    readonly successUrl?: string;
+
+    @IsString()
+    @IsOptional()
+    @ApiProperty({ required: false })
+    readonly cancelUrl?: string;
+}
+
 export class CreateMembershipCheckoutDto {
     @IsNumber()
     @IsNotEmpty()

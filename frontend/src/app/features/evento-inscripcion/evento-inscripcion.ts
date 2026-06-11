@@ -82,6 +82,13 @@ export class EventoInscripcion implements OnInit {
       return;
     }
 
+    if (Number(this.evento.price) > 0) {
+      sessionStorage.removeItem('pending_membership');
+      sessionStorage.setItem('pending_event', JSON.stringify(this.evento));
+      this.router.navigate(['/checkout/pay']);
+      return;
+    }
+
     this.isSubmitting = true;
 
     this.regService.create({ user_id: user.id, event_id: this.evento.id }).subscribe({

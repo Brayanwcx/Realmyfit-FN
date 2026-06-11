@@ -1,0 +1,39 @@
+.checkout-result-page {
+      min-height: 80vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .result-card {
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+      padding: 3rem 2rem;
+      border-radius: 16px;
+    }
+    .result-icon {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+    }
+    .cancel-icon {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+    }
+    h1 { font-size: 1.75rem; margin-bottom: 0.75rem; }
+    .result-message { color: var(--text-muted, #aaa); margin-bottom: 1.5rem; line-height: 1.6; }
+    .result-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn-outline {
+      padding: 0.6rem 1.5rem;
+      border: 1px solid currentColor;
+      border-radius: 8px;
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.2s;
+    }
+    .btn-outline:hover { background: rgba(255,255,255,0.08); }

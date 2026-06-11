@@ -1,0 +1,614 @@
+﻿commit 32b9d7b94c11bd62dd3e81cbf91f1689bf77f20f
+Author: Aleandro Chica <aleandrochica@gmail.com>
+Date:   Sun Jun 7 15:15:31 2026 -0500
+
+    Update admin payments and event checkout
+
+diff --git a/frontend/src/app/features/checkout/checkout-simulate.ts b/frontend/src/app/features/checkout/checkout-simulate.ts
+new file mode 100644
+index 0000000..77acbef
+--- /dev/null
++++ b/frontend/src/app/features/checkout/checkout-simulate.ts
+@@ -0,0 +1,324 @@
++import { Component, OnInit } from '@angular/core';
++import { CommonModule } from '@angular/common';
++import { Router, ActivatedRoute } from '@angular/router';
++import { FormsModule } from '@angular/forms';
++import { take } from 'rxjs/operators';
++import { CartService } from '../../core/services/cart.service';
++import { PaymentService } from '../../core/services/payment.service';
++import { AuthService } from '../../core/services/auth.service';
++
++interface EventCheckoutData {
++  eventId: number;
++  name: string;
++  price: number;
++  date?: string;
++  image?: string;
++}
++
++@Component({
++  selector: 'app-checkout-simulate',
++  standalone: true,
++  imports: [CommonModule, FormsModule],
++  template: `
++    <div class="simulate-container">
++      <div class="simulate-card">
++        <h2>Simulaci├│n de Pago Seguro</h2>
++        <p class="subtitle">Modo de prueba local (no se har├ín cargos reales)</p>
++
++        @if (checkoutType === 'event' && eventCheckout) {
++          <div class="checkout-summary">
++            <p class="summary-label">Evento a comprar</p>
++            <h3>{{ eventCheckout.name }}</h3>
++            @if (eventCheckout.date) {
++              <p class="summary-date">{{ eventCheckout.date }}</p>
++            }
++          </div>
++        }
++
++        <div class="card-element">
++          <label>N├║mero de Tarjeta (Prueba)</label>
++          <input type="text" placeholder="4242 4242 4242 4242" [(ngModel)]="cardNumber" />
++        </div>
++
++        <div class="row">
++          <div class="card-element half">
++            <label>Expiraci├│n</label>
++            <input type="text" placeholder="12/34" [(ngModel)]="expiry" />
++          </div>
++          <div class="card-element half">
++            <label>CVC</label>
++            <input type="text" placeholder="123" [(ngModel)]="cvc" />
++          </div>
++        </div>
++
++        <div class="card-element">
++          <label>Nombre en la tarjeta</label>
++          <input type="text" placeholder="John Doe" [(ngModel)]="name" />
++        </div>
++
++        @if (error) {
++          <div class="error-msg">{{ error }}</div>
++        }
++
++        <button
++          class="btn-primary w-100 pay-btn"
++          [disabled]="isProcessing"
++          (click)="processPayment()"
++        >
++          {{ isProcessing ? 'Procesando...' : 'Pagar Ahora (' + (total | currency) + ')' }}
++        </button>
++
++        <button type="button" class="btn-back" (click)="goBack()" [disabled]="isProcessing">
++          ÔåÉ Volver
++        </button>
++      </div>
++    </div>
++  `,
++  styles: [`
++    .simulate-container {
++      min-height: 80vh;
++      display: flex;
++      align-items: center;
++      justify-content: center;
++      background-color: var(--background);
++      padding: 2rem;
++    }
++    .simulate-card {
++      background-color: var(--surface);
++      padding: 2.5rem;
++      border-radius: 12px;
++      width: 100%;
++      max-width: 450px;
++      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
++      border: 1px solid var(--border-color);
++    }
++    h2 {
++      margin-top: 0;
++      color: var(--text-primary);
++      text-align: center;
++      font-size: 1.5rem;
++    }
++    .subtitle {
++      color: var(--text-secondary);
++      text-align: center;
++      font-size: 0.9rem;
++      margin-bottom: 2rem;
++    }
++    .checkout-summary {
++      background: rgba(34, 197, 94, 0.08);
++      border: 1px solid rgba(34, 197, 94, 0.2);
++      border-radius: 10px;
++      padding: 1rem 1.25rem;
++      margin-bottom: 1.5rem;
++      text-align: center;
++    }
++    .checkout-summary h3 {
++      margin: 0.25rem 0;
++      color: var(--text-primary);
++      font-size: 1.1rem;
++    }
++    .summary-label {
++      margin: 0;
++      font-size: 0.8rem;
++      color: var(--text-secondary);
++      text-transform: uppercase;
++      letter-spacing: 0.5px;
++    }
++    .summary-date {
++      margin: 0.25rem 0 0;
++      font-size: 0.85rem;
++      color: var(--text-secondary);
++    }
++    .card-element {
++      margin-bottom: 1.2rem;
++    }
++    .card-element label {
++      display: block;
++      margin-bottom: 0.5rem;
++      color: var(--text-secondary);
++      font-size: 0.85rem;
++    }
++    .card-element input {
++      width: 100%;
++      padding: 0.75rem;
++      border-radius: 6px;
++      border: 1px solid var(--border-color);
++      background-color: rgba(255, 255, 255, 0.05);
++      color: var(--text-primary);
++      font-size: 1rem;
++      box-sizing: border-box;
++    }
++    .card-element input:focus {
++      outline: none;
++      border-color: var(--primary-color);
++    }
++    .row {
++      display: flex;
++      gap: 1rem;
++    }
++    .half {
++      flex: 1;
++    }
++    .error-msg {
++      color: #ff4d4f;
++      background: rgba(255, 77, 79, 0.1);
++      padding: 0.75rem;
++      border-radius: 6px;
++      margin-bottom: 1rem;
++      font-size: 0.9rem;
++      text-align: center;
++    }
++    .pay-btn {
++      padding: 1rem;
++      font-size: 1.1rem;
++      font-weight: 600;
++      margin-top: 1rem;
++      border: none;
++      border-radius: 8px;
++      width: 100%;
++      cursor: pointer;
++    }
++    .pay-btn:disabled {
++      opacity: 0.7;
++      cursor: not-allowed;
++    }
++    .btn-back {
++      width: 100%;
++      margin-top: 0.75rem;
++      padding: 0.75rem;
++      background: transparent;
++      border: 1px solid var(--border-color);
++      color: var(--text-secondary);
++      border-radius: 8px;
++      cursor: pointer;
++    }
++    .btn-back:hover:not(:disabled) {
++      background: rgba(255,255,255,0.05);
++    }
++  `]
++})
++export class CheckoutSimulateComponent implements OnInit {
++  cartItems: any[] = [];
++  eventCheckout: EventCheckoutData | null = null;
++  checkoutType: 'cart' | 'event' = 'cart';
++  isProcessing = false;
++  error: string | null = null;
++  total = 0;
++
++  cardNumber = '';
++  expiry = '';
++  cvc = '';
++  name = '';
++
++  constructor(
++    private cartService: CartService,
++    private paymentService: PaymentService,
++    private authService: AuthService,
++    private router: Router,
++    private route: ActivatedRoute,
++  ) {}
++
++  ngOnInit() {
++    this.route.queryParams.pipe(take(1)).subscribe(params => {
++      if (params['type'] === 'event') {
++        this.checkoutType = 'event';
++        const saved = sessionStorage.getItem('event_checkout');
++        if (!saved) {
++          this.router.navigate(['/eventos']);
++          return;
++        }
++        try {
++          this.eventCheckout = JSON.parse(saved);
++          this.total = Number(this.eventCheckout?.price) || 0;
++        } catch {
++          this.router.navigate(['/eventos']);
++        }
++        return;
++      }
++
++      this.cartService.cart$.pipe(take(1)).subscribe(items => {
++        this.cartItems = items;
++        this.total = items.reduce((acc, item) => acc + (Number(item.price) * item.qty), 0);
++        if (this.total > 0) this.total += 5;
++        if (this.cartItems.length === 0) {
++          this.router.navigate(['/cart']);
++        }
++      });
++    });
++  }
++
++  goBack() {
++    if (this.checkoutType === 'event') {
++      this.router.navigate(['/inscripcion']);
++    } else {
++      this.router.navigate(['/cart']);
++    }
++  }
++
++  processPayment() {
++    if (!this.cardNumber || !this.expiry || !this.cvc || !this.name) {
++      this.error = 'Por favor completa todos los campos de prueba.';
++      return;
++    }
++
++    const currentUser = this.authService.getUser();
++    if (!currentUser) {
++      this.router.navigate(['/login']);
++      return;
++    }
++
++    this.isProcessing = true;
++    this.error = null;
++
++    if (this.checkoutType === 'event' && this.eventCheckout) {
++      this.paymentService.simulateEventPayment(this.eventCheckout.eventId, currentUser.id).subscribe({
++        next: (res) => {
++          if (res.success) {
++            const receipt = [{
++              name: res.eventTitle || this.eventCheckout!.name,
++              price: res.amount || this.eventCheckout!.price,
++              quantity: 1,
++            }];
++            sessionStorage.setItem('last_checkout', JSON.stringify(receipt));
++            sessionStorage.setItem('last_checkout_type', 'event');
++            sessionStorage.removeItem('event_checkout');
++            sessionStorage.removeItem('inscripcion_evento');
++            this.router.navigate(['/checkout/success']);
++          }
++        },
++        error: () => {
++          this.isProcessing = false;
++          this.error = 'Ocurri├│ un error al procesar el pago del evento. Intenta de nuevo.';
++        }
++      });
++      return;
++    }
++
++    const items = this.cartItems.map(item => ({
++      productId: item.id || item.productId,
++      name: item.name,
++      price: Number(item.price),
++      quantity: item.qty,
++      image: item.imageUrl || item.image || undefined,
++    }));
++
++    this.paymentService.simulatePayment(items, currentUser.id).subscribe({
++      next: (res) => {
++        if (res.success) {
++          const receipt = this.cartItems.map(item => ({
++            name: item.name,
++            price: Number(item.price),
++            quantity: item.qty,
++          }));
++          sessionStorage.setItem('last_checkout', JSON.stringify(receipt));
++          sessionStorage.setItem('last_checkout_type', 'cart');
++          this.router.navigate(['/checkout/success']);
++        }
++      },
++      error: () => {
++        this.isProcessing = false;
++        this.error = 'Ocurri├│ un error en la simulaci├│n del servidor. Intenta de nuevo.';
++      }
++    });
++  }
++}
+diff --git a/frontend/src/app/features/checkout/checkout-success.ts b/frontend/src/app/features/checkout/checkout-success.ts
+new file mode 100644
+index 0000000..decd496
+--- /dev/null
++++ b/frontend/src/app/features/checkout/checkout-success.ts
+@@ -0,0 +1,272 @@
++import { Component, OnInit } from '@angular/core';
++import { CommonModule } from '@angular/common';
++import { RouterModule, ActivatedRoute } from '@angular/router';
++import { CartService } from '../../core/services/cart.service';
++import { PaymentService } from '../../core/services/payment.service';
++
++@Component({
++  selector: 'app-checkout-success',
++  standalone: true,
++  imports: [CommonModule, RouterModule],
++  template: `
++    <div class="page-wrapper">
++      <div class="container d-flex justify-content-center">
++        <div class="receipt-card glass">
++          <div class="receipt-header">
++            <div class="icon-circle">
++              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
++                <path stroke-linecap="round" stroke-linejoin="round" d="M20 6L9 17l-5-5"/>
++              </svg>
++            </div>
++            <h1>{{ checkoutType === 'event' ? '┬íInscripci├│n Confirmada!' : 'Pago Exitoso' }}</h1>
++            <p class="order-id">{{ checkoutType === 'event' ? 'Evento pagado' : 'Orden' }} #{{ sessionId ? sessionId.slice(-8).toUpperCase() : 'SIMULADA' }}</p>
++          </div>
++
++          <div class="receipt-body">
++            <div class="receipt-date text-muted">
++              <span>Fecha:</span>
++              <strong>{{ date | date:'dd/MM/yyyy HH:mm' }}</strong>
++            </div>
++            
++            <div class="divider"></div>
++            
++            <div class="items-list">
++              <div class="receipt-item" *ngFor="let item of purchasedItems">
++                <div class="item-info">
++                  <span class="qty text-primary">{{item.qty}}x</span>
++                  <span class="name text-main">{{item.name}}</span>
++                </div>
++                <span class="price text-main">{{ formatCurrency(item.price * item.qty) }}</span>
++              </div>
++            </div>
++            
++            <div class="divider"></div>
++            
++            <div class="receipt-total text-muted">
++              <span>Subtotal</span>
++              <span>{{ formatCurrency(subtotal) }}</span>
++            </div>
++            
++            <div class="receipt-total final">
++              <span class="text-main">Total Pagado</span>
++              <span class="text-primary">{{ formatCurrency(subtotal) }}</span>
++            </div>
++          </div>
++
++          <div class="receipt-footer">
++            <p class="text-muted">{{ checkoutType === 'event' ? 'Tu cupo ha sido reservado. Revisa tus eventos en tu perfil.' : 'La orden se ha registrado en tu cuenta.' }}</p>
++            <div class="actions">
++              @if (checkoutType === 'event') {
++                <a routerLink="/eventos" class="btn-primary w-100">Ver m├ís eventos</a>
++                <a routerLink="/perfil" class="btn-outline w-100">Mi perfil</a>
++              } @else {
++                <a routerLink="/" class="btn-primary w-100">Volver al inicio</a>
++              }
++            </div>
++          </div>
++        </div>
++      </div>
++    </div>
++  `,
++  styles: [`
++    .page-wrapper {
++      padding: 6rem 0 2rem;
++      background-color: var(--color-bg, #0a0a0a);
++      min-height: 100vh;
++      display: flex;
++      align-items: center;
++    }
++    .container {
++      display: flex;
++      justify-content: center;
++      padding: 0 1rem;
++      width: 100%;
++    }
++    .receipt-card {
++      width: 100%;
++      max-width: 500px;
++      border-radius: 16px;
++      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
++      border: 1px solid rgba(255, 255, 255, 0.1);
++      background: rgba(20, 20, 20, 0.6);
++      backdrop-filter: blur(10px);
++      overflow: hidden;
++    }
++    .receipt-header {
++      padding: 2rem 2rem 1.5rem;
++      text-align: center;
++      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
++    }
++    .icon-circle {
++      width: 56px;
++      height: 56px;
++      background: rgba(var(--color-primary-rgb, 34, 197, 94), 0.15);
++      color: var(--color-primary, #22c55e);
++      border-radius: 50%;
++      display: flex;
++      align-items: center;
++      justify-content: center;
++      margin: 0 auto 0.8rem;
++    }
++    .icon-circle svg { width: 32px; height: 32px; }
++    h1 {
++      margin: 0;
++      font-size: 1.5rem;
++      color: var(--color-text-main, #fff);
++      font-family: var(--font-heading, sans-serif);
++      margin-bottom: 0.2rem;
++    }
++    .order-id {
++      color: var(--color-primary, #22c55e);
++      font-size: 0.95rem;
++      margin: 0;
++      font-family: monospace;
++      letter-spacing: 1px;
++    }
++    
++    .receipt-body {
++      padding: 1.8rem 2rem;
++    }
++    .text-muted { color: var(--color-text-muted, #aaa); }
++    .text-main { color: var(--color-text-main, #fff); }
++    .text-primary { color: var(--color-primary, #22c55e); }
++    
++    .receipt-date {
++      display: flex;
++      justify-content: space-between;
++      font-size: 1rem;
++    }
++    .divider {
++      height: 1px;
++      background: rgba(255, 255, 255, 0.1);
++      margin: 1rem 0;
++    }
++    .receipt-item {
++      display: flex;
++      justify-content: space-between;
++      margin-bottom: 0.8rem;
++      font-size: 1rem;
++    }
++    .qty { width: 32px; display: inline-block; font-weight: bold; }
++    .name { font-weight: 500; }
++    .price { font-weight: 500; }
++    
++    .receipt-total {
++      display: flex;
++      justify-content: space-between;
++      margin-bottom: 0.5rem;
++      font-size: 1rem;
++    }
++    .final {
++      font-size: 1.3rem;
++      font-weight: bold;
++      margin-top: 1.2rem;
++      padding-top: 1rem;
++      border-top: 2px solid rgba(255, 255, 255, 0.1);
++    }
++    
++    .receipt-footer {
++      background: rgba(0, 0, 0, 0.2);
++      padding: 1.5rem 2rem;
++      text-align: center;
++      border-top: 1px solid rgba(255, 255, 255, 0.05);
++    }
++    .receipt-footer p {
++      font-size: 0.9rem;
++      margin: 0 0 1.2rem;
++    }
++    .actions { display: flex; gap: 1rem; }
++    .w-100 { width: 100%; box-sizing: border-box; }
++    .btn-primary, .btn-outline {
++      flex: 1;
++      display: block;
++      text-decoration: none;
++      padding: 0.8rem;
++      border-radius: 6px;
++      font-weight: 600;
++      text-align: center;
++      font-size: 1rem;
++      transition: all 0.2s ease;
++    }
++    .btn-primary { 
++      background: var(--color-primary, #22c55e); 
++      color: #000; 
++    }
++    .btn-primary:hover {
++      transform: translateY(-2px);
++      box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
++    }
++    .btn-outline { 
++      background: transparent; 
++      color: var(--color-text-main, #fff); 
++      border: 1px solid rgba(255, 255, 255, 0.3); 
++    }
++    .btn-outline:hover {
++      background: rgba(255, 255, 255, 0.05);
++    }
++  `]
++})
++export class CheckoutSuccessComponent implements OnInit {
++  purchasedItems: any[] = [];
++  subtotal = 0;
++  date = new Date();
++  sessionId = 'STRIPE-000';
++  checkoutType: 'cart' | 'event' | 'membership' = 'cart';
++
++  constructor(
++    private cartService: CartService,
++    private paymentService: PaymentService,
++    private route: ActivatedRoute
++  ) {}
++
++  formatCurrency(value: number): string {
++    return '$ ' + new Intl.NumberFormat('es-CO').format(value);
++  }
++
++  ngOnInit() {
++    const savedType = sessionStorage.getItem('last_checkout_type');
++    if (savedType === 'event') {
++      this.checkoutType = 'event';
++    } else if (savedType === 'membership') {
++      this.checkoutType = 'membership';
++    }
++
++    this.route.queryParams.subscribe(params => {
++      this.sessionId = params['session_id'] || '';
++
++      if (this.sessionId) {
++        this.paymentService.verifyCheckoutSession(this.sessionId).subscribe({
++          next: (res) => {
++             if (res.type === 'event') {
++               this.checkoutType = 'event';
++               sessionStorage.setItem('last_checkout_type', 'event');
++             }
++             console.log('[CheckoutSuccess] Sesi├│n de pago validada correctamente');
++          },
++          error: (err) => {
++             console.error('[CheckoutSuccess] Error verificando sesi├│n en el backend:', err);
++          }
++        });
++      }
++    });
++
++    const saved = sessionStorage.getItem('last_checkout');
++    if (saved) {
++      try {
++        const items = JSON.parse(saved);
++        this.purchasedItems = items.map((i: any) => ({
++          name: i.name,
++          price: Number(i.price),
++          qty: Number(i.quantity || i.qty || 1)
++        }));
++        this.subtotal = this.purchasedItems.reduce((acc, i) => acc + (i.price * i.qty), 0);
++      } catch (e) {
++        console.error('Error parsing last checkout from storage', e);
++      }
++    }
++
++    // Force clear the current live cart so they don't buy it again
++    this.cartService.clearCart();
++  }
++}
++

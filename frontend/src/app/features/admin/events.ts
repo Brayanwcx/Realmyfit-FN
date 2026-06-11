@@ -42,6 +42,7 @@ import Swal from 'sweetalert2';
               <th>Evento</th>
               <th width="150px">Fecha / Hora</th>
               <th>Ubicación</th>
+              <th width="110px">Precio</th>
               <th width="100px">Estado</th>
               <th width="180px">Acciones</th>
             </tr>
@@ -65,6 +66,13 @@ import Swal from 'sweetalert2';
                   <div class="product-desc">{{ event.time }}</div>
                 </td>
                 <td>{{ event.location }}</td>
+                <td>
+                  @if (Number(event.price) > 0) {
+                    <span class="price-tag">{{ formatPrice(event.price) }}</span>
+                  } @else {
+                    <span class="price-free">Gratis</span>
+                  }
+                </td>
                 <td>
                   <span class="badge" [class.badge-active]="event.isActive" [class.badge-inactive]="!event.isActive">
                     {{ event.isActive ? 'Activo' : 'Inactivo' }}
@@ -146,6 +154,11 @@ import Swal from 'sweetalert2';
                     <input type="number" name="capacity" [(ngModel)]="newEvent.capacity" required placeholder="0" class="glass-input">
                   </div>
                 </div>
+                <div class="form-group">
+                  <label>Precio (USD) *</label>
+                  <input type="number" name="price" [(ngModel)]="newEvent.price" required min="0" step="0.01" placeholder="0.00" class="glass-input">
+                  <small class="field-hint">Usa 0 para eventos gratuitos</small>
+                </div>
                 <div class="form-group" style="flex:1;">
                   <label>Descripción *</label>
                   <textarea name="description" [(ngModel)]="newEvent.description" required placeholder="Describe el evento..." class="glass-input desc-area"></textarea>
@@ -214,6 +227,9 @@ import Swal from 'sweetalert2';
     .badge { padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; display: inline-block; }
     .badge-active { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
     .badge-inactive { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+    .price-tag { font-weight: 700; color: #4ade80; }
+    .price-free { font-size: 0.85rem; color: rgba(255,255,255,0.5); font-style: italic; }
+    .field-hint { font-size: 0.78rem; color: rgba(255,255,255,0.4); margin-top: 0.25rem; }
 
     .actions-cell { display: flex; gap: 0.5rem; }
     .btn-icon { display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 0.5rem 0.8rem; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 0.8rem; font-weight: 500; }
@@ -285,6 +301,11 @@ export class AdminEventsComponent implements OnInit {
   get pagedEvents() { return this.events.slice((this.page-1)*this.pageSize, this.page*this.pageSize); }
   get pageNumbers() { return Array.from({length: this.totalPages}, (_, i) => i + 1); }
   min(a: number, b: number) { return Math.min(a, b); }
+  Number = Number;
+
+  formatPrice(price: number | string): string {
+    return '$ ' + new Intl.NumberFormat('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(Number(price));
+  }
   
   showModal = false;
   isSubmitting = false;
@@ -300,6 +321,7 @@ export class AdminEventsComponent implements OnInit {
     time: '',
     location: '',
     capacity: 0,
+    price: 0,
     imageUrl: '',
     isActive: true
   };
@@ -344,7 +366,7 @@ export class AdminEventsComponent implements OnInit {
     this.showModal = true;
     this.isEditing = false;
     this.editingEventId = null;
-    this.newEvent = { title: '', description: '', date: '', time: '', location: '', capacity: 0, imageUrl: '', isActive: true };
+    this.newEvent = { title: '', description: '', date: '', time: '', location: '', capacity: 0, price: 0, imageUrl: '', isActive: true };
     this.selectedFile = null;
     this.imagePreview = null;
   }
@@ -360,6 +382,7 @@ export class AdminEventsComponent implements OnInit {
         time: event.time,
         location: event.location,
         capacity: event.capacity,
+        price: Number(event.price) || 0,
         imageUrl: event.imageUrl,
         isActive: event.isActive
     };
@@ -415,7 +438,11 @@ export class AdminEventsComponent implements OnInit {
   }
 
   private saveEventData() {
-    const dataToSave = { ...this.newEvent };
+    const dataToSave = { 
+        ...this.newEvent, 
+        price: Number(this.newEvent.price) || 0,
+        capacity: Number(this.newEvent.capacity) || 0
+    };
 
     if (this.isEditing && this.editingEventId) {
         this.eventsService.updateEvent(this.editingEventId, dataToSave).subscribe({

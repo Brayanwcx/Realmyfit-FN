@@ -31,6 +31,9 @@ export class Event {
     @Column({ type: 'int', default: 0 })
     capacity: number;
 
+    @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+    price: number;
+
     @Column({ type: 'varchar', length: 500, nullable: true })
     imageUrl: string;
 

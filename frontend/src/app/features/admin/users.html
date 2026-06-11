@@ -1,0 +1,221 @@
+<div class="view-header">
+      <h2>Gestión de Usuarios</h2>
+      <button class="btn-primary" (click)="openModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+        Nuevo Usuario
+      </button>
+    </div>
+    
+    <div class="table-container glass">
+      @if (loading) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Cargando usuarios...</p>
+        </div>
+      }
+
+      @if (errorMessage) {
+        <div class="error-state">
+          <p>Error: {{ errorMessage }}</p>
+          <button class="btn-primary" (click)="fetchUsers()">Reintentar</button>
+        </div>
+      }
+
+      @if (!loading && !errorMessage && users.length > 0) {
+        <!-- Vista Desktop -->
+        <table class="desktop-table">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Contacto</th>
+              <th>Documento</th>
+              <th width="100px">Rol</th>
+              <th width="100px">Estado</th>
+              <th width="180px">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of pagedUsers; track user.id) {
+              <tr>
+                <td>
+                  <div class="product-name">{{ user.name }} {{ user.lastName }}</div>
+                </td>
+                <td>
+                  <div class="product-desc">{{ user.email }}</div>
+                </td>
+                <td>
+                  <div class="product-desc">{{ user.docType }}: {{ user.docNumber }}</div>
+                </td>
+                <td>
+                  <span class="badge category-badge">
+                    {{ user.roles && user.roles.length > 0 ? user.roles[0].name : 'N/A' }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge" [class.badge-active]="user.isActive" [class.badge-inactive]="!user.isActive">
+                    {{ user.isActive ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="actions-cell">
+                    <button class="btn-icon" (click)="editUser(user)" title="Editar">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                      Editar
+                    </button>
+                    <button class="btn-icon delete" (click)="deleteUser(user.id)" title="Eliminar">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                      Eliminar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <!-- Vista Mobile -->
+        <div class="mobile-cards">
+          @for (user of pagedUsers; track user.id) {
+            <div class="mobile-card glass">
+              <div class="card-header">
+                <div class="card-title" style="margin-left: 0;">
+                  <h4>{{ user.name }} {{ user.lastName }}</h4>
+                  <span class="badge category-badge">{{ user.roles && user.roles.length > 0 ? user.roles[0].name : 'N/A' }}</span>
+                </div>
+              </div>
+              <div class="card-row">
+                <span class="card-label">Email</span>
+                <div class="card-value">{{ user.email }}</div>
+              </div>
+              <div class="card-row">
+                <span class="card-label">Documento</span>
+                <div class="card-value">{{ user.docType }}: {{ user.docNumber }}</div>
+              </div>
+              <div class="card-row">
+                <span class="card-label">Estado</span>
+                <div class="card-value">
+                  <span class="badge" [class.badge-active]="user.isActive" [class.badge-inactive]="!user.isActive">
+                    {{ user.isActive ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </div>
+              </div>
+              <div class="card-actions">
+                <button class="btn-icon" (click)="editUser(user)">Editar</button>
+                <button class="btn-icon delete" (click)="deleteUser(user.id)">Eliminar</button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Paginación -->
+        @if (totalPages > 1) {
+          <div class="pagination">
+            <button class="page-btn" (click)="page = 1" [disabled]="page === 1">«</button>
+            <button class="page-btn" (click)="page = page - 1" [disabled]="page === 1">‹</button>
+            @for (p of pageNumbers; track p) {
+              <button class="page-btn" [class.active]="p === page" (click)="page = p">{{ p }}</button>
+            }
+            <button class="page-btn" (click)="page = page + 1" [disabled]="page === totalPages">›</button>
+            <button class="page-btn" (click)="page = totalPages" [disabled]="page === totalPages">»</button>
+            <span class="page-info">{{ (page-1)*pageSize+1 }}–{{ min(page*pageSize, users.length) }} de {{ users.length }}</span>
+          </div>
+        }
+      }
+
+      @if (!loading && !errorMessage && users.length === 0) {
+        <div class="empty-state">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          <p>No se encontraron usuarios registrados.</p>
+        </div>
+      }
+    </div>
+
+    <!-- Modal Formulario -->
+    @if (showModal) {
+      <div class="modal-overlay" (click)="closeModal()">
+        <div class="modal-content glass" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>{{ isEditing ? 'Editar Usuario' : 'Nuevo Usuario' }}</h3>
+            <button class="btn-close" (click)="closeModal()">&times;</button>
+          </div>
+          
+          <form (ngSubmit)="submitUser()" #userForm="ngForm" class="product-form">
+            <div class="form-grid">
+              
+              <!-- Left Column -->
+              <div class="form-column">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Nombre *</label>
+                    <input type="text" name="name" [(ngModel)]="newUser.name" required placeholder="Nombres" class="glass-input">
+                  </div>
+                  <div class="form-group">
+                    <label>Apellido *</label>
+                    <input type="text" name="lastName" [(ngModel)]="newUser.lastName" required placeholder="Apellidos" class="glass-input">
+                  </div>
+                </div>
+                
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Tipo Documento *</label>
+                    <select name="docType" [(ngModel)]="newUser.docType" required class="glass-input">
+                      <option value="">Seleccionar...</option>
+                      <option value="CC">Cédula de Ciudadanía</option>
+                      <option value="TI">Tarjeta de Identidad</option>
+                      <option value="CE">Cédula de Extranjería</option>
+                      <option value="Pasaporte">Pasaporte</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Número Documento *</label>
+                    <input type="text" name="docNumber" [(ngModel)]="newUser.docNumber" required placeholder="12345678" class="glass-input">
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>Correo Electrónico *</label>
+                  <input type="email" name="email" [(ngModel)]="newUser.email" required placeholder="ejemplo@correo.com" class="glass-input">
+                </div>
+              </div>
+
+              <!-- Right Column -->
+              <div class="form-column">
+                <div class="form-group">
+                  <label>Contraseña {{ isEditing ? '(Dejar en blanco para no cambiar)' : '*' }}</label>
+                  <input type="password" name="password" [(ngModel)]="newUser.password" [required]="!isEditing" placeholder="******" class="glass-input">
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Rol de Usuario *</label>
+                    <select name="roleId" [(ngModel)]="newUser.roleId" required class="glass-input">
+                      <option value="">Seleccionar...</option>
+                      <option value="1">Administrador</option>
+                      <option value="2">Usuario / Cliente</option>
+                    </select>
+                  </div>
+                  <div class="form-group" style="padding-top: 1.5rem;">
+                    <div class="toggle-switch">
+                      <input type="checkbox" id="isActive" name="isActive" [(ngModel)]="newUser.isActive">
+                      <label for="isActive">Cuenta Activa</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+            </div>
+  
+            <div class="modal-actions">
+              <button type="button" class="btn-secondary" (click)="closeModal()">Cancelar</button>
+              <button type="submit" class="btn-primary" [disabled]="!userForm.valid || isSubmitting">
+                @if(isSubmitting) {
+                  <span class="spinner-small"></span> Guardando...
+                } @else {
+                  {{ isEditing ? 'Guardar Cambios' : 'Crear Usuario' }}
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }

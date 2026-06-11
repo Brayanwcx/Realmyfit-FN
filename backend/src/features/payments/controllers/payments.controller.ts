@@ -5,7 +5,7 @@ import {
 import type { Request } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { PaymentsService } from '../services/payments.service';
-import { CreatePaymentDto, UpdatePaymentDto, CreateCheckoutSessionDto, CreateMembershipCheckoutDto } from '../dtos/payment.dto';
+import { CreatePaymentDto, UpdatePaymentDto, CreateCheckoutSessionDto, CreateMembershipCheckoutDto, CreateEventCheckoutDto } from '../dtos/payment.dto';
 import { JwtAuthGuard } from '../../../auth/guards/auth.guard';
 import { RolesGuard } from '../../../auth/guards/roles.guard';
 import { Roles } from '../../../auth/decorators/roles.decorator';
@@ -18,24 +18,34 @@ export class PaymentsController {
 
     // ─── STRIPE ENDPOINTS ────────────────────────────────────────────────────────
 
-    /** Creates a Stripe Checkout session and returns the redirect URL. Requires JWT. */
+    /** Creates a Stripe PaymentIntent and returns the clientSecret. Requires JWT. */
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
-    @Post('stripe/checkout-session')
-    @ApiOperation({ summary: 'Create a Stripe Checkout session' })
-    @ApiResponse({ status: 201, description: 'Returns { url, sessionId }' })
-    createCheckoutSession(@Body() dto: CreateCheckoutSessionDto) {
-        return this.paymentsService.createCheckoutSession(dto);
+    @Post('stripe/payment-intent')
+    @ApiOperation({ summary: 'Create a Stripe PaymentIntent' })
+    @ApiResponse({ status: 201, description: 'Returns { clientSecret }' })
+    createPaymentIntent(@Body() dto: CreateCheckoutSessionDto) {
+        return this.paymentsService.createPaymentIntent(dto);
     }
 
-    /** Creates a Stripe Checkout session specifically for Memberships */
+    /** Creates a Stripe PaymentIntent specifically for Memberships */
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
-    @Post('stripe/checkout-session/membership')
-    @ApiOperation({ summary: 'Create a Stripe Checkout session for Memberships' })
-    @ApiResponse({ status: 201, description: 'Returns { url, sessionId }' })
-    createMembershipCheckoutSession(@Body() dto: CreateMembershipCheckoutDto) {
-        return this.paymentsService.createMembershipCheckoutSession(dto);
+    @Post('stripe/payment-intent/membership')
+    @ApiOperation({ summary: 'Create a Stripe PaymentIntent for Memberships' })
+    @ApiResponse({ status: 201, description: 'Returns { clientSecret }' })
+    createMembershipPaymentIntent(@Body() dto: CreateMembershipCheckoutDto) {
+        return this.paymentsService.createMembershipPaymentIntent(dto);
+    }
+
+    /** Creates a Stripe PaymentIntent specifically for Events */
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    @Post('stripe/payment-intent/event')
+    @ApiOperation({ summary: 'Create a Stripe PaymentIntent for Events' })
+    @ApiResponse({ status: 201, description: 'Returns { clientSecret }' })
+    createEventPaymentIntent(@Body() dto: CreateEventCheckoutDto) {
+        return this.paymentsService.createEventPaymentIntent(dto);
     }
 
     /** Stripe webhook – public endpoint (no JWT) so Stripe can POST freely. */
@@ -53,10 +63,10 @@ export class PaymentsController {
     /** Permite al frontend validar una orden desde la pantalla de éxito por si no llega el Webhook */
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
-    @Get('stripe/verify-session/:sessionId')
-    @ApiOperation({ summary: 'Verify a Stripe Session manually' })
-    verifySession(@Param('sessionId') sessionId: string) {
-        return this.paymentsService.verifyCheckoutSession(sessionId);
+    @Get('stripe/verify/:clientSecret')
+    @ApiOperation({ summary: 'Verify a Stripe PaymentIntent manually' })
+    verifyPaymentIntent(@Param('clientSecret') clientSecret: string) {
+        return this.paymentsService.verifyPaymentIntent(clientSecret);
     }
 
     // ─── Simulated Checkout ──────────────────────────────────────────
@@ -67,6 +77,14 @@ export class PaymentsController {
     @ApiOperation({ summary: 'Simulate a successful payment without Stripe' })
     simulatePayment(@Body() dto: CreateCheckoutSessionDto) {
         return this.paymentsService.simulatePayment(dto);
+    }
+
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    @Post('simulate/event')
+    @ApiOperation({ summary: 'Simulate a successful event payment without Stripe' })
+    simulateEventPayment(@Body() dto: CreateEventCheckoutDto) {
+        return this.paymentsService.simulateEventPayment(dto);
     }
 
     // ─── ADMIN CRUD ──────────────────────────────────────────────────────────────
@@ -106,6 +124,15 @@ export class PaymentsController {
     @ApiOperation({ summary: 'Update a payment (admin)' })
     update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdatePaymentDto) {
         return this.paymentsService.update(id, dto);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.ADMIN)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Patch(':id/refunded')
+    @ApiOperation({ summary: 'Mark a PENDING_REFUND payment as REFUNDED (admin)' })
+    markAsRefunded(@Param('id', ParseIntPipe) id: number) {
+        return this.paymentsService.markAsRefunded(id);
     }
 
     @ApiBearerAuth()

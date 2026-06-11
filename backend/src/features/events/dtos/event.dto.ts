@@ -33,6 +33,12 @@ export class CreateEventDto {
     @ApiProperty({ example: 30, required: false })
     readonly capacity?: number;
 
+    @IsNumber()
+    @Min(0)
+    @IsOptional()
+    @ApiProperty({ example: 25.00, required: false, description: 'Precio del evento (0 = gratis)' })
+    readonly price?: number;
+
     @IsString()
     @IsOptional()
     @ApiProperty({ example: 'https://example.com/event.jpg', required: false })

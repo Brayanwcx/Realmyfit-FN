@@ -116,30 +116,18 @@ export class MembresiasComponent implements OnInit {
     const user = this.authService.getUser();
     if (!user) return;
 
-    this.subscribing = true;
+    // Store the selected membership so the checkout page can pick it up
+    sessionStorage.removeItem('pending_event');
+    sessionStorage.setItem('pending_membership', JSON.stringify({
+      id: this.selectedPlan.id,
+      name: this.selectedPlan.name,
+      price: this.selectedPlan.price,
+    }));
 
-    this.paymentService.createMembershipCheckoutSession(this.selectedPlan.id, user.id).subscribe({
-      next: (res) => {
-        this.subscribing = false;
-        if (res.url) {
-          sessionStorage.setItem('last_checkout', JSON.stringify([{
-            name: `Membresía ${this.selectedPlan!.name}`,
-            price: this.selectedPlan!.price,
-            quantity: 1
-          }]));
-          window.location.href = res.url;
-        }
-      },
-      error: (err) => {
-        this.subscribing = false;
-        this.closeModal();
-        const message = err.error?.message || 'Error al procesar la suscripción.';
-        this.showToast(
-          Array.isArray(message) ? message.join(', ') : message,
-          'error'
-        );
-      }
-    });
+    this.closeModal();
+
+    // Navigate to our custom payment form
+    this.router.navigate(['/checkout/pay']);
   }
 
   showToast(message: string, type: 'success' | 'error') {

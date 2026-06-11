@@ -1,0 +1,137 @@
+<div class="view-header">
+      <h2>Gestión de Reseñas</h2>
+    </div>
+    
+    <div class="table-container glass">
+      @if (loading) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Cargando reseñas...</p>
+        </div>
+      }
+      
+      @if (errorMessage) {
+        <div class="error-state">
+          <p>Error: {{ errorMessage }}</p>
+          <button class="btn-primary" (click)="fetchReviews()">Reintentar</button>
+        </div>
+      }
+
+      @if (!loading && !errorMessage && reviews.length > 0) {
+        <!-- Vista Desktop -->
+        <table class="desktop-table">
+          <thead>
+            <tr>
+              <th width="200px">Usuario</th>
+              <th width="120px">Puntaje</th>
+              <th>Comentario</th>
+              <th width="120px">Fecha</th>
+              <th width="120px">Estado</th>
+              <th width="200px">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (review of pagedReviews; track review.id) {
+              <tr>
+                <td>
+                  <div class="product-name">{{ review.user?.name || 'Anónimo' }} {{ review.user?.lastName || '' }}</div>
+                </td>
+                <td>
+                  <div class="stars">
+                    @for (star of [1,2,3,4,5]; track star) {
+                      <span class="star" [class.filled]="star <= review.rating">★</span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <div class="product-desc" [title]="review.comment">{{ review.comment || 'Sin comentario' }}</div>
+                </td>
+                <td class="font-bold">{{ review.createdAt | date:'shortDate' }}</td>
+                <td>
+                  <span class="badge" [class.badge-active]="review.isActive" [class.badge-inactive]="!review.isActive">
+                    {{ review.isActive ? 'Activa' : 'Inactiva' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="actions-cell">
+                    <button class="btn-icon" (click)="toggleStatus(review)" title="Cambiar estado">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                      {{ review.isActive ? 'Ocultar' : 'Publicar' }}
+                    </button>
+                    <button class="btn-icon delete" (click)="deleteReview(review)" title="Eliminar">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                      Eliminar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <!-- Vista Mobile -->
+        <div class="mobile-cards">
+          @for (review of pagedReviews; track review.id) {
+            <div class="mobile-card glass">
+              <div class="card-header">
+                <div class="card-title" style="margin-left: 0;">
+                  <h4>{{ review.user?.name || 'Anónimo' }} {{ review.user?.lastName || '' }}</h4>
+                  <div class="stars" style="margin-top: 4px;">
+                    @for (star of [1,2,3,4,5]; track star) {
+                      <span class="star" [class.filled]="star <= review.rating">★</span>
+                    }
+                  </div>
+                </div>
+              </div>
+              <div class="card-row">
+                <span class="card-label">Comentario</span>
+                <div class="card-value product-desc" style="max-width: 60%; text-align: right;">{{ review.comment || 'Sin comentario' }}</div>
+              </div>
+              <div class="card-row">
+                <span class="card-label">Fecha</span>
+                <div class="card-value font-bold">{{ review.createdAt | date:'shortDate' }}</div>
+              </div>
+              <div class="card-row">
+                <span class="card-label">Estado</span>
+                <div class="card-value">
+                  <span class="badge" [class.badge-active]="review.isActive" [class.badge-inactive]="!review.isActive">
+                    {{ review.isActive ? 'Activa' : 'Inactiva' }}
+                  </span>
+                </div>
+              </div>
+              <div class="card-actions">
+                <button class="btn-icon" (click)="toggleStatus(review)">
+                  @if (review.isActive) {
+                    Ocultar
+                  } @else {
+                    Publicar
+                  }
+                </button>
+                <button class="btn-icon delete" (click)="deleteReview(review)">Eliminar</button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Paginación -->
+        @if (totalPages > 1) {
+          <div class="pagination">
+            <button class="page-btn" (click)="page = 1" [disabled]="page === 1">«</button>
+            <button class="page-btn" (click)="page = page - 1" [disabled]="page === 1">‹</button>
+            @for (p of pageNumbers; track p) {
+              <button class="page-btn" [class.active]="p === page" (click)="page = p">{{ p }}</button>
+            }
+            <button class="page-btn" (click)="page = page + 1" [disabled]="page === totalPages">›</button>
+            <button class="page-btn" (click)="page = totalPages" [disabled]="page === totalPages">»</button>
+            <span class="page-info">{{ (page-1)*pageSize+1 }}–{{ min(page*pageSize, reviews.length) }} de {{ reviews.length }}</span>
+          </div>
+        }
+      }
+
+      @if (!loading && !errorMessage && reviews.length === 0) {
+        <div class="empty-state">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          <p>No se encontraron reseñas.</p>
+        </div>
+      }
+    </div>

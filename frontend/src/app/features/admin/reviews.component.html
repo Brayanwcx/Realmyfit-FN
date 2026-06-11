@@ -1,0 +1,19 @@
+<div class="view-header">
+      <h2>Gestión de Reseñas</h2>
+    </div>
+    <div class="table-container glass">
+      <div *ngIf="loading" class="loading-state">Cargando reseñas...</div>
+      <table *ngIf="!loading && reviews.length > 0">
+        <thead>
+          <tr><th>Usuario</th><th>Puntuación</th><th>Comentario</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of reviews">
+            <td>{{ r.user?.name || 'Usuario' }}</td>
+            <td>{{ r.rating }}/5</td>
+            <td>{{ r.comment }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div *ngIf="!loading && reviews.length === 0" class="empty-state">No hay reseñas.</div>
+    </div>

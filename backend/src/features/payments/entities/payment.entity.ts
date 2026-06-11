@@ -20,6 +20,8 @@ export enum PaymentStatus {
     COMPLETED = 'COMPLETED',
     FAILED = 'FAILED',
     REFUNDED = 'REFUNDED',
+    PENDING_REFUND = 'PENDING_REFUND',
+    CANCELLED = 'CANCELLED',
 }
 
 @Entity('payments')

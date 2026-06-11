@@ -1,0 +1,53 @@
+<div class="page-wrapper">
+      <div class="container d-flex justify-content-center">
+        <div class="receipt-card glass">
+          <div class="receipt-header">
+            <div class="icon-circle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20 6L9 17l-5-5"/>
+              </svg>
+            </div>
+            <h1>Pago Exitoso</h1>
+            <p class="order-id">Orden COMPLETADA</p>
+          </div>
+
+          <div class="receipt-body">
+            <div class="receipt-date text-muted">
+              <span>Fecha:</span>
+              <strong>{{ date | date:'dd/MM/yyyy HH:mm' }}</strong>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <div class="items-list">
+              <div class="receipt-item" *ngFor="let item of purchasedItems">
+                <div class="item-info">
+                  <span class="qty text-primary">{{item.qty}}x</span>
+                  <span class="name text-main">{{item.name}}</span>
+                </div>
+                <span class="price text-main">{{ formatCurrency(item.price * item.qty) }}</span>
+              </div>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <div class="receipt-total text-muted">
+              <span>Subtotal</span>
+              <span>{{ formatCurrency(subtotal) }}</span>
+            </div>
+            
+            <div class="receipt-total final">
+              <span class="text-main">Total Pagado</span>
+              <span class="text-primary">{{ formatCurrency(subtotal) }}</span>
+            </div>
+          </div>
+
+          <div class="receipt-footer">
+            <p class="text-muted">La orden se ha registrado en tu cuenta.</p>
+            <div class="actions">
+              <a routerLink="/" class="btn-primary w-100">Volver al inicio</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>

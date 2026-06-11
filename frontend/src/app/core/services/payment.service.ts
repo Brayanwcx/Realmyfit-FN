@@ -10,9 +10,8 @@ export interface CheckoutItem {
   image?: string;
 }
 
-export interface CheckoutSessionResponse {
-  url: string;
-  sessionId: string;
+export interface PaymentIntentResponse {
+  clientSecret: string;
 }
 
 @Injectable({
@@ -28,25 +27,33 @@ export class PaymentService {
     return this.http.get<any[]>(this.apiUrl + '/payments');
   }
 
-  createCheckoutSession(
+  createPaymentIntent(
     items: CheckoutItem[],
     userId: number
-  ): Observable<CheckoutSessionResponse> {
-    return this.http.post<CheckoutSessionResponse>(
-      `${this.apiUrl}/payments/stripe/checkout-session`,
+  ): Observable<PaymentIntentResponse> {
+    return this.http.post<PaymentIntentResponse>(
+      `${this.apiUrl}/payments/stripe/payment-intent`,
       { items, userId }
     );
   }
 
-  createMembershipCheckoutSession(
+  createMembershipPaymentIntent(
     membershipId: number,
-    userId: number,
-    successUrl?: string,
-    cancelUrl?: string
-  ): Observable<CheckoutSessionResponse> {
-    return this.http.post<CheckoutSessionResponse>(
-      `${this.apiUrl}/payments/stripe/checkout-session/membership`,
-      { membershipId, userId, successUrl, cancelUrl }
+    userId: number
+  ): Observable<PaymentIntentResponse> {
+    return this.http.post<PaymentIntentResponse>(
+      `${this.apiUrl}/payments/stripe/payment-intent/membership`,
+      { membershipId, userId }
+    );
+  }
+
+  createEventPaymentIntent(
+    eventId: number,
+    userId: number
+  ): Observable<PaymentIntentResponse> {
+    return this.http.post<PaymentIntentResponse>(
+      `${this.apiUrl}/payments/stripe/payment-intent/event`,
+      { eventId, userId }
     );
   }
 
@@ -60,9 +67,19 @@ export class PaymentService {
     );
   }
 
-  verifyCheckoutSession(sessionId: string): Observable<{ success: boolean; status: string; orderId?: number }> {
-    return this.http.get<{ success: boolean; status: string; orderId?: number }>(
-      `${this.apiUrl}/payments/stripe/verify-session/${sessionId}`
+  simulateEventPayment(
+    eventId: number,
+    userId: number
+  ): Observable<{ success: boolean; paymentId: number; registrationId: number; eventTitle: string; amount: number }> {
+    return this.http.post<{ success: boolean; paymentId: number; registrationId: number; eventTitle: string; amount: number }>(
+      `${this.apiUrl}/payments/simulate/event`,
+      { eventId, userId }
+    );
+  }
+
+  verifyPaymentIntent(clientSecret: string): Observable<{ success: boolean; status: string; orderId?: number; type?: string; eventId?: number }> {
+    return this.http.get<{ success: boolean; status: string; orderId?: number; type?: string; eventId?: number }>(
+      `${this.apiUrl}/payments/stripe/verify/${clientSecret}`
     );
   }
 }

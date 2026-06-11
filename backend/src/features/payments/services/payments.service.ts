@@ -7,8 +7,10 @@ import { Payment, PaymentMethod, PaymentStatus } from '../entities/payment.entit
 import { Order } from '../../orders/entities/order.entity';
 import { OrderItem } from '../../orders/entities/order-item.entity';
 import { Product } from '../../products/entities/product.entity';
-import { CreatePaymentDto, UpdatePaymentDto, CreateCheckoutSessionDto, CreateMembershipCheckoutDto } from '../dtos/payment.dto';
+import { CreatePaymentDto, UpdatePaymentDto, CreateCheckoutSessionDto, CreateMembershipCheckoutDto, CreateEventCheckoutDto } from '../dtos/payment.dto';
 import { MembershipsService } from '../../memberships/services/memberships.service';
+import { EventsService } from '../../events/services/events.service';
+import { EventRegistrationsService } from '../../event-registrations/services/event-registrations.service';
 
 @Injectable()
 export class PaymentsService {
@@ -21,6 +23,8 @@ export class PaymentsService {
         @InjectRepository(Product) private productRepo: Repository<Product>,
         private configService: ConfigService,
         private membershipsService: MembershipsService,
+        private eventsService: EventsService,
+        private eventRegistrationsService: EventRegistrationsService,
     ) {
         const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
         if (!secretKey) {
@@ -59,6 +63,15 @@ export class PaymentsService {
         return this.paymentRepo.save(payment);
     }
 
+    async markAsRefunded(id: number) {
+        const payment = await this.findOne(id);
+        if (payment.status !== PaymentStatus.PENDING_REFUND) {
+            throw new BadRequestException(`Payment #${id} is not pending refund (status: ${payment.status}).`);
+        }
+        payment.status = PaymentStatus.REFUNDED;
+        return this.paymentRepo.save(payment);
+    }
+
     async remove(id: number) {
         const payment = await this.findOne(id);
         return this.paymentRepo.remove(payment);
@@ -77,31 +90,52 @@ export class PaymentsService {
 
     // ─── STRIPE ──────────────────────────────────────────────────────────────────
 
-    async createMembershipCheckoutSession(dto: CreateMembershipCheckoutDto) {
+    async createEventPaymentIntent(dto: CreateEventCheckoutDto) {
         if (!this.stripe) throw new BadRequestException('Stripe not configured.');
 
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:4200';
-        const successUrl = dto.successUrl || `${frontendUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
-        const cancelUrl = dto.cancelUrl || `${frontendUrl}/checkout/cancel`;
+        const event = await this.eventsService.findOne(dto.eventId);
+        if (!event || !event.isActive) {
+            throw new BadRequestException('El evento no está disponible.');
+        }
+        const price = Number(event.price);
+        if (price <= 0) {
+            throw new BadRequestException('Este evento es gratuito y no requiere pago.');
+        }
+
+        const paymentIntent = await this.stripe.paymentIntents.create({
+            amount: Math.round(price * 100),
+            currency: 'usd',
+            metadata: {
+                type: 'EVENT',
+                userId: String(dto.userId),
+                eventId: String(event.id),
+            },
+        });
+
+        const payment = this.paymentRepo.create({
+            amount: price,
+            paymentMethod: PaymentMethod.STRIPE,
+            status: PaymentStatus.PENDING,
+            stripeSessionId: paymentIntent.id,
+            description: `Evento Checkout - ${event.title}`,
+            user_id: dto.userId,
+        });
+        await this.paymentRepo.save(payment);
+
+        return { clientSecret: paymentIntent.client_secret };
+    }
+
+    async createMembershipPaymentIntent(dto: CreateMembershipCheckoutDto) {
+        if (!this.stripe) throw new BadRequestException('Stripe not configured.');
 
         const membership = await this.membershipsService.findOne(dto.membershipId);
         if (!membership || !membership.isActive) {
             throw new BadRequestException('Membership is not available');
         }
 
-        const session = await this.stripe.checkout.sessions.create({
-            payment_method_types: ['card'],
-            mode: 'payment',
-            line_items: [{
-                quantity: 1,
-                price_data: {
-                    currency: 'usd',
-                    unit_amount: Math.round(membership.price * 100),
-                    product_data: { name: `Membresía: ${membership.name}` },
-                },
-            }],
-            success_url: successUrl,
-            cancel_url: cancelUrl,
+        const paymentIntent = await this.stripe.paymentIntents.create({
+            amount: Math.round(membership.price * 100),
+            currency: 'usd',
             metadata: {
                 type: 'MEMBERSHIP',
                 userId: String(dto.userId),
@@ -114,23 +148,19 @@ export class PaymentsService {
             amount: membership.price,
             paymentMethod: PaymentMethod.STRIPE,
             status: PaymentStatus.PENDING,
-            stripeSessionId: session.id,
+            stripeSessionId: paymentIntent.id,
             description: `Membresía Checkout - ${membership.name}`,
             user_id: dto.userId,
         });
         await this.paymentRepo.save(payment);
 
-        return { url: session.url, sessionId: session.id };
+        return { clientSecret: paymentIntent.client_secret };
     }
 
-    async createCheckoutSession(dto: CreateCheckoutSessionDto) {
+    async createPaymentIntent(dto: CreateCheckoutSessionDto) {
         if (!this.stripe) {
             throw new BadRequestException('Stripe is not configured. Set STRIPE_SECRET_KEY in .env');
         }
-
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:4200';
-        const successUrl = dto.successUrl || `${frontendUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`;
-        const cancelUrl = dto.cancelUrl || `${frontendUrl}/checkout/cancel`;
 
         let totalAmount = 0;
         const verifiedItems: any[] = [];
@@ -153,40 +183,11 @@ export class PaymentsService {
             });
         }
 
-        const lineItems: any[] = verifiedItems.map((item) => ({
-            quantity: item.quantity,
-            price_data: {
-                currency: 'usd',
-                unit_amount: Math.round(item.price * 100), // Stripe uses cents
-                product_data: {
-                    name: item.name,
-                    ...(item.image && item.image.startsWith('http') ? { images: [item.image] } : {}),
-                },
-            },
-        }));
+        // Total calculation already complete (No shipping fee added)
 
-        if (totalAmount > 0) {
-            // Add Shipping Fee
-            totalAmount += 5;
-            lineItems.push({
-                quantity: 1,
-                price_data: {
-                    currency: 'usd',
-                    unit_amount: 500, // $5.00
-                    product_data: {
-                        name: 'Tarifa de Envío',
-                    },
-                },
-            });
-        }
-
-
-        const session = await this.stripe.checkout.sessions.create({
-            payment_method_types: ['card'],
-            mode: 'payment',
-            line_items: lineItems,
-            success_url: successUrl,
-            cancel_url: cancelUrl,
+        const paymentIntent = await this.stripe.paymentIntents.create({
+            amount: Math.round(totalAmount * 100), // Stripe uses cents
+            currency: 'usd',
             metadata: {
                 userId: String(dto.userId),
             },
@@ -197,7 +198,7 @@ export class PaymentsService {
             amount: totalAmount,
             paymentMethod: PaymentMethod.STRIPE,
             status: PaymentStatus.PENDING,
-            stripeSessionId: session.id,
+            stripeSessionId: paymentIntent.id,
             description: `Stripe Checkout – ${verifiedItems.length} item(s) + Envío`,
             user_id: dto.userId,
         });
@@ -208,7 +209,7 @@ export class PaymentsService {
             totalAmount,
             status: 'PENDING' as any,
             user_id: dto.userId,
-            notes: session.id,
+            notes: paymentIntent.id,
         });
         await this.orderRepo.save(order);
 
@@ -224,35 +225,53 @@ export class PaymentsService {
         });
         await this.orderItemRepo.save(orderItemsList);
 
-        return { url: session.url, sessionId: session.id };
+        return { clientSecret: paymentIntent.client_secret };
     }
 
-    async verifyCheckoutSession(sessionId: string) {
+    async verifyPaymentIntent(clientSecret: string) {
         if (!this.stripe) {
             throw new BadRequestException('Stripe is not configured.');
         }
 
         try {
-            const session = await this.stripe.checkout.sessions.retrieve(sessionId);
+            // Retrieve INTENT id from clientSecret if necessary
+            const paymentIntentId = clientSecret.startsWith('pi_') && clientSecret.includes('_secret_') 
+                                    ? clientSecret.split('_secret_')[0] 
+                                    : clientSecret;
+                                    
+            const intent = await this.stripe.paymentIntents.retrieve(paymentIntentId);
             
             // Si el pago ya fue procesado correctamente:
-            if (session.payment_status === 'paid') {
-                if (session.metadata?.type === 'MEMBERSHIP') {
-                    const paymentDoc = await this.paymentRepo.findOne({ where: { stripeSessionId: session.id } });
+            if (intent.status === 'succeeded') {
+                if (intent.metadata?.type === 'MEMBERSHIP') {
+                    const paymentDoc = await this.paymentRepo.findOne({ where: { stripeSessionId: intent.id } });
                     if (paymentDoc && paymentDoc.status !== PaymentStatus.COMPLETED) {
                         await this.paymentRepo.update({ id: paymentDoc.id }, { status: PaymentStatus.COMPLETED });
-                        await this.membershipsService.subscribeUser(Number(session.metadata.userId), Number(session.metadata.membershipId));
-                        return { success: true, status: 'paid', type: 'membership' };
+                        await this.membershipsService.subscribeUser(Number(intent.metadata.userId), Number(intent.metadata.membershipId));
+                        return { success: true, status: 'succeeded', type: 'membership' };
                     }
                     return { success: true, status: 'already_processed', type: 'membership' };
                 }
 
-                const orderDoc = await this.orderRepo.findOne({ where: { notes: session.id } });
+                if (intent.metadata?.type === 'EVENT') {
+                    const paymentDoc = await this.paymentRepo.findOne({ where: { stripeSessionId: intent.id } });
+                    if (paymentDoc && paymentDoc.status !== PaymentStatus.COMPLETED) {
+                        await this.paymentRepo.update({ id: paymentDoc.id }, { status: PaymentStatus.COMPLETED });
+                        await this.eventRegistrationsService.confirmPaidRegistration(
+                            Number(intent.metadata.userId),
+                            Number(intent.metadata.eventId),
+                        );
+                        return { success: true, status: 'succeeded', type: 'event', eventId: Number(intent.metadata.eventId) };
+                    }
+                    return { success: true, status: 'already_processed', type: 'event', eventId: Number(intent.metadata.eventId) };
+                }
+
+                const orderDoc = await this.orderRepo.findOne({ where: { notes: intent.id } });
                 
                 // Solo si encontramos la orden y aun esta pendiente para evitar restar multiple veces
                 if (orderDoc && orderDoc.status !== 'CONFIRMED' as any) {
                     await this.paymentRepo.update(
-                        { stripeSessionId: session.id },
+                        { stripeSessionId: intent.id },
                         { status: PaymentStatus.COMPLETED },
                     );
 
@@ -264,14 +283,14 @@ export class PaymentsService {
                     // Disminuir Stock
                     await this.deductStock(orderDoc.id);
                     
-                    return { success: true, status: 'paid', orderId: orderDoc.id };
+                    return { success: true, status: 'succeeded', orderId: orderDoc.id };
                 }
                 return { success: true, status: 'already_processed', orderId: orderDoc?.id };
             }
             
-            return { success: false, status: session.payment_status };
+            return { success: false, status: intent.status };
         } catch (err) {
-            throw new BadRequestException(`Could not verify Stripe session: ${err.message}`);
+            throw new BadRequestException(`Could not verify Stripe intent: ${err.message}`);
         }
     }
 
@@ -292,25 +311,33 @@ export class PaymentsService {
             throw new BadRequestException(`Webhook signature verification failed: ${err.message}`);
         }
 
-        if (event.type === 'checkout.session.completed') {
-            const session = event.data.object as any;
+        if (event.type === 'payment_intent.succeeded') {
+            const intent = event.data.object as any;
             await this.paymentRepo.update(
-                { stripeSessionId: session.id },
+                { stripeSessionId: intent.id },
                 { status: PaymentStatus.COMPLETED },
             );
             
-            if (session.metadata?.type === 'MEMBERSHIP') {
+            if (intent.metadata?.type === 'MEMBERSHIP') {
                 try {
-                    await this.membershipsService.subscribeUser(Number(session.metadata.userId), Number(session.metadata.membershipId));
-                    console.log(`[Stripe] Membership activated for session ${session.id}`);
+                    await this.membershipsService.subscribeUser(Number(intent.metadata.userId), Number(intent.metadata.membershipId));
+                    console.log(`[Stripe] Membership activated for intent ${intent.id}`);
                 } catch (e) {
                     console.error('[Stripe] Failed to assign membership on webhook:', e);
                 }
+            } else if (intent.metadata?.type === 'EVENT') {
+                try {
+                    await this.eventRegistrationsService.confirmPaidRegistration(
+                        Number(intent.metadata.userId),
+                        Number(intent.metadata.eventId),
+                    );
+                    console.log(`[Stripe] Event registration confirmed for intent ${intent.id}`);
+                } catch (e) {
+                    console.error('[Stripe] Failed to confirm event registration on webhook:', e);
+                }
             } else {
-                const orderDoc = await this.orderRepo.findOne({ where: { notes: session.id } });
+                const orderDoc = await this.orderRepo.findOne({ where: { notes: intent.id } });
                 if (orderDoc) {
-                    // Bug #6 fix: verificar que la orden no fue ya confirmada antes de deducir stock
-                    // (puede ocurrir si verifyCheckoutSession() se ejecutó antes que el webhook)
                     if (orderDoc.status !== 'CONFIRMED' as any) {
                         await this.orderRepo.update(
                             { id: orderDoc.id },
@@ -319,18 +346,18 @@ export class PaymentsService {
                         await this.deductStock(orderDoc.id);
                     }
                 }
-                console.log(`[Stripe] Payment completed for session ${session.id}`);
+                console.log(`[Stripe] Payment completed for intent ${intent.id}`);
             }
         }
 
-        if (event.type === 'checkout.session.expired') {
-            const session = event.data.object as any;
+        if (event.type === 'payment_intent.payment_failed') {
+            const intent = event.data.object as any;
             await this.paymentRepo.update(
-                { stripeSessionId: session.id },
+                { stripeSessionId: intent.id },
                 { status: PaymentStatus.FAILED },
             );
             await this.orderRepo.update(
-                { notes: session.id },
+                { notes: intent.id },
                 { status: 'CANCELLED' as any },
             );
         }
@@ -339,6 +366,40 @@ export class PaymentsService {
     }
 
     // ─── Simulated Payment Flow ───────────────────────────────────────────────────
+
+    async simulateEventPayment(dto: CreateEventCheckoutDto) {
+        const event = await this.eventsService.findOne(dto.eventId);
+        if (!event || !event.isActive) {
+            throw new BadRequestException('El evento no está disponible.');
+        }
+
+        const price = Number(event.price);
+        if (price <= 0) {
+            throw new BadRequestException('Este evento es gratuito y no requiere pago.');
+        }
+
+        const simId = `simulated_event_${Date.now()}`;
+
+        const payment = this.paymentRepo.create({
+            amount: price,
+            paymentMethod: PaymentMethod.STRIPE,
+            status: PaymentStatus.COMPLETED,
+            stripeSessionId: simId,
+            description: `Simulated Event Checkout - ${event.title}`,
+            user_id: dto.userId,
+        });
+        await this.paymentRepo.save(payment);
+
+        const registration = await this.eventRegistrationsService.confirmPaidRegistration(dto.userId, dto.eventId);
+
+        return {
+            success: true,
+            paymentId: payment.id,
+            registrationId: registration.id,
+            eventTitle: event.title,
+            amount: price,
+        };
+    }
 
     async simulatePayment(dto: CreateCheckoutSessionDto) {
         let totalAmount = 0;

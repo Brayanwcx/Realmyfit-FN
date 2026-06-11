@@ -62,28 +62,16 @@ export class CartComponent implements OnInit {
       return;
     }
 
-    this.isCheckingOut = true;
-    this.checkoutError = null;
+    // Store items briefly so the checkout page can read them
+    sessionStorage.setItem('last_checkout', JSON.stringify(this.cartItems.map(i => ({
+      name: i.name, price: i.price, quantity: i.qty
+    }))));
 
-    const items = this.cartItems.map(item => ({
-      productId: item.id || item.productId,
-      name: item.name,
-      price: Number(item.price),
-      quantity: item.qty,
-      image: item.imageUrl || item.image || undefined,
-    }));
+    // Clear any stale membership or event checkout states
+    sessionStorage.removeItem('pending_membership');
+    sessionStorage.removeItem('pending_event');
 
-    this.paymentService.createCheckoutSession(items, currentUser.id).subscribe({
-      next: (res) => {
-        // Save items briefly to sessionStorage so the success page can show the receipt
-        sessionStorage.setItem('last_checkout', JSON.stringify(items));
-        // Redirect to Stripe Checkout
-        window.location.href = res.url;
-      },
-      error: (err) => {
-        this.isCheckingOut = false;
-        this.checkoutError = err?.error?.message || 'Error al iniciar el pago. Intenta nuevamente.';
-      }
-    });
+    // Navigate to our custom payment form
+    this.router.navigate(['/checkout/pay']);
   }
 }

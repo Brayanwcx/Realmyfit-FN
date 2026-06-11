@@ -1,0 +1,157 @@
+<div class="checkout-page">
+
+  <!-- ─── Loading State ──────────────────────── -->
+  @if (isLoading) {
+    <div class="full-loader">
+      <div class="pulse-ring"></div>
+      <p>Preparando pago seguro...</p>
+    </div>
+  }
+
+  <!-- ─── Error Loading ──────────────────────── -->
+  @if (!isLoading && errorMessage && !clientSecret) {
+    <div class="full-loader">
+      <div class="error-icon">!</div>
+      <p class="error-text">{{ errorMessage }}</p>
+      <button class="btn-ghost" (click)="cancel()">← Volver</button>
+    </div>
+  }
+
+  <!-- ─── Payment Form ──────────────────────── -->
+  @if (!isLoading && clientSecret) {
+    <div class="checkout-layout">
+
+      <!-- LEFT: Order Summary -->
+      <aside class="summary-panel">
+        <div class="brand-logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span>RealMyFit</span>
+        </div>
+
+        <p class="summary-label">Resumen</p>
+
+        <div class="items-list">
+          @if (mode === 'cart') {
+            @for (item of cartItems; track item.id) {
+              <div class="summary-item">
+                <div class="item-thumb">
+                  @if (item.imageUrl || item.image) {
+                    <img [src]="getImageUrl(item.imageUrl || item.image)" [alt]="item.name" />
+                  } @else {
+                    <div class="thumb-placeholder">🛒</div>
+                  }
+                </div>
+                <div class="item-meta">
+                  <span class="item-name">{{ item.name }}</span>
+                  <span class="item-unit">Cant: {{ item.qty }} &nbsp;•&nbsp; {{ formatCurrency(item.price) }} c/u</span>
+                </div>
+                <span class="item-total">{{ formatCurrency(item.price * item.qty) }}</span>
+              </div>
+            }
+          } @else if (mode === 'membership') {
+            <div class="summary-item membership">
+              <div class="item-thumb membership-icon">⭐</div>
+              <div class="item-meta">
+                <span class="item-name">Membresía {{ membershipName }}</span>
+                <span class="item-unit">Acceso completo</span>
+              </div>
+              <span class="item-total">{{ formatCurrency(membershipPrice) }}</span>
+            </div>
+          } @else if (mode === 'event') {
+            <div class="summary-item event">
+              <div class="item-thumb event-icon">🎟️</div>
+              <div class="item-meta">
+                <span class="item-name">Evento: {{ eventName }}</span>
+                <span class="item-unit">Entrada General</span>
+              </div>
+              <span class="item-total">{{ formatCurrency(eventPrice) }}</span>
+            </div>
+          }
+        </div>
+
+        <div class="summary-totals">
+          <div class="divider"></div>
+          <div class="total-row grand">
+            <span>Total</span>
+            <span class="grand-amount">{{ formatCurrency(total) }}</span>
+          </div>
+        </div>
+
+        <div class="security-badges">
+          <span class="badge">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Pago cifrado SSL
+          </span>
+          <span class="badge">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            Stripe
+          </span>
+        </div>
+      </aside>
+
+      <!-- RIGHT: Payment Form -->
+      <main class="payment-panel">
+        <div class="panel-header">
+          <h1>Completa tu pago</h1>
+          <p>Ingresa los datos de tu tarjeta de crédito o débito</p>
+        </div>
+
+        <!-- Cardholder Name -->
+        <div class="form-group">
+          <label for="cardholder">Nombre en la tarjeta</label>
+          <input
+            id="cardholder"
+            type="text"
+            class="glass-input"
+            placeholder="Ej. Juan Pérez"
+            [(ngModel)]="cardholderName"
+            autocomplete="cc-name"
+          />
+        </div>
+
+        <!-- Stripe Card Element -->
+        <div class="form-group">
+          <label>Datos de la tarjeta</label>
+          <div class="card-wrapper" [class.mounted]="cardMounted">
+            <div id="card-container"></div>
+            @if (!cardMounted) {
+              <div class="card-placeholder">
+                <span class="dots"><span></span><span></span><span></span></span>
+              </div>
+            }
+          </div>
+          @if (cardError) {
+            <p class="field-error">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              {{ cardError }}
+            </p>
+          }
+        </div>
+
+
+        <!-- Payment Error -->
+        @if (errorMessage) {
+          <div class="alert-error">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            {{ errorMessage }}
+          </div>
+        }
+
+        <!-- Actions -->
+        <div class="action-row">
+          <button class="btn-ghost" (click)="cancel()" [disabled]="isProcessing">← Volver</button>
+          <button class="btn-pay" (click)="pay()" [disabled]="isProcessing || !cardMounted">
+            @if (isProcessing) {
+              <span class="spinner"></span>
+              Procesando...
+            } @else {
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Pagar {{ formatCurrency(total) }}
+            }
+          </button>
+        </div>
+      </main>
+
+    </div>
+  }
+</div>

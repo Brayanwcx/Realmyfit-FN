@@ -72,6 +72,16 @@
               <span class="summary-label">Disponibilidad</span>
               <span class="summary-value">{{ evento.spots }} / {{ evento.capacity }} cupos</span>
             </div>
+            <div class="summary-row" *ngIf="evento.price > 0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
+              <span class="summary-label">Acceso</span>
+              <span class="summary-value" style="color:#4ade80; font-weight: 600;">$ {{ evento.price | number:'1.0-0' }} USD</span>
+            </div>
+            <div class="summary-row" *ngIf="evento.price == 0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              <span class="summary-label">Acceso</span>
+              <span class="summary-value" style="color:#60a5fa; font-weight: 600;">Entrada Gratuita</span>
+            </div>
           </div>
 
           <!-- Notice box -->
@@ -100,6 +110,8 @@
               <span class="spinner-small" style="display:inline-block; width:16px; height:16px; border:2px solid; border-radius:50%; border-top-color:transparent; animation:spin 1s linear infinite; vertical-align:middle; margin-right:8px;"></span> Registrando...
             } @else if (evento.spots === 0) {
               No disponible
+            } @else if (evento.price > 0) {
+              💳 &nbsp;Comprar Entrada (${{ evento.price | number:'1.0-0' }} USD)
             } @else {
               ✓ &nbsp;Confirmar Asistencia
             }
