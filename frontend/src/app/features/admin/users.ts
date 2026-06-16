@@ -5,19 +5,22 @@ import { UsersService } from '../../core/services/users.service';
 import { finalize } from 'rxjs';
 import Swal from '../../core/utils/app-swal';
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-admin-users',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './users.html',
-  styleUrls: ['./users.scss']})
+  styleUrls: ['./users.scss']
+})
 export class AdminUsersComponent implements OnInit {
     destroyRef = inject(DestroyRef);
   private usersService = inject(UsersService);
   private cdr = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone);
-  
+  public authService = inject(AuthService);
+  isSuperAdmin = false;
   users: any[] = [];
   loading = true;
   errorMessage = '';
@@ -46,6 +49,7 @@ export class AdminUsersComponent implements OnInit {
   };
 
   ngOnInit() {
+    this.isSuperAdmin = this.authService.isSuperAdmin();
     this.fetchUsers();
   }
 

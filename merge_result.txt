@@ -1,0 +1,26 @@
+Auto-merging frontend/src/app/app.routes.ts
+Auto-merging frontend/src/app/core/services/auth.service.ts
+CONFLICT (content): Merge conflict in frontend/src/app/core/services/auth.service.ts
+Auto-merging frontend/src/app/features/admin/admin.ts
+CONFLICT (content): Merge conflict in frontend/src/app/features/admin/admin.ts
+Auto-merging frontend/src/app/features/admin/contacts.ts
+CONFLICT (add/add): Merge conflict in frontend/src/app/features/admin/contacts.ts
+Auto-merging frontend/src/app/features/admin/machines.ts
+CONFLICT (content): Merge conflict in frontend/src/app/features/admin/machines.ts
+Auto-merging frontend/src/app/features/admin/trainers.ts
+CONFLICT (content): Merge conflict in frontend/src/app/features/admin/trainers.ts
+Auto-merging frontend/src/app/features/admin/users.ts
+CONFLICT (content): Merge conflict in frontend/src/app/features/admin/users.ts
+Auto-merging frontend/src/app/features/contacto/contacto.html
+CONFLICT (content): Merge conflict in frontend/src/app/features/contacto/contacto.html
+Auto-merging frontend/src/app/features/contacto/contacto.ts
+CONFLICT (content): Merge conflict in frontend/src/app/features/contacto/contacto.ts
+Auto-merging frontend/src/app/features/maquina-detalle/maquina-detalle.html
+CONFLICT (content): Merge conflict in frontend/src/app/features/maquina-detalle/maquina-detalle.html
+Auto-merging frontend/src/app/features/maquina-detalle/maquina-detalle.scss
+CONFLICT (content): Merge conflict in frontend/src/app/features/maquina-detalle/maquina-detalle.scss
+Auto-merging frontend/src/app/features/maquinas/maquinas.component.html
+CONFLICT (content): Merge conflict in frontend/src/app/features/maquinas/maquinas.component.html
+Auto-merging frontend/src/app/features/maquinas/maquinas.ts
+CONFLICT (content): Merge conflict in frontend/src/app/features/maquinas/maquinas.ts
+Automatic merge failed; fix conflicts and then commit the result.
