@@ -1,8 +1,9 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-forgot-password',
@@ -12,6 +13,7 @@ import { AuthService } from '../../core/services/auth.service';
   styleUrls: ['../login/login.component.scss']
 })
 export class ForgotPasswordComponent {
+    destroyRef = inject(DestroyRef);
   forgotPasswordForm: FormGroup;
   loading = false;
   successMessage = '';
@@ -37,7 +39,7 @@ export class ForgotPasswordComponent {
 
     const email = this.forgotPasswordForm.get('email')?.value;
 
-    this.authService.forgotPassword(email).subscribe({
+    this.authService.forgotPassword(email).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
         this.successMessage = response.message || 'Código enviado. Revisa tu correo electrónico.';
         this.loading = false;

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, OnDestroy, AfterViewInit, ElementRef, ViewChild, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy, AfterViewInit, ElementRef, ViewChild, ChangeDetectorRef, NgZone, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { forkJoin, Subscription, of } from 'rxjs';
@@ -12,6 +12,7 @@ import { MembershipsService } from '../../core/services/memberships.service';
 import { ReviewsService } from '../../core/services/reviews.service';
 import { OrdersService } from '../../core/services/orders.service';
 import { PaymentService } from '../../core/services/payment.service';
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -20,6 +21,7 @@ import { PaymentService } from '../../core/services/payment.service';
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.scss']})
 export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
+    destroyRef = inject(DestroyRef);
   @ViewChild('lineChartCanvas') lineChartCanvas!: ElementRef;
   @ViewChild('doughnutChartCanvas') doughnutChartCanvas!: ElementRef;
 
@@ -82,54 +84,45 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     }));
 
     this.sub = forkJoin({
-      users: safeCall(this.usersService.getUsers()),
-      products: safeCall(this.productsService.getProducts()),
-      memberships: safeCall(this.membershipsService.getMemberships()),
-      orders: safeCall(this.ordersService.getOrders()),
-      reviews: safeCall(this.reviewsService.getReviews()),
-      payments: safeCall(this.paymentService.getPayments()),
-    }).subscribe({
+          users: safeCall(this.usersService.getUsers()),
+          products: safeCall(this.productsService.getProducts()),
+          memberships: safeCall(this.membershipsService.getMemberships()),
+          orders: safeCall(this.ordersService.getOrders()),
+          reviews: safeCall(this.reviewsService.getReviews()),
+          payments: safeCall(this.paymentService.getPayments()),
+        }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res: any) => {
-        this.ngZone.run(() => {
-          this.stats = {
-            users: res.users?.length || 0,
-            products: res.products?.length || 0,
-            memberships: res.memberships?.length || 0,
-            orders: res.orders?.length || 0
-          };
-          
-          if(res.orders && Array.isArray(res.orders)) {
-            this.allOrders = res.orders;
-          }
-
-          if(res.payments && Array.isArray(res.payments)) {
-             this.allPayments = res.payments;
-             const sortedPayments = [...res.payments].sort((a, b) => 
-               new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-             );
-             this.recentOrders = sortedPayments.slice(0, 5);
-          } else {
-             this.recentOrders = [];
-          }
-
-          if(res.reviews) this.reviewsData = res.reviews;
-          
-          this.lastUpdate = new Date();
-          this.loading = false;
-          this.cdr.detectChanges();
-
-          setTimeout(() => {
-            this.initLineChart();
-            this.initDoughnutChart();
-          }, 100);
-        });
+        this.stats = {
+                            users: res.users?.length || 0,
+                            products: res.products?.length || 0,
+                            memberships: res.memberships?.length || 0,
+                            orders: res.orders?.length || 0
+                          };
+                if(res.orders && Array.isArray(res.orders)) {
+                            this.allOrders = res.orders;
+                          }
+                if(res.payments && Array.isArray(res.payments)) {
+                             this.allPayments = res.payments;
+                             const sortedPayments = [...res.payments].sort((a, b) => 
+                               new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                             );
+                             this.recentOrders = sortedPayments.slice(0, 5);
+                          } else {
+                             this.recentOrders = [];
+                          }
+                if(res.reviews) this.reviewsData = res.reviews;
+                this.lastUpdate = new Date();
+                this.loading = false;
+                this.cdr.detectChanges();
+                setTimeout(() => {
+                            this.initLineChart();
+                            this.initDoughnutChart();
+                          }, 100);
       },
       error: (err) => {
-        this.ngZone.run(() => {
-          console.error('Error loading dashboard stats', err);
+        console.error('Error loading dashboard stats', err);
           this.loading = false;
           this.cdr.detectChanges();
-        });
       }
     });
   }

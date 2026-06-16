@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { CartService } from '../../core/services/cart.service';
 import { PaymentService } from '../../core/services/payment.service';
 import { AuthService } from '../../core/services/auth.service';
 import { environment } from '../../../environments/environment';
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-cart',
@@ -14,6 +15,7 @@ import { environment } from '../../../environments/environment';
   styleUrls: ['./cart.component.scss'],
 })
 export class CartComponent implements OnInit {
+    destroyRef = inject(DestroyRef);
   cartItems: any[] = [];
   isCheckingOut = false;
   checkoutError: string | null = null;
@@ -26,7 +28,7 @@ export class CartComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.cartService.cart$.subscribe(items => {
+    this.cartService.cart$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(items => {
       this.cartItems = items;
     });
   }

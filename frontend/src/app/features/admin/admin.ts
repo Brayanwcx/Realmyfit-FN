@@ -1,9 +1,10 @@
-import { Component, inject, OnInit, ChangeDetectorRef, HostListener } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef, HostListener, DestroyRef } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { AuthService } from '../../core/services/auth.service';
-import Swal from 'sweetalert2';
+import Swal from '../../core/utils/app-swal';
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-admin',
@@ -13,6 +14,7 @@ import Swal from 'sweetalert2';
   styleUrl: './admin.scss',
 })
 export class AdminComponent implements OnInit {
+    destroyRef = inject(DestroyRef);
   private sanitizer = inject(DomSanitizer);
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
@@ -136,7 +138,7 @@ export class AdminComponent implements OnInit {
   ];
 
   ngOnInit() {
-    this.authService.currentUser.subscribe((user: any) => {
+    this.authService.currentUser.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((user: any) => {
       if (user) {
         this.userName = user.name || (user.email ? user.email.split('@')[0] : 'Administrador');
         this.userInitials = this.userName.charAt(0).toUpperCase();
@@ -160,7 +162,7 @@ export class AdminComponent implements OnInit {
 
     // Upload to server
     this.isUploadingAvatar = true;
-    this.authService.uploadAvatar(file).subscribe({
+    this.authService.uploadAvatar(file).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.isUploadingAvatar = false;
         Swal.fire('¡Éxito!', 'Foto de perfil actualizada', 'success');

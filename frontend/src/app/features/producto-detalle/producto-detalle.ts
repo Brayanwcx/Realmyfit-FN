@@ -167,6 +167,7 @@ export class ProductoDetalleComponent implements OnInit {
     setTimeout(() => {
       this.added = false;
       this.qty = 1; // Reset qty after adding
+      this.cdr.detectChanges(); // Force update: setTimeout runs outside Angular's zone
     }, 1500);
   }
 

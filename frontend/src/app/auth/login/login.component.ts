@@ -1,11 +1,12 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, DestroyRef, inject } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import Swal from 'sweetalert2';
+import Swal from '../../core/utils/app-swal';
 import { ChangeDetectorRef } from '@angular/core';
 import { environment } from '../../../environments/environment';
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-login',
@@ -15,6 +16,7 @@ import { environment } from '../../../environments/environment';
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent implements OnInit, OnDestroy {
+    destroyRef = inject(DestroyRef);
   isLoginMode = true;
   isLoading = false;
   errorMessage = '';
@@ -308,7 +310,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.authService.login(this.email, this.password).subscribe({
+    this.authService.login(this.email, this.password).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (res) => {
         this.isLoading = false;
         this.resetAttempts();
@@ -388,7 +390,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     const { confirmPassword, ...payload } = this.registerData;
 
-    this.authService.register(payload).subscribe({
+    this.authService.register(payload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.isLoading = false;
         Swal.fire({

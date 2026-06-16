@@ -1,9 +1,10 @@
-import { Component, OnInit, inject, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, NgZone, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UsersService } from '../../core/services/users.service';
 import { finalize } from 'rxjs';
-import Swal from 'sweetalert2';
+import Swal from '../../core/utils/app-swal';
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-admin-users',
@@ -12,6 +13,7 @@ import Swal from 'sweetalert2';
   templateUrl: './users.html',
   styleUrls: ['./users.scss']})
 export class AdminUsersComponent implements OnInit {
+    destroyRef = inject(DestroyRef);
   private usersService = inject(UsersService);
   private cdr = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone);
@@ -56,21 +58,17 @@ export class AdminUsersComponent implements OnInit {
       .pipe(finalize(() => {
         this.loading = false;
         this.cdr.detectChanges();
-      }))
+      }), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (data) => {
-          this.ngZone.run(() => {
-            this.users = data;
-            this.page = 1;
-            this.cdr.detectChanges();
-          });
+          this.users = data;
+              this.page = 1;
+              this.cdr.detectChanges();
         },
         error: (err) => {
-          this.ngZone.run(() => {
-            console.error('Error fetching users:', err);
+          console.error('Error fetching users:', err);
             this.errorMessage = err.status === 401 ? 'No autorizado.' : 'Error de conexión con el servidor.';
             this.cdr.detectChanges();
-          });
         }
       });
   }
@@ -122,12 +120,12 @@ export class AdminUsersComponent implements OnInit {
     }
 
     if (this.isEditing && this.editingId) {
-      this.usersService.updateUser(this.editingId, dataToSave).subscribe({
+      this.usersService.updateUser(this.editingId, dataToSave).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: () => this.ngZone.run(() => this.onSaveSuccess()),
         error: (err) => this.ngZone.run(() => this.onSaveError(err))
       });
     } else {
-      this.usersService.createUser(dataToSave).subscribe({
+      this.usersService.createUser(dataToSave).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: () => this.ngZone.run(() => this.onSaveSuccess()),
         error: (err) => this.ngZone.run(() => this.onSaveError(err))
       });
@@ -162,18 +160,14 @@ export class AdminUsersComponent implements OnInit {
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.usersService.deleteUser(id).subscribe({
+        this.usersService.deleteUser(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
           next: () => {
-            this.ngZone.run(() => {
-              Swal.fire('¡Eliminado!', 'El usuario ha sido eliminado.', 'success');
-              this.fetchUsers();
-            });
+            Swal.fire('¡Eliminado!', 'El usuario ha sido eliminado.', 'success');
+                this.fetchUsers();
           },
           error: (err) => {
-            this.ngZone.run(() => {
-              console.error('Error deleting user', err);
+            console.error('Error deleting user', err);
               Swal.fire('Error', 'No se pudo eliminar el usuario', 'error');
-            });
           }
         });
       }

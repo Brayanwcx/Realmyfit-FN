@@ -1,7 +1,6 @@
 import {
   Component, OnInit, OnDestroy,
-  inject, ChangeDetectorRef
-} from '@angular/core';
+  inject, ChangeDetectorRef, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -10,6 +9,7 @@ import { PaymentService } from '../../core/services/payment.service';
 import { CartService } from '../../core/services/cart.service';
 import { AuthService } from '../../core/services/auth.service';
 import { environment } from '../../../environments/environment';
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-checkout-payment',
@@ -19,6 +19,7 @@ import { environment } from '../../../environments/environment';
   styleUrls: ['./checkout-payment.scss'],
 })
 export class CheckoutPaymentComponent implements OnInit, OnDestroy {
+    destroyRef = inject(DestroyRef);
   private paymentService = inject(PaymentService);
   private cartService = inject(CartService);
   private authService = inject(AuthService);
@@ -45,6 +46,7 @@ export class CheckoutPaymentComponent implements OnInit, OnDestroy {
   errorMessage = '';
   cardError = '';
   cardMounted = false;
+  hasPaid = false;
 
   // Billing form
   cardholderName = '';
@@ -108,12 +110,12 @@ export class CheckoutPaymentComponent implements OnInit, OnDestroy {
 
     // Request clientSecret from backend
     if (this.mode === 'membership') {
-      this.paymentService.createMembershipPaymentIntent(this.membershipId!, user.id).subscribe({
+      this.paymentService.createMembershipPaymentIntent(this.membershipId!, user.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (res) => { this.clientSecret = res.clientSecret; this.onSecretReady(); },
         error: (err) => { this.isLoading = false; this.errorMessage = err?.error?.message || 'Error al crear el pago.'; this.cdr.detectChanges(); }
       });
     } else if (this.mode === 'event') {
-      this.paymentService.createEventPaymentIntent(this.eventId!, user.id).subscribe({
+      this.paymentService.createEventPaymentIntent(this.eventId!, user.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (res) => { this.clientSecret = res.clientSecret; this.onSecretReady(); },
         error: (err) => { this.isLoading = false; this.errorMessage = err?.error?.message || 'Error al crear el pago del evento.'; this.cdr.detectChanges(); }
       });
@@ -125,7 +127,7 @@ export class CheckoutPaymentComponent implements OnInit, OnDestroy {
         quantity: i.qty,
         image: i.imageUrl || i.image || undefined,
       }));
-      this.paymentService.createPaymentIntent(items, user.id).subscribe({
+      this.paymentService.createPaymentIntent(items, user.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (res) => { this.clientSecret = res.clientSecret; this.onSecretReady(); },
         error: (err) => { this.isLoading = false; this.errorMessage = err?.error?.message || 'Error al crear el pago.'; this.cdr.detectChanges(); }
       });
@@ -208,11 +210,18 @@ export class CheckoutPaymentComponent implements OnInit, OnDestroy {
       this.isProcessing = false;
       this.errorMessage = error.message || 'El pago falló. Revisa los datos de tu tarjeta.';
       this.cdr.detectChanges();
+      
+      // Notify backend locally about the failure so it can mark it as FAILED instead of PENDING 
+      // (This overrides silent intent failures where Webhooks might be blocked locally)
+      this.paymentService.failPaymentIntent(this.clientSecret).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        error: (err) => console.error('Error marking intent as failed locally:', err)
+      });
       return;
     }
 
     if (paymentIntent?.status === 'succeeded') {
-      this.paymentService.verifyPaymentIntent(this.clientSecret).subscribe({
+      this.hasPaid = true;
+      this.paymentService.verifyPaymentIntent(this.clientSecret).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (verification) => {
           if (this.mode === 'cart') {
             const receipt = this.cartItems.map(i => ({
@@ -257,5 +266,12 @@ export class CheckoutPaymentComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.cardElement?.destroy();
+    
+    // Si la inicialización del pago está a medias y el usuario sale, lo cancelamos.
+    if (this.clientSecret && !this.hasPaid && !this.isProcessing) {
+      this.paymentService.cancelPaymentIntent(this.clientSecret).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        error: (err) => console.error('No se pudo cancelar el intento de pago o ya no existe.', err)
+      });
+    }
   }
 }

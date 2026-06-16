@@ -1,9 +1,10 @@
-import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
+import { Component, HostListener, OnInit, OnDestroy, DestroyRef, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CartService } from '../../../core/services/cart.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-navbar',
@@ -12,6 +13,7 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./navbar.component.scss']
 })
 export class NavbarComponent implements OnInit, OnDestroy {
+    destroyRef = inject(DestroyRef);
   isScrolled = false;
   isMobileMenuOpen = false;
   isServicesExpanded = false;
@@ -26,11 +28,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    this.cartService.cart$.subscribe(items => {
+    this.cartService.cart$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(items => {
       this.totalItems = items.reduce((acc, item) => acc + item.qty, 0);
     });
 
-    this.userSub = this.authService.currentUser.subscribe(user => {
+    this.userSub = this.authService.currentUser.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(user => {
       this.currentUser = user;
     });
   }

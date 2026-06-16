@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
@@ -6,7 +6,8 @@ import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 import { WishlistService } from '../../core/services/wishlist.service';
 import { CartService } from '../../core/services/cart.service';
 import { EventRegistrationsService } from '../../core/services/event-registrations.service';
-import Swal from 'sweetalert2';
+import Swal from '../../core/utils/app-swal';
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-perfil',
@@ -16,6 +17,7 @@ import Swal from 'sweetalert2';
   styleUrls: ['./perfil.scss']
 })
 export class PerfilComponent implements OnInit {
+    destroyRef = inject(DestroyRef);
   user: any = null;
   activeTab = 'info';
   isLoading = true;
@@ -53,13 +55,13 @@ export class PerfilComponent implements OnInit {
     this.user = this.authService.getUser();
     this.isLoading = false;
 
-    this.wishlistService.wishlist$.subscribe(items => {
+    this.wishlistService.wishlist$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(items => {
       this.wishlistItems = items;
       this.cdr.detectChanges();
     });
 
     // Try to load full profile from backend
-    this.authService.getUserProfile().subscribe({
+    this.authService.getUserProfile().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (profile) => {
         this.user = profile;
         localStorage.setItem('gym_user', JSON.stringify(profile));
@@ -140,7 +142,7 @@ export class PerfilComponent implements OnInit {
 
       const file = new File([this.croppedImageBlob], 'avatar.png', { type: 'image/png' });
       
-      this.authService.uploadAvatar(file).subscribe({
+      this.authService.uploadAvatar(file).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (res) => {
           this.isUploading = false;
           if (this.user) {
@@ -160,7 +162,7 @@ export class PerfilComponent implements OnInit {
   }
 
   removeFromWishlist(productId: number) {
-    this.wishlistService.removeFromWishlist(productId).subscribe();
+    this.wishlistService.removeFromWishlist(productId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
   }
 
   addToCartFromWishlist(producto: any) {
@@ -199,7 +201,7 @@ export class PerfilComponent implements OnInit {
     }).then((result) => {
       if (!result.isConfirmed) return;
 
-      this.regService.cancelOwn(reg.id).subscribe({
+      this.regService.cancelOwn(reg.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: () => {
           // Actualizar estado localmente sin recargar la página
           reg.status = 'CANCELLED';

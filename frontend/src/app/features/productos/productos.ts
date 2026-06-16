@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CartService } from '../../core/services/cart.service';
@@ -6,7 +6,8 @@ import { WishlistService } from '../../core/services/wishlist.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ProductsService } from '../../core/services/products.service';
 import { environment } from '../../../environments/environment';
-import Swal from 'sweetalert2';
+import Swal from '../../core/utils/app-swal';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { RouterLink, Router } from '@angular/router';
 
@@ -23,6 +24,7 @@ export class ProductosComponent implements OnInit {
   searchQuery = '';
 
   productos: any[] = [];
+  destroyRef = inject(DestroyRef);
 
   constructor(
     private cartService: CartService,
@@ -30,14 +32,14 @@ export class ProductosComponent implements OnInit {
     private authService: AuthService,
     private productsService: ProductsService,
     private router: Router,
-    private cdr: ChangeDetectorRef,
-    private ngZone: NgZone
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit() {
-    this.productsService.getProducts().subscribe({
-      next: (data) => {
-        this.ngZone.run(() => {
+    this.productsService.getProducts()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (data) => {
           // filter out inactive products, map properties
           this.productos = data.filter((p: any) => p.isActive !== false).map((p: any) => ({
             ...p,
@@ -47,15 +49,19 @@ export class ProductosComponent implements OnInit {
             tag: p.stock === 0 ? 'Agotado' : ''
           }));
           this.cdr.detectChanges();
-        });
-      },
-      error: (err) => this.ngZone.run(() => console.error('Error fetching public products', err))
-    });
+        },
+        error: (err) => console.error('Error fetching public products', err)
+      });
 
     // Suscribirse a la wishlist para actualizar la vista inmediatamente
-    this.wishlistService.wishlist$.subscribe(() => {
-      this.cdr.detectChanges();
-    });
+    this.wishlistService.wishlist$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        // En componentes sin OnPush, Angular detectará el cambio automáticamente 
+        // a menos que el servicio emita fuera de la 'Angular Zone'.
+        // Mantenemos cdr.detectChanges() solo de precaución si el servicio es asíncrono externo.
+        this.cdr.detectChanges();
+      });
   }
 
   getImageUrl(url: string | undefined): string {
@@ -162,6 +168,7 @@ export class ProductosComponent implements OnInit {
     setTimeout(() => {
       producto.added = false;
       producto.qty = 1;
+      this.cdr.detectChanges(); // Force update: setTimeout runs outside Angular's zone
     }, 1200);
   }
 
@@ -191,7 +198,7 @@ export class ProductosComponent implements OnInit {
     }
     
     // Optimistic UI update can be done here, but WishlistService loads it anyway
-    this.wishlistService.toggleWishlist(producto.id).subscribe({
+    this.wishlistService.toggleWishlist(producto.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => console.log('Wishlist toggled for', producto.name),
       error: (err) => {
         console.error('Error toggling wishlist', err);

@@ -1,8 +1,9 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-reset-password',
@@ -12,6 +13,7 @@ import { AuthService } from '../../core/services/auth.service';
   styleUrls: ['../login/login.component.scss']
 })
 export class ResetPasswordComponent implements OnInit {
+    destroyRef = inject(DestroyRef);
   resetPasswordForm: FormGroup;
   loading = false;
   successMessage = '';
@@ -37,13 +39,13 @@ export class ResetPasswordComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       if (params['email']) {
         this.resetPasswordForm.patchValue({ email: params['email'] });
       }
     });
 
-    this.resetPasswordForm.get('newPassword')?.valueChanges.subscribe(val => {
+    this.resetPasswordForm.get('newPassword')?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(val => {
       this.calculatePasswordStrength(val || '');
       this.cdr.detectChanges();
     });
@@ -75,7 +77,7 @@ export class ResetPasswordComponent implements OnInit {
 
     const formData = this.resetPasswordForm.value;
 
-    this.authService.resetPassword(formData).subscribe({
+    this.authService.resetPassword(formData).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (response) => {
         this.successMessage = response.message || 'Contraseña restablecida exitosamente.';
         this.loading = false;

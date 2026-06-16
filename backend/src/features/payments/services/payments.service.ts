@@ -365,6 +365,62 @@ export class PaymentsService {
         return { received: true };
     }
 
+    async cancelPaymentIntent(clientSecret: string) {
+        if (!this.stripe) return;
+
+        try {
+            const paymentIntentId = clientSecret.startsWith('pi_') && clientSecret.includes('_secret_')
+                ? clientSecret.split('_secret_')[0]
+                : clientSecret;
+
+            // Cancel intent on Stripe (if it is incomplete)
+            const intent = await this.stripe.paymentIntents.retrieve(paymentIntentId);
+            if (intent && intent.status === 'requires_payment_method') {
+                await this.stripe.paymentIntents.cancel(paymentIntentId);
+            }
+
+            // Remove Order if it exists and is PENDING
+            const orderDoc = await this.orderRepo.findOne({ where: { notes: paymentIntentId } });
+            if (orderDoc && orderDoc.status === 'PENDING' as any) {
+                await this.orderRepo.remove(orderDoc);
+                console.log(`[Stripe] Cancelled and removed PENDING Order ${orderDoc.id}`);
+            }
+
+            // Remove Payment if it exists and is PENDING
+            const paymentDoc = await this.paymentRepo.findOne({ where: { stripeSessionId: paymentIntentId } });
+            if (paymentDoc && paymentDoc.status === PaymentStatus.PENDING) {
+                await this.paymentRepo.remove(paymentDoc);
+                console.log(`[Stripe] Cancelled and removed PENDING Payment ${paymentDoc.id}`);
+            }
+
+            return { success: true };
+        } catch (e) {
+            console.error('[Stripe] Error cancelling payment intent', e);
+            // Return gracefully
+            return { success: false, message: e.message };
+        }
+    }
+
+    async failPaymentIntent(clientSecret: string) {
+        if (!this.stripe) return;
+        try {
+            const paymentIntentId = clientSecret.startsWith('pi_') && clientSecret.includes('_secret_')
+                ? clientSecret.split('_secret_')[0]
+                : clientSecret;
+
+            const paymentDoc = await this.paymentRepo.findOne({ where: { stripeSessionId: paymentIntentId } });
+            if (paymentDoc && paymentDoc.status === PaymentStatus.PENDING) {
+                paymentDoc.status = PaymentStatus.FAILED;
+                await this.paymentRepo.save(paymentDoc);
+                console.log(`[Stripe] Marked Payment ${paymentDoc.id} as FAILED due to explicit frontend decline.`);
+            }
+            return { success: true };
+        } catch (e) {
+            console.error('[Stripe] Error marking payment intent as failed', e);
+            return { success: false };
+        }
+    }
+
     // ─── Simulated Payment Flow ───────────────────────────────────────────────────
 
     async simulateEventPayment(dto: CreateEventCheckoutDto) {

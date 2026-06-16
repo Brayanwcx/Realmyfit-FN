@@ -1,8 +1,9 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, inject, ChangeDetectorRef, DestroyRef } from '@angular/core';
 import { HeroComponent } from '../hero/hero';
 import { FeaturesComponent } from '../features/features';
 import { RouterLink } from '@angular/router';
 import { ReviewsService } from '../../core/services/reviews.service';
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-home',
@@ -11,6 +12,7 @@ import { ReviewsService } from '../../core/services/reviews.service';
   styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
+    destroyRef = inject(DestroyRef);
   testimonials = [
     {
       text: '"Empecé desde cero y el equipo me guio paso a paso. Ahora no imagino mi vida sin RealMyFit. Es más que un gimnasio, es mi segunda casa."',
@@ -51,7 +53,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit() {
     this.startCarousel();
     
-    this.reviewsService.getReviews().subscribe({
+    this.reviewsService.getReviews().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (data) => {
         // Limita a un máximo de 5-10 reseñas para evitar saturar de puntos el carrusel
         const activeReviews = data.filter((r: any) => r.isActive).slice(0, 10);

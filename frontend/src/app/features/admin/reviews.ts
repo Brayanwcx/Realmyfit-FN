@@ -1,9 +1,10 @@
-import { Component, OnInit, inject, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, NgZone, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ReviewsService, Review } from '../../core/services/reviews.service';
 import { finalize } from 'rxjs';
-import Swal from 'sweetalert2';
+import Swal from '../../core/utils/app-swal';
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-admin-reviews',
@@ -12,6 +13,7 @@ import Swal from 'sweetalert2';
   templateUrl: './reviews.html',
   styleUrls: ['./reviews.scss']})
 export class AdminReviewsComponent implements OnInit {
+    destroyRef = inject(DestroyRef);
   private reviewsService = inject(ReviewsService);
   private cdr = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone);
@@ -40,21 +42,17 @@ export class AdminReviewsComponent implements OnInit {
       .pipe(finalize(() => {
         this.loading = false;
         this.cdr.detectChanges();
-      }))
+      }), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (data) => {
-          this.ngZone.run(() => {
-            this.reviews = data || [];
-            this.page = 1;
-            this.cdr.detectChanges();
-          });
+          this.reviews = data || [];
+              this.page = 1;
+              this.cdr.detectChanges();
         },
         error: (err) => {
-          this.ngZone.run(() => {
-            console.error('Error fetching reviews', err);
+          console.error('Error fetching reviews', err);
             this.errorMessage = err.status === 401 ? 'No autorizado.' : (err.message || 'Error de conexión');
             this.cdr.detectChanges();
-          });
         }
       });
   }
@@ -73,19 +71,15 @@ export class AdminReviewsComponent implements OnInit {
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.reviewsService.updateReviewStatus(review.id, newStatus).subscribe({
+        this.reviewsService.updateReviewStatus(review.id, newStatus).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
           next: (updatedReview) => {
-            this.ngZone.run(() => {
-              review.isActive = updatedReview.isActive;
-              Swal.fire('¡Éxito!', 'La reseña ha sido ' + (newStatus ? 'publicada' : 'ocultada') + ' correctamente.', 'success');
-              this.cdr.detectChanges();
-            });
+            review.isActive = updatedReview.isActive;
+                Swal.fire('¡Éxito!', 'La reseña ha sido ' + (newStatus ? 'publicada' : 'ocultada') + ' correctamente.', 'success');
+                this.cdr.detectChanges();
           },
           error: (err) => {
-            this.ngZone.run(() => {
-              console.error('Error updating review', err);
+            console.error('Error updating review', err);
               Swal.fire('Error', 'Error al actualizar el estado de la reseña', 'error');
-            });
           }
         });
       }
@@ -104,19 +98,15 @@ export class AdminReviewsComponent implements OnInit {
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.reviewsService.deleteReview(review.id).subscribe({
+        this.reviewsService.deleteReview(review.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
           next: () => {
-            this.ngZone.run(() => {
-              this.reviews = this.reviews.filter(r => r.id !== review.id);
-              Swal.fire('¡Eliminado!', 'La reseña ha sido eliminada.', 'success');
-              this.cdr.detectChanges();
-            });
+            this.reviews = this.reviews.filter(r => r.id !== review.id);
+                Swal.fire('¡Eliminado!', 'La reseña ha sido eliminada.', 'success');
+                this.cdr.detectChanges();
           },
           error: (err) => {
-            this.ngZone.run(() => {
-              console.error('Error deleting review', err);
+            console.error('Error deleting review', err);
               Swal.fire('Error', 'No se pudo eliminar la reseña', 'error');
-            });
           }
         });
       }

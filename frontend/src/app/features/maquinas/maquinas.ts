@@ -1,7 +1,8 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, DestroyRef } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MachinesService, Machine } from '../../core/services/machines.service';
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-maquinas',
@@ -10,6 +11,7 @@ import { MachinesService, Machine } from '../../core/services/machines.service';
   styleUrls: ['./maquinas.component.scss'],
 })
 export class MaquinasComponent implements OnInit {
+    destroyRef = inject(DestroyRef);
   public machinesService = inject(MachinesService);
   private cdr = inject(ChangeDetectorRef);
 
@@ -18,7 +20,7 @@ export class MaquinasComponent implements OnInit {
   errorMessage = '';
 
   ngOnInit() {
-    this.machinesService.getMachinesPublic().subscribe({
+    this.machinesService.getMachinesPublic().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (data) => {
         this.maquinas = data;
         this.loading = false;

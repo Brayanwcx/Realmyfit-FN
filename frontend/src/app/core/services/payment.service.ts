@@ -82,4 +82,17 @@ export class PaymentService {
       `${this.apiUrl}/payments/stripe/verify/${clientSecret}`
     );
   }
+
+  cancelPaymentIntent(clientSecret: string): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(
+      `${this.apiUrl}/payments/stripe/intent/${clientSecret}`
+    );
+  }
+
+  failPaymentIntent(clientSecret: string): Observable<{ success: boolean }> {
+    return this.http.patch<{ success: boolean }>(
+      `${this.apiUrl}/payments/stripe/fail/${clientSecret}`,
+      {}
+    );
+  }
 }

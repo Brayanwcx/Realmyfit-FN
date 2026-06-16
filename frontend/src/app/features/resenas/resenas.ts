@@ -1,9 +1,10 @@
-import { Component, OnInit, inject, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, NgZone, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ReviewsService, Review } from '../../core/services/reviews.service';
 import { AuthService } from '../../core/services/auth.service';
-import Swal from 'sweetalert2';
+import Swal from '../../core/utils/app-swal';
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-resenas',
@@ -13,6 +14,7 @@ import Swal from 'sweetalert2';
   styleUrls: ['./resenas.scss'],
 })
 export class Resenas implements OnInit {
+    destroyRef = inject(DestroyRef);
   private reviewsService = inject(ReviewsService);
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
@@ -31,30 +33,25 @@ export class Resenas implements OnInit {
   isSubmitting = false;
 
   ngOnInit() {
-    this.authService.currentUser.subscribe(user => {
-      this.ngZone.run(() => {
-        this.currentUser = user;
+    this.authService.currentUser.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(user => {
+      this.currentUser = user;
         this.cdr.detectChanges();
-      });
     });
     this.fetchReviews();
   }
 
   fetchReviews() {
-    this.reviewsService.getReviews().subscribe({
+    this.reviewsService.getReviews().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (data) => {
-        this.ngZone.run(() => {
-          // Only show active reviews
-          this.reviews = data.filter(r => r.isActive !== false);
-          this.totalReviews = this.reviews.length;
-          if (this.totalReviews > 0) {
-            const sum = this.reviews.reduce((acc, r) => acc + r.rating, 0);
-            this.globalRating = Number((sum / this.totalReviews).toFixed(1));
-          } else {
-            this.globalRating = 0;
-          }
-          this.cdr.detectChanges();
-        });
+        this.reviews = data.filter(r => r.isActive !== false);
+            this.totalReviews = this.reviews.length;
+            if (this.totalReviews > 0) {
+                        const sum = this.reviews.reduce((acc, r) => acc + r.rating, 0);
+                        this.globalRating = Number((sum / this.totalReviews).toFixed(1));
+                      } else {
+                        this.globalRating = 0;
+                      }
+            this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error fetching reviews:', err);
@@ -84,40 +81,32 @@ export class Resenas implements OnInit {
     const ratingValue = Number(this.newRating);
     const userId = Number(this.currentUser.id || this.currentUser.sub);
     
-    this.reviewsService.createReview(ratingValue, this.newComment, userId).subscribe({
+    this.reviewsService.createReview(ratingValue, this.newComment, userId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (review) => {
-        this.ngZone.run(() => {
-          // Add the new review immediately
-          this.reviews = [{...review, user: this.currentUser}, ...this.reviews];
-          this.totalReviews = this.reviews.length;
-          // Recalculate global rating
-          const sum = this.reviews.reduce((acc, r) => acc + r.rating, 0);
-          this.globalRating = Number((sum / this.totalReviews).toFixed(1));
-          
-          this.isSubmitting = false;
-          this.showForm = false;
-          this.cdr.detectChanges();
-          
-          Swal.fire({
-            title: '¡Gracias!',
-            text: 'Reseña publicada con éxito',
-            icon: 'success',
-            confirmButtonColor: 'var(--color-primary)'
-          });
-        });
+        this.reviews = [{...review, user: this.currentUser}, ...this.reviews];
+            this.totalReviews = this.reviews.length;
+            const sum = this.reviews.reduce((acc, r) => acc + r.rating, 0);
+            this.globalRating = Number((sum / this.totalReviews).toFixed(1));
+            this.isSubmitting = false;
+            this.showForm = false;
+            this.cdr.detectChanges();
+            Swal.fire({
+                        title: '¡Gracias!',
+                        text: 'Reseña publicada con éxito',
+                        icon: 'success',
+                        confirmButtonColor: 'var(--color-primary)'
+                      });
       },
       error: (err) => {
-        this.ngZone.run(() => {
-          console.error('Error creating review', err);
+        console.error('Error creating review', err);
           this.isSubmitting = false;
           this.cdr.detectChanges();
           Swal.fire({
-            title: 'Error',
-            text: 'Ocurrió un error al publicar la reseña',
-            icon: 'error',
-            confirmButtonColor: 'var(--color-primary)'
-          });
-        });
+                      title: 'Error',
+                      text: 'Ocurrió un error al publicar la reseña',
+                      icon: 'error',
+                      confirmButtonColor: 'var(--color-primary)'
+                    });
       }
     });
   }

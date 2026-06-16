@@ -1,0 +1,203 @@
+
+    <div class="view-header">
+      <h2>Gestión de Pagos</h2>
+      <div class="header-stats">
+        <span class="stat-chip pending">Pendientes: {{ countByStatus('PENDING') }}</span>
+        <span class="stat-chip completed">Completados: {{ countByStatus('COMPLETED') }}</span>
+        <span class="stat-chip failed">Fallidos: {{ countByStatus('FAILED') }}</span>
+        <span class="stat-chip refund">Reembolso Pendiente: {{ countByStatus('PENDING_REFUND') }}</span>
+      </div>
+    </div>
+
+    <div class="tabs-container">
+      <button class="tab-btn" [class.active]="categoryFilter === 'ALL'" (click)="setCategory('ALL')">Todos</button>
+      <button class="tab-btn" [class.active]="categoryFilter === 'PRODUCTS'" (click)="setCategory('PRODUCTS')">Productos</button>
+      <button class="tab-btn" [class.active]="categoryFilter === 'EVENTS'" (click)="setCategory('EVENTS')">Eventos</button>
+      <button class="tab-btn" [class.active]="categoryFilter === 'MEMBERSHIPS'" (click)="setCategory('MEMBERSHIPS')">Membresías</button>
+    </div>
+
+    <div class="filters-row">
+      <div class="search-box">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="page = 1"
+          placeholder="Buscar por usuario, correo, ID o referencia..."
+        />
+      </div>
+      <select [(ngModel)]="statusFilter" (ngModelChange)="page = 1" class="filter-select">
+        <option value="">Todos los estados</option>
+        <option value="PENDING">Pendiente</option>
+        <option value="COMPLETED">Completado</option>
+        <option value="FAILED">Fallido</option>
+        <option value="REFUNDED">Reembolsado</option>
+        <option value="PENDING_REFUND">Reembolso Pendiente</option>
+      </select>
+    </div>
+
+    <div class="table-container glass">
+      @if (loading) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Cargando pagos...</p>
+        </div>
+      }
+
+      @if (!loading && filteredPayments.length > 0) {
+        <table class="desktop-table">
+          <thead>
+            <tr>
+              <th width="120px">ID Pago</th>
+              <th width="250px">Usuario</th>
+              <th>Artículos comprados</th>
+              <th width="120px">Monto</th>
+              <th width="140px">Estado</th>
+              <th width="150px">Fecha</th>
+              <th width="130px">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (payment of pagedPayments; track payment.id) {
+              <tr>
+                <td>
+                  <div class="payment-id">#{{ payment.id }}</div>
+                </td>
+                <td>
+                  <div class="product-name">
+                    {{ payment.user?.name || 'Usuario' }} {{ payment.user?.lastName || '' }}
+                  </div>
+                  <div class="product-desc">{{ payment.user?.email || 'Sin correo' }}</div>
+                </td>
+                <td>
+                  <div class="items-summary">
+                    @if (payment.items.length > 0) {
+                      @for (item of payment.items.slice(0, 2); track $index) {
+                        <span class="item-chip">{{ item.quantity }}x {{ item.name }}</span>
+                      }
+                      @if (payment.items.length > 2) {
+                        <span class="product-desc">+{{ payment.items.length - 2 }} más</span>
+                      }
+                    } @else {
+                      <span class="product-desc">{{ payment.description || 'Sin artículos' }}</span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <span class="font-bold">{{ formatCurrency(payment.amount) }}</span>
+                </td>
+                <td>
+                  <span class="status-badge" [ngClass]="getStatusClass(payment.status)">
+                    {{ formatStatus(payment.status) }}
+                  </span>
+                </td>
+                <td class="font-date">{{ payment.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td>
+                  <div class="actions-cell">
+                    <button class="btn-icon" (click)="viewDetails(payment)" title="Ver detalles">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                      Ver
+                    </button>
+                    @if (payment.status === 'PENDING_REFUND') {
+                      <button class="btn-icon btn-refund" (click)="markAsRefunded(payment)" title="Marcar como Reembolsado">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        Reembolsado
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <div class="mobile-cards">
+          @for (payment of pagedPayments; track payment.id) {
+            <div class="mobile-card glass">
+              <div class="card-header">
+                <div class="card-title" style="margin-left:0">
+                  <span class="payment-id">#{{ payment.id }}</span>
+                  <h4>{{ payment.user?.name || 'Usuario' }} {{ payment.user?.lastName || '' }}</h4>
+                </div>
+              </div>
+              <div class="card-row">
+                <span class="card-label">Monto</span>
+                <span class="card-value font-bold">{{ formatCurrency(payment.amount) }}</span>
+              </div>
+              <div class="card-row">
+                <span class="card-label">Estado</span>
+                <span class="status-badge" [ngClass]="getStatusClass(payment.status)">
+                  {{ formatStatus(payment.status) }}
+                </span>
+              </div>
+              <div class="card-row">
+                <span class="card-label">Artículos</span>
+                <span class="card-value">{{ payment.items.length }}</span>
+              </div>
+              <div class="card-actions">
+                <button class="btn-icon" (click)="viewDetails(payment)">Ver detalles</button>
+              </div>
+            </div>
+          }
+        </div>
+
+        @if (totalPages > 1) {
+          <div class="pagination">
+            <button class="page-btn" (click)="page = 1" [disabled]="page === 1">«</button>
+            <button class="page-btn" (click)="page = page - 1" [disabled]="page === 1">‹</button>
+            @for (p of pageNumbers; track p) {
+              <button class="page-btn" [class.active]="p === page" (click)="page = p">
+                {{ p }}
+              </button>
+            }
+            <button class="page-btn" (click)="page = page + 1" [disabled]="page === totalPages">
+              ›
+            </button>
+            <button class="page-btn" (click)="page = totalPages" [disabled]="page === totalPages">
+              »
+            </button>
+            <span class="page-info"
+              >{{ (page - 1) * pageSize + 1 }}–{{
+                min(page * pageSize, filteredPayments.length)
+              }}
+              de {{ filteredPayments.length }}</span
+            >
+          </div>
+        }
+      }
+
+      @if (!loading && filteredPayments.length === 0) {
+        <div class="empty-state">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+            <line x1="1" y1="10" x2="23" y2="10"></line>
+          </svg>
+          <p>No se encontraron pagos.</p>
+        </div>
+      }
+    </div>
+  

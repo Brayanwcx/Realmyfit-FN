@@ -87,3 +87,93 @@ ul {
   margin: 0 auto;
   padding: 0 1.5rem;
 }
+
+/* SweetAlert Global Custom Styles for AppSwal */
+.app-swal-popup {
+  border-radius: 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  background: rgba(26, 26, 46, 0.85) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5) !important;
+}
+
+.app-swal-title {
+  font-family: var(--font-heading) !important;
+  font-weight: 700 !important;
+  color: var(--color-text-main) !important;
+  letter-spacing: 0.5px !important;
+}
+
+.app-swal-content {
+  font-family: var(--font-body) !important;
+  color: var(--color-text-muted) !important;
+}
+
+.app-swal-btn {
+  font-family: var(--font-heading) !important;
+  font-weight: 600 !important;
+  padding: 0.75rem 2rem !important;
+  border-radius: 8px !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  margin: 0 0.5rem !important;
+}
+
+.app-swal-confirm {
+  background-color: var(--color-primary) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 15px var(--color-primary-glow) !important;
+}
+
+.app-swal-confirm:hover {
+  transform: translateY(-2px) !important;
+  background-color: #2ecc71 !important;
+  box-shadow: 0 8px 25px var(--color-primary-glow) !important;
+}
+
+.app-swal-deny {
+  background-color: #f39c12 !important;
+  color: #fff !important;
+  box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4) !important;
+}
+
+.app-swal-deny:hover {
+  transform: translateY(-2px) !important;
+  background-color: #f1c40f !important;
+  box-shadow: 0 8px 25px rgba(243, 156, 18, 0.4) !important;
+}
+
+.app-swal-cancel {
+  background-color: transparent !important;
+  color: #ff4757 !important;
+  border: 1px solid rgba(255, 71, 87, 0.3) !important;
+}
+
+.app-swal-cancel:hover {
+  background-color: rgba(255, 71, 87, 0.1) !important;
+  border-color: #ff4757 !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Fix SweetAlert toast overlay causing dark shadow/backdrop on screen */
+body.swal2-toast-shown {
+  padding-right: 0 !important;
+  overflow: auto !important;
+}
+
+/* Remove the dark container backdrop from toasts — it's only needed for modals */
+body.swal2-toast-shown .swal2-container {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  pointer-events: none !important;
+}
+
+/* But the toast itself should still receive pointer events */
+body.swal2-toast-shown .swal2-toast {
+  pointer-events: auto !important;
+  border-radius: 14px !important;
+}

@@ -1,9 +1,10 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MembershipsService, Membership } from '../../core/services/memberships.service';
 import { AuthService } from '../../core/services/auth.service';
 import { PaymentService } from '../../core/services/payment.service';
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 interface PlanCard {
   id: number;
@@ -24,6 +25,7 @@ interface PlanCard {
   styleUrls: ['./membresias.component.scss'],
 })
 export class MembresiasComponent implements OnInit {
+    destroyRef = inject(DestroyRef);
   private membershipsService = inject(MembershipsService);
   private authService = inject(AuthService);
   private paymentService = inject(PaymentService);
@@ -51,7 +53,7 @@ export class MembresiasComponent implements OnInit {
     this.loading = true;
     this.errorMessage = '';
 
-    this.membershipsService.getPublicMemberships().subscribe({
+    this.membershipsService.getPublicMemberships().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (memberships) => {
         const user = this.authService.getUser();
         

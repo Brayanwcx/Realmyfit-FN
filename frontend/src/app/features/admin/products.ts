@@ -1,10 +1,11 @@
-import { Component, OnInit, inject, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, NgZone, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductsService } from '../../core/services/products.service';
 import { environment } from '../../../environments/environment';
 import { finalize } from 'rxjs';
-import Swal from 'sweetalert2';
+import Swal from '../../core/utils/app-swal';
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-admin-products',
@@ -13,6 +14,7 @@ import Swal from 'sweetalert2';
   templateUrl: './products.html',
   styleUrls: ['./products.scss']})
 export class AdminProductsComponent implements OnInit {
+    destroyRef = inject(DestroyRef);
   private productsService = inject(ProductsService);
   private cdr = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone);
@@ -64,22 +66,18 @@ export class AdminProductsComponent implements OnInit {
       .pipe(finalize(() => {
         this.loading = false;
         this.cdr.detectChanges();
-      }))
+      }), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (data) => {
-          this.ngZone.run(() => {
-            this.products = data;
-            this.page = 1;
-            console.log('Productos cargados:', this.products);
-            this.cdr.detectChanges();
-          });
+          this.products = data;
+              this.page = 1;
+              console.log('Productos cargados:', this.products);
+              this.cdr.detectChanges();
         },
         error: (err) => {
-          this.ngZone.run(() => {
-            console.error('Error fetching products:', err);
+          console.error('Error fetching products:', err);
             this.errorMessage = err.status === 401 ? 'No autorizado.' : 'Error de conexión';
             this.cdr.detectChanges();
-          });
         }
       });
   }
@@ -120,10 +118,8 @@ export class AdminProductsComponent implements OnInit {
       this.selectedFile = file;
       const reader = new FileReader();
       reader.onload = () => {
-        this.ngZone.run(() => {
-          this.imagePreview = reader.result as string;
+        this.imagePreview = reader.result as string;
           this.cdr.detectChanges();
-        });
       };
       reader.readAsDataURL(file);
     }
@@ -141,21 +137,17 @@ export class AdminProductsComponent implements OnInit {
     this.isSubmitting = true;
 
     if (this.selectedFile) {
-      this.productsService.uploadImage(this.selectedFile).subscribe({
+      this.productsService.uploadImage(this.selectedFile).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (uploadRes) => {
-          this.ngZone.run(() => {
-            this.newProduct.imageUrl = uploadRes.url;
-            this.saveProductData();
-          });
+          this.newProduct.imageUrl = uploadRes.url;
+              this.saveProductData();
         },
         error: (err) => {
-          this.ngZone.run(() => {
-            console.error('Error uploading image', err);
+          console.error('Error uploading image', err);
             const status = err?.status || 'Desconocido';
             Swal.fire('Error', `Error al subir la imagen (Código: ${status}). Por favor vuelve a iniciar sesión o verifica tu conexión.`, 'error');
             this.isSubmitting = false;
             this.cdr.detectChanges();
-          });
         }
       });
     } else {
@@ -171,12 +163,12 @@ export class AdminProductsComponent implements OnInit {
     };
 
     if (this.isEditing && this.editingProductId) {
-      this.productsService.updateProduct(this.editingProductId, dataToSave).subscribe({
+      this.productsService.updateProduct(this.editingProductId, dataToSave).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: () => this.ngZone.run(() => this.onSaveSuccess()),
         error: (err) => this.ngZone.run(() => this.onSaveError(err))
       });
     } else {
-      this.productsService.createProduct(dataToSave).subscribe({
+      this.productsService.createProduct(dataToSave).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: () => this.ngZone.run(() => this.onSaveSuccess()),
         error: (err) => this.ngZone.run(() => this.onSaveError(err))
       });
@@ -211,7 +203,7 @@ export class AdminProductsComponent implements OnInit {
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.productsService.deleteProduct(id).subscribe({
+        this.productsService.deleteProduct(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
           next: () => {
             Swal.fire('¡Eliminado!', 'El producto ha sido eliminado.', 'success');
             this.fetchProducts();

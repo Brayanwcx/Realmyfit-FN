@@ -1,9 +1,10 @@
-import { Component, OnInit, inject, NgZone } from '@angular/core';
+import { Component, OnInit, inject, NgZone, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { EventRegistrationsService } from '../../core/services/event-registrations.service';
 import { AuthService } from '../../core/services/auth.service';
-import Swal from 'sweetalert2';
+import Swal from '../../core/utils/app-swal';
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-evento-inscripcion',
@@ -13,6 +14,7 @@ import Swal from 'sweetalert2';
   styleUrls: ['./evento-inscripcion.scss'],
 })
 export class EventoInscripcion implements OnInit {
+    destroyRef = inject(DestroyRef);
   private regService = inject(EventRegistrationsService);
   private authService = inject(AuthService);
   private router = inject(Router);
@@ -56,29 +58,25 @@ export class EventoInscripcion implements OnInit {
 
     const user = this.authService.getUser();
     if (!user?.id) {
-      this.ngZone.run(() => {
-        Swal.fire({
-          title: 'Inicia Sesión',
-          text: 'Debes iniciar sesión para confirmar tu reserva.',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonText: 'Iniciar Sesión',
-          cancelButtonText: 'Cancelar',
-          confirmButtonColor: '#22c55e',
-          cancelButtonColor: '#94a3b8',
-        }).then((res) => {
-          if (res.isConfirmed) {
-            this.router.navigate(['/login']);
-          }
-        });
-      });
+      Swal.fire({
+                  title: 'Inicia Sesión',
+                  text: 'Debes iniciar sesión para confirmar tu reserva.',
+                  icon: 'warning',
+                  showCancelButton: true,
+                  confirmButtonText: 'Iniciar Sesión',
+                  cancelButtonText: 'Cancelar',
+                  confirmButtonColor: '#22c55e',
+                  cancelButtonColor: '#94a3b8',
+                }).then((res) => {
+                  if (res.isConfirmed) {
+                    this.router.navigate(['/login']);
+                  }
+                });
       return;
     }
 
     if (!this.evento?.id) {
-      this.ngZone.run(() => {
-        Swal.fire('Error', 'No se pudo identificar el evento. Vuelve al calendario e intenta de nuevo.', 'error');
-      });
+      Swal.fire('Error', 'No se pudo identificar el evento. Vuelve al calendario e intenta de nuevo.', 'error');
       return;
     }
 
@@ -91,32 +89,28 @@ export class EventoInscripcion implements OnInit {
 
     this.isSubmitting = true;
 
-    this.regService.create({ user_id: user.id, event_id: this.evento.id }).subscribe({
+    this.regService.create({ user_id: user.id, event_id: this.evento.id }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.isSubmitting = false;
-        this.ngZone.run(() => {
-          Swal.fire({
-            title: '¡Reserva Confirmada!',
-            text: `Tu asistencia a ${this.evento.title} ha sido registrada con éxito. ¡Nos vemos en la clase!`,
-            icon: 'success',
-            confirmButtonText: 'Volver a Eventos',
-            confirmButtonColor: '#22c55e'
-          }).then(() => {
-            this.router.navigate(['/eventos']);
-          });
-        });
+        Swal.fire({
+                        title: '¡Reserva Confirmada!',
+                        text: `Tu asistencia a ${this.evento.title} ha sido registrada con éxito. ¡Nos vemos en la clase!`,
+                        icon: 'success',
+                        confirmButtonText: 'Volver a Eventos',
+                        confirmButtonColor: '#22c55e'
+                      }).then(() => {
+                        this.router.navigate(['/eventos']);
+                      });
       },
       error: (err) => {
         this.isSubmitting = false;
         const msg = err?.error?.message || 'Error al registrar la inscripción. Intenta de nuevo.';
-        this.ngZone.run(() => {
-          if (msg.includes('duplicate') || msg.includes('unique') || err.status === 409) {
-             Swal.fire('¡Atención!', 'Ya tienes una reserva confirmada para este evento.', 'info')
-               .then(() => this.router.navigate(['/eventos']));
-          } else {
-             Swal.fire('Error', msg, 'error');
-          }
-        });
+        if (msg.includes('duplicate') || msg.includes('unique') || err.status === 409) {
+                       Swal.fire('¡Atención!', 'Ya tienes una reserva confirmada para este evento.', 'info')
+                         .then(() => this.router.navigate(['/eventos']));
+                    } else {
+                       Swal.fire('Error', msg, 'error');
+                    }
       }
     });
   }

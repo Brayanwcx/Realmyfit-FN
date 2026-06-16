@@ -1,7 +1,8 @@
-import { Component, OnInit, inject, NgZone, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, NgZone, ChangeDetectorRef, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TrainersService } from '../../core/services/trainers.service';
 import { environment } from '../../../environments/environment';
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-entrenadores',
@@ -11,6 +12,7 @@ import { environment } from '../../../environments/environment';
   styleUrls: ['./entrenadores.component.scss'],
 })
 export class EntrenadoresComponent implements OnInit {
+    destroyRef = inject(DestroyRef);
   private trainersService = inject(TrainersService);
   private apiBase = environment.apiUrl.replace('/api', '');
   private ngZone = inject(NgZone);
@@ -21,19 +23,15 @@ export class EntrenadoresComponent implements OnInit {
   error = '';
 
   ngOnInit() {
-    this.trainersService.getTrainersPublic().subscribe({
+    this.trainersService.getTrainersPublic().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (data) => {
-        this.ngZone.run(() => {
-          this.entrenadores = data.filter((t: any) => t.isActive);
-          this.loading = false;
-        });
+        this.entrenadores = data.filter((t: any) => t.isActive);
+            this.loading = false;
         this.cdr.detectChanges();
       },
       error: () => {
-        this.ngZone.run(() => {
-          this.error = 'No se pudo cargar la lista de entrenadores.';
+        this.error = 'No se pudo cargar la lista de entrenadores.';
           this.loading = false;
-        });
         this.cdr.detectChanges();
       }
     });

@@ -1,10 +1,10 @@
-import { Component, OnInit, inject, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, NgZone, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TrainersService } from '../../core/services/trainers.service';
 import { environment } from '../../../environments/environment';
-import Swal from 'sweetalert2';
-
+import Swal from '../../core/utils/app-swal';
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-admin-trainers',
@@ -13,6 +13,7 @@ import Swal from 'sweetalert2';
   templateUrl: './trainers.html',
   styleUrls: ['./trainers.scss']})
 export class AdminTrainersComponent implements OnInit {
+    destroyRef = inject(DestroyRef);
   private trainersService = inject(TrainersService);
   private cdr = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone);
@@ -57,7 +58,7 @@ export class AdminTrainersComponent implements OnInit {
   fetchTrainers() {
     this.loading = true;
     this.errorMessage = '';
-    this.trainersService.getTrainers().subscribe({
+    this.trainersService.getTrainers().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: data => {
         this.trainers = data;
         this.loading = false;
@@ -144,15 +145,13 @@ export class AdminTrainersComponent implements OnInit {
         ? this.trainersService.updateTrainer(this.selectedTrainerId, payload)
         : this.trainersService.createTrainer(payload);
 
-      obs.subscribe({
+      obs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: () => {
           Swal.fire('¡Éxito!', 'Entrenador guardado correctamente', 'success').then(() => {
-            this.ngZone.run(() => {
-              this.submitting = false;
+            this.submitting = false;
               this.cancelForm();
               this.fetchTrainers();
               this.cdr.detectChanges();
-            });
           });
         },
         error: err => {
@@ -165,7 +164,7 @@ export class AdminTrainersComponent implements OnInit {
     };
 
     if (this.selectedFile) {
-      this.trainersService.uploadImage(this.selectedFile).subscribe({
+      this.trainersService.uploadImage(this.selectedFile).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: ({ imageUrl }) => saveData(imageUrl),
         error: () => {
           this.submitting = false;
@@ -190,12 +189,10 @@ export class AdminTrainersComponent implements OnInit {
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.trainersService.deleteTrainer(id).subscribe({
+        this.trainersService.deleteTrainer(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
           next: () => { 
             Swal.fire('¡Eliminado!', 'El entrenador ha sido eliminado.', 'success').then(() => {
-              this.ngZone.run(() => {
-                this.fetchTrainers(); 
-              });
+              this.fetchTrainers();
             });
           },
           error: () => {

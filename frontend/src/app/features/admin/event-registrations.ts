@@ -1,8 +1,9 @@
-import { Component, OnInit, inject, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, NgZone, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EventRegistrationsService } from '../../core/services/event-registrations.service';
 import { finalize } from 'rxjs';
-import Swal from 'sweetalert2';
+import Swal from '../../core/utils/app-swal';
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-admin-event-registrations',
@@ -11,6 +12,7 @@ import Swal from 'sweetalert2';
   templateUrl: './event-registrations.html',
   styleUrls: ['./event-registrations.scss']})
 export class AdminEventRegistrationsComponent implements OnInit {
+    destroyRef = inject(DestroyRef);
   private regService = inject(EventRegistrationsService);
   private cdr = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone);
@@ -39,7 +41,7 @@ export class AdminEventRegistrationsComponent implements OnInit {
       .pipe(finalize(() => {
         this.loading = false;
         this.cdr.detectChanges();
-      }))
+      }), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (data) => {
           this.registrations = data;
@@ -62,56 +64,52 @@ export class AdminEventRegistrationsComponent implements OnInit {
   }
 
   confirmRegistration(reg: any) {
-    this.ngZone.run(() => {
-      Swal.fire({
-        title: '¿Confirmar inscripción?',
-        html: `Confirmar asistencia de <b>${reg.user?.name || 'usuario'}</b> al evento <b>${reg.event?.title || ''}</b>`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#22c55e',
-        cancelButtonColor: '#ef4444',
-        confirmButtonText: 'Sí, confirmar',
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.regService.update(reg.id, { status: 'CONFIRMED' }).subscribe({
-            next: () => {
-              this.fetchRegistrations();
-              Swal.fire('¡Confirmado!', 'La inscripción ha sido confirmada.', 'success');
-            },
-            error: () => {
-              Swal.fire('Error', 'No se pudo confirmar la inscripción.', 'error');
-            }
-          });
-        }
-      });
-    });
+    Swal.fire({
+              title: '¿Confirmar inscripción?',
+              html: `Confirmar asistencia de <b>${reg.user?.name || 'usuario'}</b> al evento <b>${reg.event?.title || ''}</b>`,
+              icon: 'question',
+              showCancelButton: true,
+              confirmButtonColor: '#22c55e',
+              cancelButtonColor: '#ef4444',
+              confirmButtonText: 'Sí, confirmar',
+              cancelButtonText: 'Cancelar'
+            }).then((result) => {
+              if (result.isConfirmed) {
+                this.regService.update(reg.id, { status: 'CONFIRMED' }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+                  next: () => {
+                    this.fetchRegistrations();
+                    Swal.fire('¡Confirmado!', 'La inscripción ha sido confirmada.', 'success');
+                  },
+                  error: () => {
+                    Swal.fire('Error', 'No se pudo confirmar la inscripción.', 'error');
+                  }
+                });
+              }
+            });
   }
 
   deleteRegistration(id: number) {
-    this.ngZone.run(() => {
-      Swal.fire({
-        title: '¿Eliminar inscripción?',
-        text: 'No podrás revertir esta acción.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#22c55e',
-        cancelButtonColor: '#ef4444',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.regService.remove(id).subscribe({
-            next: () => {
-              this.fetchRegistrations();
-              Swal.fire('¡Eliminado!', 'La inscripción ha sido eliminada.', 'success');
-            },
-            error: () => {
-              Swal.fire('Error', 'No se pudo eliminar la inscripción.', 'error');
-            }
-          });
-        }
-      });
-    });
+    Swal.fire({
+              title: '¿Eliminar inscripción?',
+              text: 'No podrás revertir esta acción.',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#22c55e',
+              cancelButtonColor: '#ef4444',
+              confirmButtonText: 'Sí, eliminar',
+              cancelButtonText: 'Cancelar'
+            }).then((result) => {
+              if (result.isConfirmed) {
+                this.regService.remove(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+                  next: () => {
+                    this.fetchRegistrations();
+                    Swal.fire('¡Eliminado!', 'La inscripción ha sido eliminada.', 'success');
+                  },
+                  error: () => {
+                    Swal.fire('Error', 'No se pudo eliminar la inscripción.', 'error');
+                  }
+                });
+              }
+            });
   }
 }

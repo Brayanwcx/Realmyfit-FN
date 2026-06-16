@@ -68,6 +68,42 @@
         </tbody>
       </table>
 
+      <!-- Mobile Cards -->
+      <div class="mobile-cards">
+        <div class="mobile-card glass" *ngFor="let trainer of pagedTrainers">
+          <div class="card-header">
+            <div class="product-thumb glass" style="width: 48px; height: 48px; border-radius: 50%; min-width: 48px;">
+               <img *ngIf="trainer.imageUrl" [src]="resolveImageUrl(trainer.imageUrl)" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" (error)="$any($event.target).src='https://placehold.co/80x80/1a1a2e/555?text=?' " />
+               <div *ngIf="!trainer.imageUrl" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:linear-gradient(135deg, #0ea5e9, #7c3aed);color:white;font-weight:bold;border-radius:inherit;">
+                  {{ (trainer.name || '?').charAt(0).toUpperCase() }}
+               </div>
+            </div>
+            <div class="card-title" style="margin-left: 0.5rem">
+              <h4 style="margin: 0; font-size: 1.1rem">{{ trainer.name }} {{ trainer.lastName }}</h4>
+              <span class="card-label">{{ trainer.specialty || 'Sin definir' }}</span>
+            </div>
+          </div>
+          <div class="card-row">
+            <span class="card-label">Contacto</span>
+            <span class="card-value">{{ trainer.phone || trainer.email }}</span>
+          </div>
+          <div class="card-row">
+            <span class="card-label">Experiencia</span>
+            <span class="card-value">{{ trainer.experience || '-' }}</span>
+          </div>
+          <div class="card-row">
+            <span class="card-label">Estado</span>
+            <span class="badge" [class.badge-active]="trainer.isActive" [class.badge-inactive]="!trainer.isActive">
+               {{ trainer.isActive ? 'Activo' : 'Inactivo' }}
+            </span>
+          </div>
+          <div class="card-actions">
+             <button class="btn-icon" (click)="openEdit(trainer)">Editar</button>
+             <button class="btn-icon delete" (click)="confirmDelete(trainer.id)">Eliminar</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Paginación -->
       <div *ngIf="totalPages > 1" class="pagination">
         <button class="page-btn" (click)="page = 1" [disabled]="page === 1">«</button>

@@ -1,9 +1,10 @@
-import { Component, OnInit, inject, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, NgZone, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MachinesService, Machine } from '../../core/services/machines.service';
 import { finalize, switchMap, of } from 'rxjs';
-import Swal from 'sweetalert2';
+import Swal from '../../core/utils/app-swal';
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-admin-machines',
@@ -12,6 +13,7 @@ import Swal from 'sweetalert2';
   templateUrl: './machines.html',
   styleUrls: ['./machines.scss']})
 export class AdminMachinesComponent implements OnInit {
+    destroyRef = inject(DestroyRef);
   public machinesService = inject(MachinesService);
   private cdr = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone);
@@ -65,7 +67,7 @@ export class AdminMachinesComponent implements OnInit {
       .pipe(finalize(() => {
         this.loading = false;
         this.cdr.detectChanges();
-      }))
+      }), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (data) => {
           this.machines = data;
@@ -156,7 +158,7 @@ export class AdminMachinesComponent implements OnInit {
         )
       : of(null);
 
-    uploadThenSave$.subscribe({
+    uploadThenSave$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         const payload: any = { ...this.newMachine };
         Object.keys(payload).forEach(key => {
@@ -166,12 +168,12 @@ export class AdminMachinesComponent implements OnInit {
         });
 
         if (this.isEditing && this.editingId) {
-          this.machinesService.updateMachine(this.editingId, payload).subscribe({
+          this.machinesService.updateMachine(this.editingId, payload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
             next: () => this.onSaveSuccess(),
             error: (err) => this.onSaveError(err)
           });
         } else {
-          this.machinesService.createMachine(payload).subscribe({
+          this.machinesService.createMachine(payload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
             next: () => this.onSaveSuccess(),
             error: (err) => this.onSaveError(err)
           });
@@ -182,48 +184,42 @@ export class AdminMachinesComponent implements OnInit {
   }
 
   private onSaveSuccess() {
-    this.ngZone.run(() => {
-      this.isSubmitting = false;
+    this.isSubmitting = false;
       this.closeModal();
       this.fetchMachines();
       Swal.fire('¡Éxito!', 'Máquina guardada correctamente', 'success');
-    });
   }
 
   private onSaveError(err: any) {
-    this.ngZone.run(() => {
-      console.error('Error saving machine', err);
+    console.error('Error saving machine', err);
       this.isSubmitting = false;
       Swal.fire('Error', 'Error al guardar la máquina', 'error');
       this.cdr.detectChanges();
-    });
   }
 
   deleteMachine(id: number) {
-    this.ngZone.run(() => {
-      Swal.fire({
-        title: '¿Estás seguro?',
-        text: 'No podrás revertir esto. Se eliminará la máquina permanentemente.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#22c55e',
-        cancelButtonColor: '#ef4444',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.machinesService.deleteMachine(id).subscribe({
-            next: () => {
-              this.fetchMachines();
-              Swal.fire('¡Eliminado!', 'La máquina ha sido eliminada.', 'success');
-            },
-            error: (err: any) => {
-              console.error('Error deleting machine', err);
-              Swal.fire('Error', 'No se pudo eliminar la máquina.', 'error');
-            }
-          });
-        }
-      });
-    });
+    Swal.fire({
+              title: '¿Estás seguro?',
+              text: 'No podrás revertir esto. Se eliminará la máquina permanentemente.',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#22c55e',
+              cancelButtonColor: '#ef4444',
+              confirmButtonText: 'Sí, eliminar',
+              cancelButtonText: 'Cancelar'
+            }).then((result) => {
+              if (result.isConfirmed) {
+                this.machinesService.deleteMachine(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+                  next: () => {
+                    this.fetchMachines();
+                    Swal.fire('¡Eliminado!', 'La máquina ha sido eliminada.', 'success');
+                  },
+                  error: (err: any) => {
+                    console.error('Error deleting machine', err);
+                    Swal.fire('Error', 'No se pudo eliminar la máquina.', 'error');
+                  }
+                });
+              }
+            });
   }
 }

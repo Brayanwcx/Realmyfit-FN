@@ -60,13 +60,30 @@ export class PaymentsController {
         return { received: true };
     }
 
-    /** Permite al frontend validar una orden desde la pantalla de éxito por si no llega el Webhook */
+    /** Permite cancelar el intento si el usuario abandona el checkout */
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    @Delete('stripe/intent/:clientSecret')
+    @ApiOperation({ summary: 'Cancel an incomplete Intent and its Pending Order/Payment entities' })
+    cancelPaymentIntent(@Param('clientSecret') clientSecret: string) {
+        return this.paymentsService.cancelPaymentIntent(clientSecret);
+    }
+
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Get('stripe/verify/:clientSecret')
     @ApiOperation({ summary: 'Verify a Stripe PaymentIntent manually' })
     verifyPaymentIntent(@Param('clientSecret') clientSecret: string) {
         return this.paymentsService.verifyPaymentIntent(clientSecret);
+    }
+
+    /** Permite al frontend marcar un intento como fallido explícitamente */
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    @Patch('stripe/fail/:clientSecret')
+    @ApiOperation({ summary: 'Manually fail a Stripe PaymentIntent on the backend' })
+    failPaymentIntent(@Param('clientSecret') clientSecret: string) {
+        return this.paymentsService.failPaymentIntent(clientSecret);
     }
 
     // ─── Simulated Checkout ──────────────────────────────────────────

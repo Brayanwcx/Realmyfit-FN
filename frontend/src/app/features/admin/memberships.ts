@@ -1,9 +1,10 @@
-import { Component, OnInit, inject, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, NgZone, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MembershipsService, Membership } from '../../core/services/memberships.service';
 import { finalize } from 'rxjs';
-import Swal from 'sweetalert2';
+import Swal from '../../core/utils/app-swal';
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'app-admin-memberships',
@@ -12,6 +13,7 @@ import Swal from 'sweetalert2';
   templateUrl: './memberships.html',
   styleUrls: ['./memberships.scss']})
 export class AdminMembershipsComponent implements OnInit {
+    destroyRef = inject(DestroyRef);
   private membershipsService = inject(MembershipsService);
   private cdr = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone);
@@ -54,21 +56,17 @@ export class AdminMembershipsComponent implements OnInit {
       .pipe(finalize(() => {
         this.loading = false;
         this.cdr.detectChanges();
-      }))
+      }), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (data) => {
-          this.ngZone.run(() => {
-            this.memberships = data;
-            this.page = 1;
-            this.cdr.detectChanges();
-          });
+          this.memberships = data;
+              this.page = 1;
+              this.cdr.detectChanges();
         },
         error: (err) => {
-          this.ngZone.run(() => {
-            console.error('Error fetching memberships:', err);
+          console.error('Error fetching memberships:', err);
             this.errorMessage = err.status === 401 ? 'No autorizado.' : 'Error de conexión con el servidor.';
             this.cdr.detectChanges();
-          });
         }
       });
   }
@@ -104,12 +102,12 @@ export class AdminMembershipsComponent implements OnInit {
     };
 
     if (this.isEditing && this.editingId) {
-        this.membershipsService.updateMembership(this.editingId, dataToSave).subscribe({
+        this.membershipsService.updateMembership(this.editingId, dataToSave).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
             next: () => this.ngZone.run(() => this.onSaveSuccess()),
             error: (err) => this.ngZone.run(() => this.onSaveError(err))
         });
     } else {
-        this.membershipsService.createMembership(dataToSave).subscribe({
+        this.membershipsService.createMembership(dataToSave).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
             next: () => this.ngZone.run(() => this.onSaveSuccess()),
             error: (err) => this.ngZone.run(() => this.onSaveError(err))
         });
@@ -144,18 +142,14 @@ export class AdminMembershipsComponent implements OnInit {
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.membershipsService.deleteMembership(id).subscribe({
+        this.membershipsService.deleteMembership(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
           next: () => {
-            this.ngZone.run(() => {
-              Swal.fire('¡Eliminado!', 'La membresía ha sido eliminada.', 'success');
-              this.fetchMemberships();
-            });
+            Swal.fire('¡Eliminado!', 'La membresía ha sido eliminada.', 'success');
+                this.fetchMemberships();
           },
           error: (err) => {
-            this.ngZone.run(() => {
-              console.error('Error deleting membership', err);
+            console.error('Error deleting membership', err);
               Swal.fire('Error', 'No se pudo eliminar la membresía', 'error');
-            });
           }
         });
       }
