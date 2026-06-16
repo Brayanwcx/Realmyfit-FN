@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UsersService } from '../../core/services/users.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-admin-users',
@@ -27,7 +28,7 @@ import { UsersService } from '../../core/services/users.service';
             <th>Email</th>
             <th>Documento</th>
             <th>Estado</th>
-            <th>Acciones</th>
+            <th *ngIf="isSuperAdmin">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -40,7 +41,7 @@ import { UsersService } from '../../core/services/users.service';
                 {{ user.isActive ? 'Activo' : 'Inactivo' }}
               </span>
             </td>
-            <td>
+            <td *ngIf="isSuperAdmin">
               <button class="btn-icon">Editar</button>
               <button class="btn-icon delete">Eliminar</button>
             </td>
@@ -70,11 +71,14 @@ import { UsersService } from '../../core/services/users.service';
 })
 export class AdminUsersComponent implements OnInit {
   private usersService = inject(UsersService);
+  public authService = inject(AuthService);
+  isSuperAdmin = false;
   users: any[] = [];
   loading = true;
   errorMessage = '';
 
   ngOnInit() {
+    this.isSuperAdmin = this.authService.isSuperAdmin();
     this.fetchUsers();
   }
 

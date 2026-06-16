@@ -111,7 +111,13 @@ export class AuthService {
   isAdmin(): boolean {
     const user = this.getUser();
     if (!user?.roles) return false;
-    return user.roles.some((r: any) => r.name === 'ADMIN' || r === 'ADMIN');
+    return user.roles.some((r: any) => r.name === 'ADMIN' || r === 'ADMIN' || r.name === 'SUPERADMIN' || r === 'SUPERADMIN');
+  }
+
+  isSuperAdmin(): boolean {
+    const user = this.getUser();
+    if (!user?.roles) return false;
+    return user.roles.some((r: any) => r.name === 'SUPERADMIN' || r === 'SUPERADMIN');
   }
 
   getUser() {
