@@ -28,6 +28,10 @@ export class AuthService {
             throw new UnauthorizedException('Invalid credentials');
         }
 
+        if (!user.isActive) {
+            throw new UnauthorizedException('Su cuenta ha sido inhabilitada. Contacte a soporte.');
+        }
+
         const { password: _, ...result } = user;
         return result;
     }
@@ -93,6 +97,10 @@ export class AuthService {
         }
 
         if (!user) throw new Error('No se pudo crear o encontrar el usuario de Google');
+
+        if (!user.isActive) {
+            throw new UnauthorizedException('Su cuenta ha sido inhabilitada. Contacte a soporte.');
+        }
 
         const payload = {
             sub: user!.id,

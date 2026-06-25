@@ -44,6 +44,9 @@ export class AuthService {
         }
         // Credenciales incorrectas (401)
         if (error?.status === 401) {
+          if (error?.error?.message === 'Su cuenta ha sido inhabilitada. Contacte a soporte.') {
+              return throwError(() => new Error('ACCOUNT_INACTIVE'));
+          }
           return throwError(() => new Error('INVALID_CREDENTIALS'));
         }
         return throwError(() => new Error('Error inesperado. Intenta de nuevo.'));

@@ -26,16 +26,19 @@ export class UsersController {
         return this.usersService.findOne(userId);
     }
 
+    @Roles(Role.SUPERADMIN)
     @Post()
     createUser(@Body() payload: CreateUserDto){
         return this.usersService.create(payload);
     }
 
+    @Roles(Role.SUPERADMIN)
     @Put(':userId')
     updateUser(@Param('userId', ParseIntPipe) userId: number, @Body() payloadUpdated: UpdateUserDto){
         return this.usersService.updateUser(userId, payloadUpdated);
     }
 
+    @Roles(Role.SUPERADMIN)
     @Delete(':userId')
     deleteUser(@Param('userId', ParseIntPipe) userId: number){
         this.usersService.deleteUser(userId);

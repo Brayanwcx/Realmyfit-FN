@@ -5,6 +5,7 @@ import { CartService } from '../../core/services/cart.service';
 import { WishlistService } from '../../core/services/wishlist.service';
 import { AuthService } from '../../core/services/auth.service';
 import { ProductsService } from '../../core/services/products.service';
+import { CategoriesService } from '../../core/services/categories.service';
 import { environment } from '../../../environments/environment';
 import Swal from '../../core/utils/app-swal';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -19,7 +20,7 @@ import { RouterLink, Router } from '@angular/router';
   styleUrls: ['./productos.component.scss'],
 })
 export class ProductosComponent implements OnInit {
-  categories = ['Todos', 'Suplementos', 'Rendimiento', 'Recuperación', 'Ropa', 'Accesorios', 'Energía'];
+  categories: string[] = ['Todos'];
   selectedCategory = 'Todos';
   searchQuery = '';
 
@@ -31,11 +32,23 @@ export class ProductosComponent implements OnInit {
     private wishlistService: WishlistService,
     private authService: AuthService,
     private productsService: ProductsService,
+    private categoriesService: CategoriesService,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit() {
+    this.categoriesService.getCategories()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (data) => {
+          // Extraemos solo los nombres y preservamos 'Todos' al inicio
+          this.categories = ['Todos', ...data.map((c: any) => c.name)];
+          this.cdr.detectChanges();
+        },
+        error: (err) => console.error('Error fetching public categories', err)
+      });
+
     this.productsService.getProducts()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

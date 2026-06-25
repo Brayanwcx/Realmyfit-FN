@@ -104,8 +104,13 @@
   flex-direction: column;
   gap: 0.35rem;
   flex-grow: 1;
-  overflow: hidden;
-  /* never let nav overflow */
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none; /* Firefox */
+  
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Edge */
+  }
 }
 
 .nav-item {

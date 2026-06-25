@@ -39,6 +39,8 @@ import { AdminMembershipsComponent } from './features/admin/memberships';
 import { AdminReviewsComponent } from './features/admin/reviews';
 import { AdminOrdersComponent } from './features/admin/orders';
 import { AdminMachinesComponent } from './features/admin/machines';
+import { AdminCategoriesComponent } from './features/admin/categories/categories.component';
+import { AdminSettingsComponent } from './features/admin/settings/settings';
 
 export const routes: Routes = [
   // ─── Públicas ──────────────────────────────────────────────────
@@ -80,6 +82,8 @@ export const routes: Routes = [
       { path: 'users', component: AdminUsersComponent },
       { path: 'trainers', component: AdminTrainersComponent },
       { path: 'products', component: AdminProductsComponent },
+      { path: 'categories', component: AdminCategoriesComponent },
+      { path: 'settings', component: AdminSettingsComponent },
       { path: 'memberships', component: AdminMembershipsComponent },
       { path: 'reviews', component: AdminReviewsComponent },
       { path: 'orders', component: AdminOrdersComponent },

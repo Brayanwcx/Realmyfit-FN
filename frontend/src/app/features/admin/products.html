@@ -156,12 +156,9 @@
                     <label>Categoría</label>
                     <select name="category" [(ngModel)]="newProduct.category" class="glass-input">
                       <option value="">Seleccionar...</option>
-                      <option value="Suplementos">Suplementos</option>
-                      <option value="Rendimiento">Rendimiento</option>
-                      <option value="Recuperación">Recuperación</option>
-                      <option value="Ropa">Ropa</option>
-                      <option value="Accesorios">Accesorios</option>
-                      <option value="Energía">Energía</option>
+                      @for (cat of availableCategories; track cat.id) {
+                        <option [value]="cat.name">{{ cat.name }}</option>
+                      }
                     </select>
                   </div>
                   <div class="form-group">

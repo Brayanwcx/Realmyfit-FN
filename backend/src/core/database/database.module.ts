@@ -19,6 +19,8 @@ import config from '../config';
                     database: name,
                     synchronize: true,
                     autoLoadEntities: true,
+                    schema: 'public',
+                    ssl: host !== 'localhost' ? { rejectUnauthorized: false } : false,
                 };
             },
         }),

@@ -6,7 +6,8 @@ export async function seedRoles(dataSource: DataSource): Promise<void> {
 
   const defaultRoles = [
     { id: 1, name: 'ADMIN', description: 'Administrador del sistema con acceso total' },
-    { id: 2, name: 'USER', description: 'Usuario regular con acceso estándar' }
+    { id: 2, name: 'USER', description: 'Usuario regular con acceso estándar' },
+    { id: 3, name: 'SUPERADMIN', description: 'Superadministrador con privilegios máximos sobre usuarios y roles' }
   ];
 
   for (const roleData of defaultRoles) {

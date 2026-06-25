@@ -354,6 +354,18 @@ export class LoginComponent implements OnInit, OnDestroy {
             showClass: { popup: 'animate__animated animate__shakeX' },
             hideClass: { popup: 'animate__animated animate__fadeOutDown animate__faster' }
           });
+                } else if (err.message === 'ACCOUNT_INACTIVE') {
+          this.errorMessage = '';
+          Swal.fire({
+            title: 'Cuenta Inhabilitada',
+            html: '<span style="color:#a0a0a0">Esta cuenta se encuentra temporalmente suspendida o desactivada.<br>Comunícate con <strong style="color:#ff4757">soporte técnico</strong>.</span>',
+            icon: 'warning',
+            confirmButtonText: 'Entendido',
+            background: '#1a1a2e',
+            color: '#f5f5f5',
+            confirmButtonColor: '#ffa502',
+            showClass: { popup: 'animate__animated animate__zoomIn animate__faster' }
+          });
         } else {
           // Error de red o servidor caído
           if (err.message && err.message !== 'INVALID_CREDENTIALS') {

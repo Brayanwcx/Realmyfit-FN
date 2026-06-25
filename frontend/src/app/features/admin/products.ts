@@ -2,6 +2,7 @@ import { Component, OnInit, inject, ChangeDetectorRef, NgZone, DestroyRef } from
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductsService } from '../../core/services/products.service';
+import { CategoriesService } from '../../core/services/categories.service';
 import { environment } from '../../../environments/environment';
 import { finalize } from 'rxjs';
 import Swal from '../../core/utils/app-swal';
@@ -16,8 +17,11 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 export class AdminProductsComponent implements OnInit {
     destroyRef = inject(DestroyRef);
   private productsService = inject(ProductsService);
+  private categoriesService = inject(CategoriesService);
   private cdr = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone);
+
+  availableCategories: any[] = [];
 
   products: any[] = [];
   loading = true;
@@ -49,6 +53,17 @@ export class AdminProductsComponent implements OnInit {
 
   ngOnInit() {
     this.fetchProducts();
+    this.fetchCategories();
+  }
+
+  fetchCategories() {
+    this.categoriesService.getCategories().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (cats) => {
+        this.availableCategories = cats;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Error fetching categories for dropdown', err)
+    });
   }
 
   getImageUrl(url: string | null | undefined): string {
