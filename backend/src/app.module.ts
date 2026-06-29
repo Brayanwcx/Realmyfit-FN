@@ -24,8 +24,6 @@ import { TrainersModule } from './features/trainers/trainers.module';
 import { MachinesModule } from './features/machines/machines.module';
 import { OrdersModule } from './features/orders/orders.module';
 import { FilesModule } from './features/files/files.module';
-import { CategoriesModule } from './features/categories/categories.module';
-import { SettingsModule } from './features/settings/settings.module';
 import config from './core/config';
 
 @Module({
@@ -55,8 +53,8 @@ import config from './core/config';
     MailerModule.forRoot({
       transport: {
         host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
+        port: 587,
+        secure: false,
         auth: {
           user: process.env.SMTP_USER,
           pass: process.env.SMTP_PASSWORD,
@@ -67,7 +65,7 @@ import config from './core/config';
       },
     }),
     ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'uploads'),
+      rootPath: join(__dirname, '..', 'uploads'),
       serveRoot: '/uploads/',
     }),
     DatabaseModule,
@@ -85,8 +83,6 @@ import config from './core/config';
     MachinesModule,
     OrdersModule,
     FilesModule,
-    CategoriesModule,
-    SettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
