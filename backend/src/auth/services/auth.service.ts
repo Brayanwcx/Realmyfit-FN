@@ -6,7 +6,7 @@ import * as bcrypt from 'bcrypt';
 import { UserModel } from '../../features/users/interfaces/user';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { MailerService } from '@nestjs-modules/mailer';
+// MailerService removido - usando Brevo HTTP API
 import { ResetPasswordDto } from '../dtos/reset-password.dto';
 
 @Injectable()
@@ -18,7 +18,6 @@ export class AuthService {
         private readonly usersService: UsersService,
         private readonly jwtService: JwtService,
         @InjectRepository(User) private userRepo: Repository<User>,
-        private readonly mailerService: MailerService,
     ) { }
 
     async validateUser(email: string, password: string) {
@@ -150,12 +149,12 @@ export class AuthService {
         user.recoveryCodeExpiresAt = expiresAt;
         await this.userRepo.save(user);
 
-        // Enviar el correo
-        await this.mailerService.sendMail({
-            to: user.email,
+        // Enviar correo mediante Brevo HTTP API
+        const brevoPayload = {
+            sender: { name: 'RealMyFit', email: process.env.SMTP_USER },
+            to: [{ email: user.email }],
             subject: 'Código de Recuperación de Contraseña - RealMyFit',
-            text: `Tu código de recuperación es: ${recoveryCode}. Este código expirará en 15 minutos.`,
-            html: `
+            htmlContent: `
                 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0a0a12; color: #ffffff; padding: 40px 20px; text-align: center;">
                     <div style="max-width: 600px; margin: 0 auto; background-color: #10101c; border: 1px solid rgba(39, 174, 96, 0.3); border-radius: 16px; padding: 40px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);">
                         <h1 style="color: #27ae60; margin-bottom: 5px; font-size: 32px; font-weight: 800; letter-spacing: -1px;">RealMyFit</h1>
@@ -176,7 +175,17 @@ export class AuthService {
                         </p>
                     </div>
                 </div>
-            `,
+            `
+        };
+
+        await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+                'accept': 'application/json',
+                'api-key': process.env.SMTP_PASSWORD || '',
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify(brevoPayload)
         });
 
         return { message: 'Si el correo está registrado, recibirás un código de recuperación.' };

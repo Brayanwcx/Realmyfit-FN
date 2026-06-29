@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { MailerModule } from '@nestjs-modules/mailer';
+// MailerModule eliminado por Brevo HTTP API
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './core/database/database.module';
@@ -50,20 +50,7 @@ import config from './core/config';
         STRIPE_WEBHOOK_SECRET: Joi.string().optional(),
       }),
     }),
-    MailerModule.forRoot({
-      transport: {
-        host: 'smtp.gmail.com',
-        port: 587,
-        secure: false,
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASSWORD,
-        },
-      },
-      defaults: {
-        from: '"No Reply" <noreply@realmyfit.com>',
-      },
-    }),
+    // MailerModule removido para usar protocolo HTTP en la nube
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'uploads'),
       serveRoot: '/uploads/',

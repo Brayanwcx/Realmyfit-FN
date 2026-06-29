@@ -5,7 +5,7 @@ import { User } from '../../entities/user.entity';
 import { CreateUserDto, UpdateUserDto } from '../../dtos/user.dto';
 import { RolesService } from '../../../roles/services/roles.service';
 import * as bcrypt from 'bcrypt';
-import { MailerService } from '@nestjs-modules/mailer';
+// Importación de MailerService removida
 
 @Injectable()
 export class UsersService {
@@ -14,7 +14,6 @@ export class UsersService {
     constructor(
         @InjectRepository(User) private userRepo: Repository<User>,
         private rolesService: RolesService,
-        private mailerService: MailerService,
     ) { }
 
     async findAll() {
@@ -81,12 +80,12 @@ export class UsersService {
         });
         const savedUser = await this.userRepo.save(newUser);
 
-        // Send Welcome Email (fire and forget, don't await so it doesn't block response)
-        this.mailerService.sendMail({
-            to: savedUser.email,
+        // Enviando correo de bienvenida mediante Brevo HTTP API
+        const brevoPayload = {
+            sender: { name: 'RealMyFit', email: process.env.SMTP_USER }, // Gmail autorizado de Brevo
+            to: [{ email: savedUser.email }],
             subject: '¡Bienvenido a RealMyFit!',
-            text: `Hola ${savedUser.name}, bienvenido a RealMyFit. Estamos emocionados de tenerte con nosotros.`,
-            html: `
+            htmlContent: `
                 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0a0a12; color: #ffffff; padding: 40px 20px; text-align: center;">
                     <div style="max-width: 600px; margin: 0 auto; background-color: #10101c; border: 1px solid rgba(39, 174, 96, 0.3); border-radius: 16px; padding: 40px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);">
                         <h1 style="color: #27ae60; margin-bottom: 5px; font-size: 32px; font-weight: 800; letter-spacing: -1px;">RealMyFit</h1>
@@ -106,8 +105,21 @@ export class UsersService {
                         </p>
                     </div>
                 </div>
-            `,
-        }).catch(err => console.error('Error enviando correo de bienvenida:', err));
+            `
+        };
+
+        fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+                'accept': 'application/json',
+                'api-key': process.env.SMTP_PASSWORD || '', // En lugar del SMTP Password de Gmail ahora usaremos la llave de Brevo aquí
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify(brevoPayload)
+        })
+        .then(res => res.json())
+        .then(data => console.log('Correo Brevo enviado:', data))
+        .catch(err => console.error('Error enviando correo con Brevo:', err));
 
         return savedUser;
     }
