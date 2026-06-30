@@ -84,7 +84,9 @@ export class AuthController {
         }
         
         const userId = req.user.sub || req.user.id;
-        const profilePictureUrl = `http://localhost:3005/uploads/avatars/${file.filename}`;
+        const host = req.get('host');
+        const protocol = host.includes('localhost') ? 'http' : 'https';
+        const profilePictureUrl = `${protocol}://${host}/uploads/avatars/${file.filename}`;
         
         // Update user profile
         await this.usersService.updateUser(userId, { profilePicture: profilePictureUrl });

@@ -131,12 +131,6 @@ export class PerfilComponent implements OnInit {
       
       if (this.croppedImageUrl) {
         this.localImageUrl = this.croppedImageUrl;
-        // Bug #9 fix: usar método público en vez de acceder directamente a userSubject privado
-        const currentUser = this.authService.getUser();
-        if (currentUser) {
-          const preview = { ...currentUser, profilePicture: this.croppedImageUrl };
-          this.authService.updateUserLocally(preview);
-        }
       }
       this.cdr.detectChanges();
 
@@ -145,11 +139,14 @@ export class PerfilComponent implements OnInit {
       this.authService.uploadAvatar(file).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: (res) => {
           this.isUploading = false;
-          if (this.user) {
-            this.user.profilePicture = res.profilePicture;
-          }
           this.localImageUrl = null;
-          this.cdr.detectChanges();
+          if (this.user) {
+            this.user = { ...this.user, profilePicture: res.profilePicture };
+          }
+          const updatedUser = { ...this.authService.getUser(), profilePicture: res.profilePicture };
+          this.authService.updateUserLocally(updatedUser);
+          
+          this.cdr.markForCheck(); // Safely flag for update without forcing a synchronous localized check phase that breaks Navbar
         },
         error: (err) => {
           this.isUploading = false;

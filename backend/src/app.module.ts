@@ -24,6 +24,8 @@ import { TrainersModule } from './features/trainers/trainers.module';
 import { MachinesModule } from './features/machines/machines.module';
 import { OrdersModule } from './features/orders/orders.module';
 import { FilesModule } from './features/files/files.module';
+import { CategoriesModule } from './features/categories/categories.module';
+import { SettingsModule } from './features/settings/settings.module';
 import config from './core/config';
 
 @Module({
@@ -52,7 +54,7 @@ import config from './core/config';
     }),
     // MailerModule removido para usar protocolo HTTP en la nube
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'uploads'),
+      rootPath: join(process.cwd(), 'uploads'),
       serveRoot: '/uploads/',
     }),
     DatabaseModule,
@@ -70,6 +72,8 @@ import config from './core/config';
     MachinesModule,
     OrdersModule,
     FilesModule,
+    CategoriesModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
