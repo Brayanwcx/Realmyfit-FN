@@ -160,12 +160,6 @@ export class AdminComponent implements OnInit {
         this.userInitials = this.userName.charAt(0).toUpperCase();
         this.userAvatar = user.profilePicture || null;
         
-        if (this.authService.isSuperAdmin()) {
-          this.menuItems = this.menuItems.filter(
-            item => ['Usuarios', 'Categorías', 'Ajustes'].includes(item.label)
-          );
-        }
-
         this.cdr.detectChanges();
       }
     });
